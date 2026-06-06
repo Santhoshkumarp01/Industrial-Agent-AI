@@ -1,0 +1,14 @@
+fastapi==0.115.6
+uvicorn==0.32.1
+pymupdf==1.24.14
+sentence-transformers==3.3.1
+qdrant-client==1.9.1
+fastembed==0.3.1
+anthropic==0.40.0
+nltk==3.9.1
+pydantic==2.10.3
+pydantic-settings==2.7.0
+python-multipart==0.0.20
+torch==2.5.1
+pytest==8.3.4
+pytest-asyncio==0.24.0
