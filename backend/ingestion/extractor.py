@@ -69,7 +69,7 @@ Be factual and precise. Focus on technical details."""
 
         # Generate description with image
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model=config.LLM_MODEL,
             contents=[prompt, {"mime_type": "image/jpeg", "data": image_data}]
         )
         description = response.text.strip()

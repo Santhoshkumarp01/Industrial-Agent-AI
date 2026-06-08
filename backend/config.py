@@ -42,7 +42,7 @@ class Config:
     TABLE_ROW_TOKENS = 100           # Target tokens per table row group
 
     # --- LLM ---
-    LLM_MODEL = "gemini-2.0-flash-exp"  # Latest Gemini Flash model
+    LLM_MODEL = "gemini-2.5-flash"  # Latest Gemini Flash model (verified working with v1beta API)
     LLM_MAX_TOKENS = 2048
     LLM_TEMPERATURE = 0.1
 

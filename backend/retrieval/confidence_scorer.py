@@ -238,7 +238,7 @@ Score: 0.85
 Reason: Answer is complete and accurate but could be more specific about torque values."""
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model=config.LLM_MODEL,
             contents=prompt,
             config=types.GenerateContentConfig(
                 max_output_tokens=100,

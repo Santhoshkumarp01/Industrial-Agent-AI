@@ -29,8 +29,10 @@ def _make_retrieved_chunk(
 ) -> RetrievedChunk:
     return RetrievedChunk(
         chunk_id=chunk_id or str(uuid.uuid4()),
+        doc_id="test-doc-id",  # ← Added missing field
         doc_name=doc_name,
         equipment_tag=equipment_tag,
+        block_type="paragraph",  # ← FIXED: Added block_type
         text="This is a sample maintenance chunk about bearing lubrication procedures.",
         page_number=3,
         bbox=(10.0, 20.0, 400.0, 60.0),

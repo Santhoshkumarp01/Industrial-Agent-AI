@@ -92,7 +92,7 @@ Output format (one per line):
 3. [Third variation]"""
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model=config.LLM_MODEL,
             contents=prompt,
             config=types.GenerateContentConfig(
                 max_output_tokens=200,

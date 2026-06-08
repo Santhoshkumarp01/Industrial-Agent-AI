@@ -27,6 +27,7 @@ wheels/
 *.egg
 MANIFEST
 venv/
+.venv/
 env/
 ENV/
 env.bak/
@@ -36,6 +37,7 @@ venv.bak/
 *.db
 *.sqlite
 *.sqlite3
+maintenance_wizard.db
 
 # Machine Learning Models
 *.pkl
@@ -44,10 +46,14 @@ venv.bak/
 *.pt
 *.pth
 *.onnx
+backend/ml/saved_models/*.pkl
 
 # Uploaded Files
 backend/data/uploads/*
 !backend/data/uploads/.gitkeep
+
+# Qdrant Storage (if using local Docker)
+qdrant_storage/
 
 # Node
 node_modules/
@@ -57,6 +63,8 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 .pnpm-store/
+package-lock.json
+yarn.lock
 
 # Build outputs
 dist/
@@ -87,3 +95,10 @@ htmlcov/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Sentence Transformers Cache
+.cache/
+huggingface/
+
+# Docker
+.dockerignore

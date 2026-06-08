@@ -50,6 +50,7 @@ class RetrievedChunk(BaseModel):
     doc_id: str            # ← Added for PDF serving
     doc_name: str
     equipment_tag: str
+    block_type: str        # ← ADDED: paragraph | heading | list | table | figure_caption
     text: str
     page_number: int
     bbox: tuple

@@ -532,6 +532,7 @@ def _reciprocal_rank_fusion(
                 doc_id=p["doc_id"],        # ← Ensure this is included
                 doc_name=p["doc_name"],
                 equipment_tag=p.get("equipment_tag", ""),
+                block_type=p.get("block_type", "paragraph"),  # ← FIXED: Added block_type
                 text=p["text"],
                 page_number=int(p["page_number"]),
                 bbox=bbox,
