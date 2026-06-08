@@ -1,6 +1,7 @@
 const EQUIPMENT = [
   {
     id: 'rm1',
+    backendId: 'RM1',
     name: 'Rolling Mill #1',
     tag: 'Rolling Mill',
     sensors: {
@@ -12,6 +13,7 @@ const EQUIPMENT = [
   },
   {
     id: 'rm3',
+    backendId: 'RM3',
     name: 'Rolling Mill #3',
     tag: 'Rolling Mill',
     sensors: {
@@ -23,6 +25,7 @@ const EQUIPMENT = [
   },
   {
     id: 'bf1',
+    backendId: 'BF1',
     name: 'BF Blower #1',
     tag: 'Blast Furnace',
     sensors: {
@@ -34,6 +37,7 @@ const EQUIPMENT = [
   },
   {
     id: 'comp_a',
+    backendId: 'COMP_A',
     name: 'Compressor A',
     tag: 'Compressor',
     sensors: {

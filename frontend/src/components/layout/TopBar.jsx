@@ -76,7 +76,7 @@ export default function TopBar() {
             color: 'var(--text-secondary)',
           }}
         >
-          Tata Steel — Jamshedpur Plant
+          Maintenance Wizard AI
         </span>
       </div>
 

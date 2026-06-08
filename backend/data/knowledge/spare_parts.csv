@@ -1,0 +1,21 @@
+part_number,description,equipment_type,compatible_equipment,quantity_in_stock,lead_time_days,unit_cost_inr,supplier,location
+SKF-22318,Spherical Roller Bearing,Rolling Mill,RM1|RM3,2,0,4500,SKF India,Warehouse-A Rack-3
+SKF-22319,Spherical Roller Bearing (large),Rolling Mill,RM1|RM3,0,7,4800,SKF India,On Order
+SKF-6208,Deep Groove Ball Bearing,Compressor,COMP_A,4,0,1200,SKF India,Warehouse-A Rack-3
+ABB-M3BP-160,Motor Winding Kit 160kW,BF Blower,BF1,1,0,28000,ABB India,Warehouse-B Rack-1
+CI-44,Coupling Insert (Polyurethane),Rolling Mill,RM1|RM3,6,0,850,Fenner India,Warehouse-A Rack-7
+CI-48,Coupling Insert (Large),BF Blower,BF1,3,0,1200,Fenner India,Warehouse-A Rack-7
+OF-112,Oil Filter Element,Rolling Mill,RM1|RM3,8,0,650,Parker India,Warehouse-C Rack-2
+OF-115,Oil Filter Element (BF Blower),BF Blower,BF1,5,0,780,Parker India,Warehouse-C Rack-2
+SS-12,Shaft Seal Kit,Rolling Mill,RM1|RM3,3,0,2200,Freudenberg,Warehouse-A Rack-5
+BH-22,Bearing Housing,Rolling Mill,RM1|RM3,1,14,18000,Local Machining,Warehouse-B Rack-4
+IF-22A,Compressor Inlet Filter,Compressor,COMP_A,10,0,420,Ingersoll Rand,Warehouse-C Rack-1
+BW-04,Dynamic Balancing Weight Set,BF Blower,BF1,2,0,3500,Local,Workshop
+GREASE-SKF-5KG,SKF LGMT 3 Grease 5kg,All,RM1|RM3|BF1|COMP_A,15,0,2800,SKF India,Warehouse-C Rack-5
+SEAL-VITON-32,Viton O-Ring Set 32mm,Compressor,COMP_A,20,0,380,Parker India,Warehouse-C Rack-3
+VALVE-SEAT-A,Suction Valve Seat,Compressor,COMP_A,2,21,12000,Hoerbiger,On Order
+CABLE-GLAND-M25,Cable Gland M25 IP67,BF Blower,BF1,12,0,180,Weidmuller,Warehouse-C Rack-4
+V-BELT-SPA-2000,SPA Section V-Belt 2000mm,BF Blower,BF1,6,0,950,Gates India,Warehouse-A Rack-8
+PULLEY-SPA-200,SPA Pulley 200mm 3-Groove,BF Blower,BF1,2,14,3200,Local,Warehouse-B Rack-2
+GASKET-SET-COMP,Compressor Gasket Set,Compressor,COMP_A,4,0,1800,Ingersoll Rand,Warehouse-C Rack-2
+VALVE-SPRING-COMP,Compressor Valve Spring Kit,Compressor,COMP_A,8,0,650,Hoerbiger,Warehouse-C Rack-2

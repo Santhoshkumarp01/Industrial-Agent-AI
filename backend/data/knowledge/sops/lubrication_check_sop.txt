@@ -1,0 +1,99 @@
+STANDARD OPERATING PROCEDURE
+Lubrication Circuit Inspection and Oil Change
+
+SOP No: MT-LU-002 | Rev: 2 | Date: 2024-01-10
+Equipment: Rolling Mill #1, Rolling Mill #3, BF Blower #1
+Estimated Duration: 2–3 hours
+
+1. SAFETY PRECAUTIONS
+   1.1 Equipment must be isolated (LOTO applied) before starting work.
+   1.2 Oil can be hot (up to 70°C) — wear heat-resistant gloves.
+   1.3 Avoid skin contact with used oil. Use nitrile gloves.
+   1.4 Have spill kit and absorbent pads ready at work site.
+   1.5 Dispose of used oil per environmental regulations (designated waste oil drums).
+
+2. TOOLS AND MATERIALS REQUIRED
+   - Oil drain pump (if gravity drain not available)
+   - Oil filter wrench
+   - Torque wrench (30–80 Nm range)
+   - Oil analysis sample bottles (clean, labeled)
+   - Replacement oil filter: OF-112 (RM1/RM3) or OF-115 (BF1)
+   - Fresh lubrication oil: ISO VG 220 mineral oil, 20L minimum
+   - Funnel with fine mesh filter
+   - Cleaning rags and degreaser
+
+3. INSPECTION FREQUENCY
+   - Visual inspection: Weekly
+   - Oil analysis sampling: Monthly
+   - Oil filter replacement: Every 3 months or per condition monitoring
+   - Complete oil change: Every 12 months or if contamination detected
+
+4. PROCEDURE
+
+   Step 1 — Pre-Inspection Visual Check
+   1.1 Check oil level in sight glass — should be between MIN and MAX marks.
+   1.2 Observe oil color through sight glass:
+       - Clear amber: OK
+       - Dark brown/black: Oxidation — oil change needed
+       - Milky/cloudy: Water contamination — investigate source immediately
+   1.3 Check for external leaks around seals, fittings, and pipe joints.
+   1.4 Listen for unusual pump noise (cavitation, air entrainment).
+
+   Step 2 — Oil Sampling for Analysis
+   2.1 Run equipment at normal operating temperature for 30 minutes before sampling.
+   2.2 Take sample from mid-point sampling valve (not from drain or top-up port).
+   2.3 Flush sampling valve for 5 seconds before collecting sample.
+   2.4 Fill sample bottle to shoulder line, seal immediately.
+   2.5 Label: Equipment ID, date, running hours, technician name.
+   2.6 Send to lab within 24 hours. Request: viscosity, particle count, water content, TAN.
+
+   Step 3 — Oil Filter Replacement
+   3.1 Shut down equipment. Ensure system is depressurized.
+   3.2 Place drip tray under filter housing.
+   3.3 Use filter wrench to remove filter element (turn counter-clockwise).
+   3.4 Inspect old filter element:
+       - Heavy metallic debris: Bearing wear — escalate immediately
+       - Sludge buildup: Oil degradation — increase monitoring
+       - Normal dirt: Acceptable
+   3.5 Clean filter housing with lint-free rag.
+   3.6 Lubricate new filter O-ring with clean oil.
+   3.7 Install new filter element. Torque to 50 Nm (hand-tight + 1/2 turn).
+   3.8 Fill housing with clean oil before sealing to avoid dry start.
+
+   Step 4 — Complete Oil Change (if required)
+   4.1 Shut down equipment. Ensure system is cool (<40°C) and depressurized.
+   4.2 Place oil drain pan (minimum 25L capacity) under drain plug.
+   4.3 Remove drain plug slowly. Allow complete drainage (minimum 20 minutes).
+   4.4 Inspect drained oil for metal particles, water, or sludge.
+   4.5 Clean drain plug magnetic tip. Re-install with new crush washer. Torque to 40 Nm.
+   4.6 Replace oil filter (Step 3).
+   4.7 Fill system with fresh oil through top-up port using funnel with mesh filter.
+   4.8 Fill to MAX mark on sight glass. Do not overfill.
+   4.9 Replace top-up cap. Check seal is intact.
+
+   Step 5 — System Restart and Verification
+   5.1 Remove LOTO. Start equipment at no load.
+   5.2 Run for 5 minutes. Check for leaks around filter and drain plug.
+   5.3 Stop equipment. Wait 10 minutes for oil to settle.
+   5.4 Recheck oil level in sight glass. Top up if needed to MAX mark.
+   5.5 Run equipment at normal load. Monitor oil pressure gauge:
+       - Normal: 3.5–5.0 bar
+       - Low (<3.0 bar): Stop and investigate
+   5.6 Check oil temperature after 30 minutes — should stabilize at 60–75°C.
+
+5. ACCEPTANCE CRITERIA
+   - Oil level between MIN and MAX marks
+   - Oil color: Clear amber (not dark or milky)
+   - Oil pressure: 3.5–5.0 bar at normal operating temperature
+   - No external leaks
+   - Oil temperature: 60–75°C at steady state
+
+6. TROUBLESHOOTING
+   - LOW PRESSURE: Check filter blockage, pump wear, oil level, viscosity grade
+   - HIGH TEMPERATURE: Check cooler cleanliness, ambient temp, oil contamination
+   - WATER IN OIL: Inspect cooling water pipes, seals, condensation in breather
+   - METALLIC PARTICLES: Bearing wear — escalate to engineering immediately
+
+7. DOCUMENTATION
+   Record in lubrication log: date, running hours, oil level, filter change, observations.
+   Attach oil analysis report when received.

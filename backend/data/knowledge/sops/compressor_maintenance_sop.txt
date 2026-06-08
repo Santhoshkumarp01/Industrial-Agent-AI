@@ -1,0 +1,179 @@
+STANDARD OPERATING PROCEDURE
+Compressor Valve Inspection and Intercooler Cleaning
+
+SOP No: MT-COMP-008 | Rev: 2 | Date: 2024-01-12
+Equipment: Compressor A (Reciprocating Air Compressor)
+Estimated Duration: 6–8 hours
+
+1. SAFETY PRECAUTIONS
+   1.1 Obtain Permit to Work (PTW) from operations supervisor.
+   1.2 Perform LOTO on compressor motor supply and pneumatic isolation valves.
+   1.3 Depressurize all receiver tanks and intercooler stages completely (vent to atmosphere).
+   1.4 Verify zero pressure using calibrated pressure gauge before opening any covers.
+   1.5 Wear safety glasses, hearing protection, and steel-toed boots.
+   1.6 Compressed air can be hot (up to 120°C) — allow cooling to <40°C before starting work.
+   1.7 Use proper lifting equipment for valve assemblies (15–20 kg weight).
+
+2. TOOLS AND MATERIALS REQUIRED
+   - Valve spring compressor tool (compressor-specific)
+   - Torque wrench (20–120 Nm range)
+   - Feeler gauge set (0.05–1.0 mm)
+   - High-pressure water jet or chemical cleaning system
+   - Replacement valve seats (VALVE-SEAT-A) if required
+   - Valve springs (have spares available)
+   - Gasket set (GASKET-SET-COMP)
+   - O-ring set (SEAL-VITON-32)
+   - Valve grinding compound (fine grade)
+   - Cleaning solvent (non-flammable)
+   - Compressed air supply (dry, oil-free)
+   - Leak detection solution (soapy water)
+
+3. MAINTENANCE FREQUENCY
+   - Visual inspection during operation: Weekly
+   - Valve inspection and cleaning: Every 3 months or 2,000 running hours
+   - Valve replacement: Every 10,000 hours or when leakage detected
+   - Intercooler cleaning: Every 6 months or when temperature rise >15°C above normal
+
+4. PROCEDURE
+
+   PART A — VALVE INSPECTION AND REPLACEMENT
+
+   Step 1 — Compressor Shutdown and Depressurization
+   1.1 Coordinate with operations for planned shutdown.
+   1.2 Stop compressor. Close discharge isolation valve.
+   1.3 Open drain valves on all receiver tanks and intercoolers. Vent to atmosphere.
+   1.4 Apply LOTO on motor supply breaker and pneumatic isolation valves.
+   1.5 Attach pressure gauge to cylinder head test port. Verify 0 bar pressure.
+   1.6 Allow compressor to cool to ambient temperature (<40°C). Minimum 2 hours.
+
+   Step 2 — Cylinder Head Removal
+   2.1 Disconnect cooling water inlet/outlet hoses from cylinder head (if water-cooled).
+   2.2 Remove cylinder head cover bolts in cross pattern (8 × M16 bolts, record torque).
+   2.3 Lift cylinder head cover carefully using lifting eyes. Weight: ~25 kg.
+   2.4 Inspect cylinder head gasket. Replace if damaged, compressed, or leaking.
+
+   Step 3 — Suction Valve Inspection
+   3.1 Locate suction valve assembly (typically on top of piston, accessed from head).
+   3.2 Use valve spring compressor tool to compress valve springs.
+   3.3 Remove valve retaining clip or snap ring.
+   3.4 Lift out valve assembly (valve plate + springs + retainer).
+   3.5 Inspect valve plate and seat:
+       - Check valve plate flatness using straight edge and feeler gauge
+       - Warpage >0.05mm: Replace valve plate
+       - Check valve seat for pitting, erosion, carbon buildup
+       - Measure valve spring free length:
+         * New spring: 45mm typical
+         * Replace if compressed to <40mm (loss of sealing force)
+   3.6 Clean valve plate and seat with solvent. Remove carbon deposits carefully.
+   3.7 If seat is damaged (pitting >0.3mm depth):
+       - Replace valve seat VALVE-SEAT-A
+       - Lap new seat with valve grinding compound
+       - Test seal by applying light oil and checking for leakage when valve plate is held closed
+
+   Step 4 — Discharge Valve Inspection
+   4.1 Locate discharge valve assembly (typically in cylinder head or discharge passage).
+   4.2 Remove discharge valve cover plate (4 × M10 bolts).
+   4.3 Remove valve springs using spring compressor.
+   4.4 Lift out discharge valve assembly.
+   4.5 Inspect valve plate and seat (same criteria as suction valve in Step 3.5).
+   4.6 Discharge valves experience higher temperature and pressure:
+       - Check for heat discoloration (blue tint indicates overheating)
+       - Check for valve plate warping or cracking
+       - Replace if any cracks visible (can cause catastrophic failure)
+   4.7 Clean and replace as needed.
+
+   Step 5 — Valve Reassembly
+   5.1 Install new valve seat if old one was removed. Torque to 60 Nm.
+   5.2 Apply thin layer of valve grinding compound to valve seat.
+   5.3 Place valve plate on seat. Rotate gently 10–15 times to lap surfaces together.
+   5.4 Clean off all grinding compound with solvent. Surfaces should be mirror-smooth.
+   5.5 Install valve springs. Ensure correct orientation (tighter coil pitch at bottom).
+   5.6 Compress springs with tool. Install retaining clip or snap ring.
+   5.7 Verify valve moves freely by pressing valve plate — should snap back when released.
+   5.8 Install new gasket on cylinder head mating surface.
+   5.9 Refit cylinder head cover. Torque bolts to 85 Nm in cross pattern (gradually tighten in 3 stages: 30, 60, 85 Nm).
+
+   PART B — INTERCOOLER CLEANING
+
+   Step 6 — Intercooler Preparation
+   6.1 Locate intercooler heat exchanger (between compression stages).
+   6.2 Close intercooler inlet and outlet isolation valves.
+   6.3 Open intercooler drain valve. Drain condensate water completely.
+   6.4 Disconnect intercooler from piping (may require removing flanges).
+
+   Step 7 — Intercooler Tube Cleaning
+   7.1 Inspect intercooler tubes for fouling, scale buildup, oil contamination.
+   7.2 Cleaning method selection based on fouling type:
+       - Light dust/dirt: Compressed air blow-through (max 6 bar pressure)
+       - Oil contamination: Chemical cleaning with degreaser, flush with water
+       - Hard scale: High-pressure water jet (100–150 bar) OR chemical descaling
+   7.3 For chemical cleaning:
+       - Fill intercooler with descaling solution (citric acid 5% solution)
+       - Soak for 2 hours
+       - Flush with clean water until pH neutral
+   7.4 For water jet cleaning:
+       - Insert water jet lance into each tube
+       - Flush until water runs clear
+       - Use tube cleaning brushes for stubborn deposits
+   7.5 After cleaning, blow dry with compressed air.
+   7.6 Inspect tubes with inspection light — should see clear passage through all tubes.
+
+   Step 8 — Intercooler Pressure Test
+   8.1 Reconnect intercooler to piping with new gaskets.
+   8.2 Close drain valve. Open inlet/outlet valves.
+   8.3 Pressurize intercooler slowly to working pressure (typically 10 bar).
+   8.4 Hold pressure for 10 minutes. Check for leaks using leak detection solution.
+   8.5 Acceptable leakage: Zero. Any leak = re-torque flanges or replace gaskets.
+
+   Step 9 — Compressor Restart and Functional Test
+   9.1 Remove LOTO after verifying all covers are installed and tools are removed.
+   9.2 Start compressor in unloaded mode (suction valve held open).
+   9.3 Run for 5 minutes. Listen for abnormal valve noise (chattering, metallic impacts).
+   9.4 Check cylinder head temperature — should be <90°C after 5 minutes.
+   9.5 Switch to loaded mode (normal operation).
+   9.6 Monitor performance:
+       - Discharge pressure: Should reach rated pressure (e.g., 10 bar) in <2 minutes
+       - Intercooler outlet temperature: Should be <50°C (cooling effect restored)
+       - Suction/discharge valve noise: Should be quiet, rhythmic clicking only
+       - Motor current: Should be within ±5% of rated (e.g., 32A for typical 22kW compressor)
+   9.7 Run for 1 hour at full load. Check:
+       - Final stage discharge temperature: Should be <120°C
+       - Intercooler pressure drop: Should be <0.5 bar (clean intercooler)
+       - No air leaks from cylinder head gasket or valve covers
+   9.8 If all parameters acceptable, return to normal operation.
+
+5. ACCEPTANCE CRITERIA
+   - Valve seat leakage: Zero (tested with leak detection solution at 10 bar)
+   - Valve spring free length: >40mm (replace if shorter)
+   - Cylinder head gasket: No leaks (soap test at working pressure)
+   - Intercooler outlet temperature: <50°C at rated load
+   - Intercooler pressure drop: <0.5 bar
+   - Discharge pressure: Reaches rated pressure (10 bar) within 2 minutes
+   - Final stage temperature: <120°C at full load
+   - Motor current: Within ±5% of rated current
+
+6. TROUBLESHOOTING
+   - LOW DISCHARGE PRESSURE (<8 bar when rated is 10 bar):
+     * Cause: Valve leakage (suction or discharge), piston ring wear, intercooler leakage
+     * Action: Leak test valves individually, check piston rings, pressure test intercooler
+
+   - HIGH DISCHARGE TEMPERATURE (>140°C):
+     * Cause: Fouled intercooler, inadequate cooling, valve leakage, over-compression
+     * Action: Clean intercooler, check cooling water flow, inspect valves
+
+   - VALVE NOISE (loud metallic chattering):
+     * Cause: Broken valve spring, valve seat erosion, valve plate cracked, foreign object
+     * Action: Stop immediately. Inspect and replace damaged components.
+
+   - INTERCOOLER DIFFERENTIAL PRESSURE HIGH (>1.0 bar):
+     * Cause: Tubes blocked, scale buildup, internal corrosion
+     * Action: Chemical cleaning or tube replacement
+
+   - OIL CARRYOVER TO DISCHARGE (oily air output):
+     * Cause: Worn piston rings, valve stem seals damaged, oil level too high
+     * Action: Replace piston rings, valve seals, check oil level
+
+7. DOCUMENTATION
+   Record in compressor maintenance log: date, running hours, valve condition (suction/discharge),
+   spring measurements, intercooler cleaning method, pressure test results, performance after restart.
+   Update valve replacement schedule based on wear rate observed.

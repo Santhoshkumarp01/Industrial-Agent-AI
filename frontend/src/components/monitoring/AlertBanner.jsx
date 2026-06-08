@@ -1,8 +1,19 @@
-import React from 'react'
+import React, { useState } from 'react'
 import StatusDot from '../shared/StatusDot'
 
 export default function AlertBanner({ alert, onDismiss, onViewAnalysis }) {
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+
   if (!alert) return null
+
+  const handleViewAnalysis = async () => {
+    setIsAnalyzing(true)
+    try {
+      await onViewAnalysis(alert)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
 
   return (
     <div
@@ -40,31 +51,34 @@ export default function AlertBanner({ alert, onDismiss, onViewAnalysis }) {
 
       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
         <button
-          onClick={() => onViewAnalysis(alert)}
+          onClick={handleViewAnalysis}
+          disabled={isAnalyzing}
           style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 11,
-            color: 'var(--status-critical)',
-            border: '1px solid var(--status-critical)',
-            background: 'rgba(232, 93, 93, 0.12)',
+            color: isAnalyzing ? 'var(--text-muted)' : 'var(--status-critical)',
+            border: `1px solid ${isAnalyzing ? 'var(--border-subtle)' : 'var(--status-critical)'}`,
+            background: isAnalyzing ? 'rgba(128,128,128,0.12)' : 'rgba(232, 93, 93, 0.12)',
             padding: '3px 10px',
             borderRadius: 'var(--radius-sm)',
-            cursor: 'pointer',
+            cursor: isAnalyzing ? 'not-allowed' : 'pointer',
             letterSpacing: '0.06em',
             transition: 'var(--transition)',
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(232,93,93,0.22)'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(232,93,93,0.12)'}
+          onMouseEnter={(e) => !isAnalyzing && (e.currentTarget.style.background = 'rgba(232,93,93,0.22)')}
+          onMouseLeave={(e) => !isAnalyzing && (e.currentTarget.style.background = 'rgba(232,93,93,0.12)')}
         >
-          VIEW ANALYSIS
+          {isAnalyzing ? 'ANALYZING...' : 'VIEW ANALYSIS'}
         </button>
         <button
           onClick={() => onDismiss(alert.id)}
+          disabled={isAnalyzing}
           style={{
-            color: 'var(--text-muted)',
+            color: isAnalyzing ? 'var(--text-muted)' : 'var(--text-muted)',
             fontSize: 16,
             lineHeight: 1,
             padding: '2px 4px',
+            cursor: isAnalyzing ? 'not-allowed' : 'pointer',
           }}
         >
           ×

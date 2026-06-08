@@ -168,77 +168,132 @@ export default function ChatPanel({ chatHook, documentsHook }) {
           minHeight: 64,
           borderTop: '1px solid var(--border)',
           background: 'var(--bg-surface)',
-          display: 'flex',
-          alignItems: 'flex-end',
-          padding: '10px 12px',
-          gap: 8,
           flexShrink: 0,
         }}
       >
-        <button
-          onClick={() => setUploaderExpanded((p) => !p)}
+        {/* Equipment tag input row */}
+        <div
           style={{
-            width: 32,
-            height: 32,
+            padding: '8px 12px 4px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: uploaderExpanded ? 'var(--accent-amber)' : 'var(--text-secondary)',
-            fontSize: 16,
-            flexShrink: 0,
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border)',
-            background: 'var(--bg-surface-2)',
-            transition: 'var(--transition)',
+            gap: 8,
+            borderBottom: '1px solid var(--border-subtle)',
           }}
-          title="Attach document"
         >
-          📎
-        </button>
+          <label
+            style={{
+              fontSize: 11,
+              color: 'var(--text-muted)',
+              fontFamily: 'var(--font-mono)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
+          >
+            Equipment:
+          </label>
+          <select
+            value={selectedTag || ''}
+            onChange={(e) => {
+              const v = e.target.value
+              useAppStore.getState().setSelectedTag(v || null)
+            }}
+            style={{
+              flex: 1,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 12,
+              padding: '4px 8px',
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--text-secondary)',
+              background: 'var(--bg-surface-2)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="">All Equipment</option>
+            {documentsHook.documents
+              .map((d) => d.equipment_tag)
+              .filter((v, i, a) => v && a.indexOf(v) === i)
+              .map((tag) => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+          </select>
+        </div>
 
-        <textarea
-          ref={textareaRef}
-          value={inputValue}
-          onChange={handleTextareaChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask about maintenance procedures, equipment specs, fault diagnosis..."
-          rows={1}
+        {/* Message input row */}
+        <div
           style={{
-            flex: 1,
-            resize: 'none',
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            fontFamily: 'var(--font-sans)',
-            fontSize: 14,
-            color: 'var(--text-primary)',
-            lineHeight: 1.5,
-            padding: '4px 0',
-            overflowY: 'hidden',
-          }}
-        />
-
-        <button
-          onClick={handleSend}
-          disabled={!inputValue.trim() || isLoading}
-          style={{
-            width: 32,
-            height: 32,
-            background: inputValue.trim() && !isLoading ? 'var(--accent-amber)' : 'var(--bg-surface-3)',
-            borderRadius: 'var(--radius-sm)',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            transition: 'var(--transition)',
-            color: 'var(--bg-base)',
-            fontSize: 14,
-            cursor: inputValue.trim() && !isLoading ? 'pointer' : 'not-allowed',
+            alignItems: 'flex-end',
+            padding: '10px 12px',
+            gap: 8,
           }}
-          title="Send (Enter)"
         >
-          ▶
-        </button>
+          <button
+            onClick={() => setUploaderExpanded((p) => !p)}
+            style={{
+              width: 32,
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: uploaderExpanded ? 'var(--accent-amber)' : 'var(--text-secondary)',
+              fontSize: 16,
+              flexShrink: 0,
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border)',
+              background: 'var(--bg-surface-2)',
+              transition: 'var(--transition)',
+            }}
+            title="Attach document"
+          >
+            📎
+          </button>
+
+          <textarea
+            ref={textareaRef}
+            value={inputValue}
+            onChange={handleTextareaChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask about maintenance procedures, equipment specs, fault diagnosis..."
+            rows={1}
+            style={{
+              flex: 1,
+              resize: 'none',
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              fontFamily: 'var(--font-sans)',
+              fontSize: 14,
+              color: 'var(--text-primary)',
+              lineHeight: 1.5,
+              padding: '4px 0',
+              overflowY: 'hidden',
+            }}
+          />
+
+          <button
+            onClick={handleSend}
+            disabled={!inputValue.trim() || isLoading}
+            style={{
+              width: 32,
+              height: 32,
+              background: inputValue.trim() && !isLoading ? 'var(--accent-amber)' : 'var(--bg-surface-3)',
+              borderRadius: 'var(--radius-sm)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              transition: 'var(--transition)',
+              color: 'var(--bg-base)',
+              fontSize: 14,
+              cursor: inputValue.trim() && !isLoading ? 'pointer' : 'not-allowed',
+            }}
+            title="Send (Enter)"
+          >
+            ▶
+          </button>
+        </div>
       </div>
 
       {/* PDF Viewer overlay */}

@@ -1,220 +1,209 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
+import { getPDFUrl } from '../../services/api'
+import useAppStore from '../../store/appStore'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
-import useAppStore from '../../store/appStore'
-import { getPdfUrl } from '../../services/api'
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+// Set worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
 export default function PDFViewer() {
   const { isPDFViewerOpen, activeCitation, closePDFViewer } = useAppStore()
+  
   const [numPages, setNumPages] = useState(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState({ width: 0, height: 0 })
+  const [pageWidth, setPageWidth] = useState(600)
   const canvasRef = useRef(null)
+  const containerRef = useRef(null)
 
-  useEffect(() => {
-    if (activeCitation?.page) {
-      setCurrentPage(activeCitation.page)
-    }
-  }, [activeCitation])
+  if (!isPDFViewerOpen || !activeCitation) return null
 
-  // Draw bbox highlight overlay after page renders
-  const handlePageRenderSuccess = (page) => {
-    setPageSize({ width: page.width, height: page.height })
+  // citation shape:
+  // { doc_id, page_number, bbox: [x0, y0, x1, y1], doc_name, ref }
+  const pdfUrl = getPDFUrl(activeCitation.doc_id)
+
+  function onDocumentLoadSuccess({ numPages }) {
+    setNumPages(numPages)
   }
 
-  useEffect(() => {
-    if (!activeCitation?.bbox || !pageSize.width) return
-    const canvas = canvasRef.current
-    if (!canvas) return
+  // Draw amber highlight rectangle over bbox after page renders
+  function onPageRenderSuccess(page) {
+    // PDF coordinate space: origin bottom-left
+    // Canvas coordinate space: origin top-left
+    // We need to convert
 
-    const ctx = canvas.getContext('2d')
-    canvas.width = pageSize.width
-    canvas.height = pageSize.height
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    const canvas = containerRef.current?.querySelector('canvas')
+    if (!canvas || !activeCitation.bbox) return
 
     const [x0, y0, x1, y1] = activeCitation.bbox
-    // PDF coordinates have origin at bottom-left; canvas origin is top-left
-    const canvasY = pageSize.height - y1
-    const rectW = x1 - x0
-    const rectH = y1 - y0
 
-    ctx.fillStyle = 'rgba(245, 166, 35, 0.25)'
-    ctx.strokeStyle = 'rgba(245, 166, 35, 0.8)'
-    ctx.lineWidth = 1.5
-    ctx.fillRect(x0, canvasY, rectW, rectH)
-    ctx.strokeRect(x0, canvasY, rectW, rectH)
-  }, [activeCitation, pageSize, currentPage])
+    // Get rendered page dimensions
+    const canvasHeight = canvas.height
+    const canvasWidth = canvas.width
 
-  if (!isPDFViewerOpen) return null
+    // page.originalWidth/Height are in PDF points
+    const scaleX = canvasWidth / page.originalWidth
+    const scaleY = canvasHeight / page.originalHeight
 
-  const docUrl = activeCitation?.docId ? getPdfUrl(activeCitation.docId) : null
+    // Convert PDF coords (bottom-left origin) to canvas coords (top-left origin)
+    const rectX = x0 * scaleX
+    const rectY = (page.originalHeight - y1) * scaleY
+    const rectW = (x1 - x0) * scaleX
+    const rectH = (y1 - y0) * scaleY
+
+    // Draw on canvas using 2D context overlay
+    // Create an overlay canvas on top of the pdf canvas
+    const existing = containerRef.current?.querySelector('.bbox-overlay')
+    if (existing) existing.remove()
+
+    const overlay = document.createElement('canvas')
+    overlay.className = 'bbox-overlay'
+    overlay.width = canvasWidth
+    overlay.height = canvasHeight
+    overlay.style.position = 'absolute'
+    overlay.style.top = canvas.offsetTop + 'px'
+    overlay.style.left = canvas.offsetLeft + 'px'
+    overlay.style.pointerEvents = 'none'
+    overlay.style.zIndex = '10'
+
+    const ctx = overlay.getContext('2d')
+    ctx.fillStyle = 'rgba(245, 166, 35, 0.25)'   // amber semi-transparent fill
+    ctx.strokeStyle = 'rgba(245, 166, 35, 0.9)'  // amber border
+    ctx.lineWidth = 2
+    ctx.fillRect(rectX, rectY, rectW, rectH)
+    ctx.strokeRect(rectX, rectY, rectW, rectH)
+
+    canvas.parentElement.style.position = 'relative'
+    canvas.parentElement.appendChild(overlay)
+  }
 
   return (
     <div
       style={{
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         right: 0,
         width: '45%',
-        height: '100%',
+        height: '100vh',
         background: 'var(--bg-surface)',
         borderLeft: '1px solid var(--border)',
-        zIndex: 200,
+        zIndex: 100,
         display: 'flex',
         flexDirection: 'column',
-        animation: 'slideInRight 0.2s ease',
+        transform: 'translateX(0)',
+        animation: 'slideInRight 200ms ease',
       }}
     >
       {/* Header */}
       <div
         style={{
-          height: 44,
+          height: '48px',
           borderBottom: '1px solid var(--border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 14px',
+          padding: '0 16px',
           flexShrink: 0,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflow: 'hidden' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-amber)', letterSpacing: '0.08em' }}>
-            PDF VIEWER
-          </span>
-          {activeCitation?.docName && (
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 11,
-                color: 'var(--text-secondary)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              — {activeCitation.docName}
-            </span>
-          )}
-        </div>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
+            color: 'var(--accent-amber)',
+            letterSpacing: '0.1em',
+          }}
+        >
+          {activeCitation.ref} · {activeCitation.doc_name} · PAGE{' '}
+          {activeCitation.page_number}
+        </span>
         <button
           onClick={closePDFViewer}
           style={{
+            background: 'none',
+            border: '1px solid var(--border)',
             color: 'var(--text-secondary)',
-            fontSize: 18,
-            lineHeight: 1,
-            padding: 4,
+            cursor: 'pointer',
+            borderRadius: 'var(--radius-sm)',
+            padding: '4px 10px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
           }}
         >
-          ×
+          CLOSE
         </button>
       </div>
 
-      {/* Page navigation */}
+      {/* PDF render area */}
+      <div
+        ref={containerRef}
+        style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: '16px',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <Document
+          file={pdfUrl}
+          onLoadSuccess={onDocumentLoadSuccess}
+          loading={
+            <div
+              style={{
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '12px',
+                marginTop: '40px',
+              }}
+            >
+              LOADING PDF...
+            </div>
+          }
+          error={
+            <div
+              style={{
+                color: 'var(--status-critical)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '12px',
+                marginTop: '40px',
+              }}
+            >
+              FAILED TO LOAD PDF
+            </div>
+          }
+        >
+          <Page
+            pageNumber={activeCitation.page_number}
+            width={pageWidth}
+            onRenderSuccess={onPageRenderSuccess}
+            renderTextLayer={true}
+            renderAnnotationLayer={false}
+          />
+        </Document>
+      </div>
+
+      {/* Page info footer */}
       <div
         style={{
+          height: '36px',
+          borderTop: '1px solid var(--border)',
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
-          padding: '6px 14px',
-          borderBottom: '1px solid var(--border)',
+          justifyContent: 'center',
+          gap: '12px',
           flexShrink: 0,
         }}
       >
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          disabled={currentPage <= 1}
+        <span
           style={{
             fontFamily: 'var(--font-mono)',
-            fontSize: 11,
-            color: currentPage <= 1 ? 'var(--text-muted)' : 'var(--text-secondary)',
-            padding: '2px 8px',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-sm)',
-            background: 'var(--bg-surface-2)',
+            fontSize: '11px',
+            color: 'var(--text-muted)',
           }}
         >
-          ◀ PREV
-        </button>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)' }}>
-          {currentPage} / {numPages || '—'}
+          PAGE {activeCitation.page_number} OF {numPages || '?'}
         </span>
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(numPages || p, p + 1))}
-          disabled={!numPages || currentPage >= numPages}
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 11,
-            color: (!numPages || currentPage >= numPages) ? 'var(--text-muted)' : 'var(--text-secondary)',
-            padding: '2px 8px',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-sm)',
-            background: 'var(--bg-surface-2)',
-          }}
-        >
-          NEXT ▶
-        </button>
-        {activeCitation?.sectionHeading && (
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-            §{activeCitation.sectionHeading.slice(0, 30)}
-          </span>
-        )}
-      </div>
-
-      {/* PDF content */}
-      <div style={{ flex: 1, overflow: 'auto', position: 'relative', background: 'var(--bg-base)' }}>
-        {docUrl ? (
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <Document
-              file={docUrl}
-              onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-              loading={
-                <div style={{ padding: 20, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)' }}>
-                  LOADING PDF...
-                </div>
-              }
-              error={
-                <div style={{ padding: 20, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--status-critical)' }}>
-                  Failed to load PDF.
-                </div>
-              }
-            >
-              <Page
-                pageNumber={currentPage}
-                onRenderSuccess={handlePageRenderSuccess}
-                renderAnnotationLayer={false}
-                renderTextLayer={true}
-              />
-            </Document>
-            {/* Highlight overlay canvas */}
-            <canvas
-              ref={canvasRef}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                pointerEvents: 'none',
-              }}
-            />
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 12,
-              color: 'var(--text-muted)',
-            }}
-          >
-            NO DOCUMENT SELECTED
-          </div>
-        )}
       </div>
     </div>
   )

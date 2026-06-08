@@ -69,5 +69,18 @@ export const useChat = () => {
     setError(null)
   }, [])
 
-  return { messages, sessionId, isLoading, error, sendMessage, clearChat }
+  const addAnalysisMessage = useCallback((analysisResult) => {
+    const analysisMsg = {
+      id: uuidv4(),
+      role: 'assistant',
+      content: '', // Content will be rendered by AgentAnalysisContent component
+      citations: [],
+      timestamp: new Date(),
+      analysisData: analysisResult,
+      logbookEntryId: analysisResult.logbook_entry_id,
+    }
+    setMessages((prev) => [...prev, analysisMsg])
+  }, [])
+
+  return { messages, sessionId, isLoading, error, sendMessage, clearChat, addAnalysisMessage }
 }

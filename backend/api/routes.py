@@ -20,6 +20,8 @@ from models.schemas import (
 
 logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 # Ensure upload directory exists
@@ -41,24 +43,37 @@ async def upload_document(
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
 
+    # Step 1 — Generate doc_id here (not inside ingestor)
     doc_id = str(uuid.uuid4())
-    save_path = Path(config.UPLOAD_DIR) / f"{doc_id}.pdf"
+
+    # Step 2 — Save PDF to disk BEFORE ingestion
+    upload_dir = Path(config.UPLOAD_DIR)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    pdf_path = upload_dir / f"{doc_id}.pdf"
 
     try:
         content = await file.read()
-        save_path.write_bytes(content)
-        logger.info(f"Saved uploaded file to {save_path}")
+        pdf_path.write_bytes(content)
+        logger.info(f"Saved uploaded file to {pdf_path}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
-    result = ingest_pdf(
-        file_path=str(save_path),
-        equipment_tag=equipment_tag,
-        doc_name=file.filename,
-        doc_id=doc_id,
-    )
+    # Step 3 — Ingest from saved path, pass same doc_id
+    try:
+        result = ingest_pdf(
+            file_path=str(pdf_path),
+            equipment_tag=equipment_tag,
+            doc_name=file.filename,
+            doc_id=doc_id,
+        )
+    except Exception as e:
+        # If ingestion fails, delete the saved PDF to avoid orphaned files
+        pdf_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
     if not result.success:
+        # Also clean up PDF on ingestion failure
+        pdf_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=result.error_message)
 
     return result
@@ -67,24 +82,47 @@ async def upload_document(
 @router.post("/chat", response_model=AnswerResponse)
 async def chat(request: ChatRequest) -> AnswerResponse:
     """
-    Accept a natural language query and return a cited answer.
+    Accept a natural language query and return a cited answer with confidence scoring.
     """
     if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
-    chunks = retrieve(
-        query=request.query,
-        equipment_tag=request.equipment_tag,
-    )
-    answer_response = generate_answer(query=request.query, chunks=chunks)
+    try:
+        # Retrieve with query rewriting and confidence scoring
+        chunks, retrieval_metadata = retrieve(
+            query=request.query,
+            equipment_tag=request.equipment_tag,
+            use_query_rewriting=True,
+            use_parent_retrieval=True,
+        )
+        
+        logger.info(
+            f"Retrieved {len(chunks)} chunks with {retrieval_metadata['confidence_level']} "
+            f"confidence ({retrieval_metadata['confidence_score']:.2f})"
+        )
+        
+        # Generate answer with confidence awareness
+        answer_response, answer_metadata = generate_answer(
+            query=request.query, 
+            chunks=chunks,
+            confidence_score=retrieval_metadata.get("confidence_score"),
+            confidence_level=retrieval_metadata.get("confidence_level"),
+            confidence_details=retrieval_metadata.get("confidence_details"),
+        )
 
-    # Cache citations if session_id provided
-    if request.session_id:
-        _citation_cache[request.session_id] = {
-            c.ref: c for c in answer_response.citations
-        }
+        # Cache citations if session_id provided
+        if request.session_id:
+            _citation_cache[request.session_id] = {
+                c.ref: c for c in answer_response.citations
+            }
 
-    return answer_response
+        return answer_response
+    except Exception as e:
+        logger.error(f"Chat endpoint error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to generate response: {str(e)}"
+        )
 
 
 @router.get("/documents", response_model=list[DocumentInfo])
@@ -115,11 +153,17 @@ async def serve_pdf(doc_id: str):
     """
     pdf_path = Path(config.UPLOAD_DIR) / f"{doc_id}.pdf"
     if not pdf_path.exists():
-        raise HTTPException(status_code=404, detail=f"PDF '{doc_id}' not found.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"PDF file not found for doc_id: {doc_id}"
+        )
     return FileResponse(
         path=str(pdf_path),
         media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename={doc_id}.pdf"},
+        headers={
+            "Content-Disposition": f"inline; filename={doc_id}.pdf",
+            "Access-Control-Allow-Origin": "*"
+        },
     )
 
 

@@ -15,7 +15,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from models.schemas import RetrievedChunk
-import config
+from config import config
 
 
 # ---------------------------------------------------------------------------

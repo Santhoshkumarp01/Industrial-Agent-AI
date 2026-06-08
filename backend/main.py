@@ -5,7 +5,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import router
+from api.sensor_routes import router as sensor_router
+from api.agent_routes import router as agent_router
 from vectorstore.qdrant_store import ensure_collection
+from database.db import init_db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -31,12 +34,15 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(sensor_router)
+app.include_router(agent_router)
 
 
 @app.on_event("startup")
 async def startup():
     nltk.download("punkt", quiet=True)
     nltk.download("punkt_tab", quiet=True)
+    init_db()         # Initialize SQLite database
     ensure_collection()   # creates Qdrant collection with dense + sparse vectors
     print("✓ Industrial Agent AI API ready")
 

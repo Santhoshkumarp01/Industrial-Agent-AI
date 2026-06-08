@@ -2,6 +2,7 @@ import React, { useEffect, useCallback } from 'react'
 import Layout from './components/layout/Layout'
 import ChatPanel from './components/chat/ChatPanel'
 import MonitoringPanel from './components/monitoring/MonitoringPanel'
+import ReportsPanel from './components/monitoring/ReportsPanel'
 import { useChat } from './hooks/useChat'
 import { useSensorStream } from './hooks/useSensorStream'
 import { useDocuments } from './hooks/useDocuments'
@@ -79,6 +80,7 @@ export default function App() {
             <MonitoringPanel
               sensorHook={sensorHook}
               onSendAlertToChat={handleSendAlertToChat}
+              chatHook={chatHook}
             />
           </div>
         )}
@@ -90,7 +92,7 @@ export default function App() {
 
         {/* Reports placeholder */}
         {activePanel === 'reports' && (
-          <PlaceholderPanel title="REPORTS" message="Reporting module coming in next segment." />
+          <ReportsPanel />
         )}
       </div>
     </Layout>

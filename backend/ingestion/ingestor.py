@@ -8,8 +8,8 @@ import fitz  # PyMuPDF — used only for page count
 from ingestion.extractor import extract_blocks
 from ingestion.chunker import chunk_blocks
 from embeddings.embedder import encode_texts
-from vectorstore.qdrant_store import upsert_chunks, delete_document
-from models.schemas import IngestResult
+from vectorstore.qdrant_store import upsert_chunks, upsert_chunks_with_parents, delete_document
+from models.schemas import IngestResult, Chunk
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +49,10 @@ def ingest_pdf(
         blocks = extract_blocks(file_path, doc_id, doc_name, equipment_tag)
         logger.info(f"[{doc_name}] Extracted {len(blocks)} blocks.")
 
-        # Step 3: Chunk
-        logger.info(f"[{doc_name}] Chunking blocks...")
-        chunks = chunk_blocks(blocks)
-        logger.info(f"[{doc_name}] Produced {len(chunks)} chunks.")
+        # Step 3: Chunk with parent-child structure
+        logger.info(f"[{doc_name}] Chunking blocks with parent-child structure...")
+        chunks, parents = chunk_blocks(blocks)
+        logger.info(f"[{doc_name}] Produced {len(chunks)} child chunks and {len(parents)} parent sections.")
 
         if not chunks:
             logger.warning(f"[{doc_name}] No chunks produced — document may be empty or image-only.")
@@ -65,16 +65,16 @@ def ingest_pdf(
                 error_message="No chunks produced from document.",
             )
 
-        # Step 4: Embed (dense vectors)
-        logger.info(f"[{doc_name}] Encoding {len(chunks)} chunks...")
+        # Step 4: Embed child chunks (dense vectors)
+        logger.info(f"[{doc_name}] Encoding {len(chunks)} child chunks...")
         texts = [c.text for c in chunks]
         embeddings = encode_texts(texts)
         logger.info(f"[{doc_name}] Dense embeddings generated.")
 
-        # Step 5: Store (Qdrant generates sparse BM25 vectors internally)
+        # Step 5: Store both children and parents (Qdrant generates sparse BM25 internally)
         logger.info(f"[{doc_name}] Upserting to Qdrant...")
-        upsert_chunks(chunks, embeddings)
-        logger.info(f"[{doc_name}] Ingestion complete — {len(chunks)} chunks stored.")
+        upsert_chunks_with_parents(chunks, embeddings, parents)
+        logger.info(f"[{doc_name}] Ingestion complete — {len(chunks)} chunks + {len(parents)} parents stored.")
 
         return IngestResult(
             doc_id=doc_id,
@@ -101,3 +101,52 @@ def ingest_pdf(
             success=False,
             error_message=str(e),
         )
+
+
+def ingest_text_chunk(
+    text: str,
+    doc_name: str,
+    equipment_tag: str = "General",
+    block_type: str = "feedback_correction",
+    source: str = "engineer_feedback"
+) -> str:
+    """
+    Ingest a single text chunk directly into Qdrant.
+    Used for feedback loop - when engineer corrections are stored back into knowledge base.
+
+    Args:
+        text: Text content to store
+        doc_name: Document name for the chunk
+        equipment_tag: Equipment identifier
+        block_type: Type of block (e.g., "feedback_correction")
+        source: Source identifier
+
+    Returns:
+        chunk_id of the stored chunk
+    """
+    chunk_id = str(uuid.uuid4())
+    doc_id = str(uuid.uuid4())
+
+    # Create a single chunk
+    chunk = Chunk(
+        chunk_id=chunk_id,
+        doc_id=doc_id,
+        doc_name=doc_name,
+        equipment_tag=equipment_tag,
+        block_type=block_type,
+        text=text,
+        page_number=0,  # Not from PDF
+        bbox=(0, 0, 0, 0),  # No bounding box
+        section_heading=source,
+        chunk_index=0,
+        token_count=len(text.split())
+    )
+
+    # Generate embedding
+    embeddings = encode_texts([text])
+
+    # Store in Qdrant
+    upsert_chunks([chunk], embeddings)
+
+    logger.info(f"[Feedback Loop] Stored correction chunk: {chunk_id}")
+    return chunk_id

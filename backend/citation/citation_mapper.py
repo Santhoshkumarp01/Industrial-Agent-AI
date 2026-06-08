@@ -41,6 +41,7 @@ def map_citations(answer: str, chunks: List[RetrievedChunk]) -> List[CitationRef
 
         citations.append(CitationRef(
             ref=ref,
+            doc_id=chunk.doc_id,         # ← Populate from chunk
             doc_name=chunk.doc_name,
             page_number=chunk.page_number,
             bbox=chunk.bbox,
