@@ -88,27 +88,50 @@ async def chat(request: ChatRequest) -> AnswerResponse:
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
     try:
+        logger.info(f"[CHAT] Processing query: {request.query[:100]}")
+        
         # Retrieve with query rewriting and confidence scoring
-        chunks, retrieval_metadata = retrieve(
-            query=request.query,
-            equipment_tag=request.equipment_tag,
-            use_query_rewriting=True,
-            use_parent_retrieval=True,
-        )
+        try:
+            chunks, retrieval_metadata = retrieve(
+                query=request.query,
+                equipment_tag=request.equipment_tag,
+                use_query_rewriting=True,
+                use_parent_retrieval=True,
+            )
+            logger.info(f"[CHAT] Retrieval successful: {len(chunks)} chunks")
+        except Exception as e:
+            logger.error(f"[CHAT] Retrieval failed: {type(e).__name__}: {e}")
+            logger.exception("Retrieval traceback:")
+            raise HTTPException(status_code=500, detail=f"Retrieval error: {str(e)}")
+        
+        # Ensure confidence score is valid (not NaN or Inf)
+        confidence_score = retrieval_metadata.get("confidence_score", 0.0)
+        if not isinstance(confidence_score, (int, float)) or confidence_score != confidence_score:  # NaN check
+            logger.warning(f"Invalid confidence score: {confidence_score}, using fallback 0.1")
+            confidence_score = 0.1
+            retrieval_metadata["confidence_score"] = 0.1
+            retrieval_metadata["confidence_level"] = "LOW"
         
         logger.info(
-            f"Retrieved {len(chunks)} chunks with {retrieval_metadata['confidence_level']} "
-            f"confidence ({retrieval_metadata['confidence_score']:.2f})"
+            f"[CHAT] Retrieved {len(chunks)} chunks with {retrieval_metadata['confidence_level']} "
+            f"confidence ({confidence_score:.2f})"
         )
         
         # Generate answer with confidence awareness
-        answer_response, answer_metadata = generate_answer(
-            query=request.query, 
-            chunks=chunks,
-            confidence_score=retrieval_metadata.get("confidence_score"),
-            confidence_level=retrieval_metadata.get("confidence_level"),
-            confidence_details=retrieval_metadata.get("confidence_details"),
-        )
+        try:
+            logger.info(f"[CHAT] Calling generate_answer...")
+            answer_response, answer_metadata = generate_answer(
+                query=request.query, 
+                chunks=chunks,
+                confidence_score=confidence_score,
+                confidence_level=retrieval_metadata.get("confidence_level"),
+                confidence_details=retrieval_metadata.get("confidence_details"),
+            )
+            logger.info(f"[CHAT] Answer generation successful")
+        except Exception as e:
+            logger.error(f"[CHAT] Answer generation failed: {type(e).__name__}: {e}")
+            logger.exception("Answer generation traceback:")
+            raise HTTPException(status_code=500, detail=f"Answer generation error: {str(e)}")
 
         # Cache citations if session_id provided
         if request.session_id:
@@ -116,9 +139,13 @@ async def chat(request: ChatRequest) -> AnswerResponse:
                 c.ref: c for c in answer_response.citations
             }
 
+        logger.info(f"[CHAT] Request completed successfully")
         return answer_response
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Chat endpoint error: {type(e).__name__}: {e}")
+        logger.error(f"[CHAT] Unexpected error: {type(e).__name__}: {e}")
+        logger.exception("Full traceback:")
         raise HTTPException(
             status_code=500, 
             detail=f"Failed to generate response: {str(e)}"

@@ -18,21 +18,8 @@ import logging
 import numpy as np
 from typing import List, Tuple
 from models.schemas import RetrievedChunk
-from google import genai
-from google.genai import types
-from config import config
 
 logger = logging.getLogger(__name__)
-
-# Initialize client
-_client = None
-
-def _get_client():
-    """Get or create singleton client."""
-    global _client
-    if _client is None:
-        _client = genai.Client(api_key=config.GOOGLE_API_KEY)
-    return _client
 
 
 def calculate_confidence(
@@ -66,19 +53,23 @@ def calculate_confidence(
     }
     
     # 1. Retrieval Quality (average of top chunks)
-    relevance_scores = [c.relevance_score for c in retrieved_chunks[:5]]
-    scores["retrieval_quality"] = np.mean(relevance_scores) if relevance_scores else 0.0
+    relevance_scores = [c.relevance_score for c in retrieved_chunks[:5] if not np.isnan(c.relevance_score)]
+    scores["retrieval_quality"] = float(np.mean(relevance_scores)) if relevance_scores else 0.0
     
     # 2. Top Chunk Score (best match)
-    scores["top_chunk_score"] = retrieved_chunks[0].relevance_score if retrieved_chunks else 0.0
+    top_score = retrieved_chunks[0].relevance_score if retrieved_chunks else 0.0
+    scores["top_chunk_score"] = 0.0 if np.isnan(top_score) else float(top_score)
     
     # 3. Chunk Consistency (do chunks agree?)
     # Simple heuristic: if top 3 chunks have similar scores, they're consistent
     if len(retrieved_chunks) >= 3:
-        top_3_scores = [c.relevance_score for c in retrieved_chunks[:3]]
-        score_variance = np.var(top_3_scores)
-        # Low variance = high consistency
-        scores["chunk_consistency"] = max(0.0, 1.0 - (score_variance * 2))
+        top_3_scores = [c.relevance_score for c in retrieved_chunks[:3] if not np.isnan(c.relevance_score)]
+        if len(top_3_scores) >= 2:
+            score_variance = float(np.var(top_3_scores))
+            # Low variance = high consistency (handle NaN case)
+            scores["chunk_consistency"] = max(0.0, min(1.0, 1.0 - (score_variance * 2)))
+        else:
+            scores["chunk_consistency"] = 0.5
     else:
         scores["chunk_consistency"] = 0.7  # Default for few chunks
     
@@ -102,6 +93,14 @@ def calculate_confidence(
     
     confidence_score = sum(scores[k] * weights[k] for k in scores.keys())
     
+    # CRITICAL: Ensure confidence_score is never NaN or infinite
+    if np.isnan(confidence_score) or np.isinf(confidence_score):
+        logger.warning(f"Invalid confidence score detected: {confidence_score}. Using fallback value 0.1")
+        confidence_score = 0.1  # Fallback to low confidence
+    
+    # Ensure it's in valid range
+    confidence_score = float(max(0.0, min(1.0, confidence_score)))
+    
     # Determine confidence level
     if confidence_score >= 0.75:
         confidence_level = "HIGH"
@@ -111,11 +110,11 @@ def calculate_confidence(
         confidence_level = "LOW"
     
     details = {
-        "score": round(confidence_score, 2),
+        "score": float(round(confidence_score, 2)),
         "level": confidence_level,
-        "breakdown": {k: round(v, 2) for k, v in scores.items()},
+        "breakdown": {k: float(round(v, 2)) for k, v in scores.items()},
         "num_chunks": len(retrieved_chunks),
-        "top_score": round(scores["top_chunk_score"], 2),
+        "top_score": float(round(scores["top_chunk_score"], 2)),
     }
     
     logger.info(
@@ -200,70 +199,24 @@ def assess_answer_quality_with_llm(
     retrieved_chunks: List[RetrievedChunk]
 ) -> Tuple[float, str]:
     """
-    Use LLM to assess if the generated answer actually addresses the query.
-    
-    This is a more sophisticated check than just retrieval scores.
+    Rule-based answer quality assessment.
     
     Returns:
         Tuple of (quality_score, explanation)
     """
-    try:
-        client = _get_client()
-        
-        chunk_texts = "\n\n".join([
-            f"Chunk {i+1}: {c.text[:200]}..."
-            for i, c in enumerate(retrieved_chunks[:3])
-        ])
-        
-        prompt = f"""Assess the quality of this answer to the user's query.
-
-Query: "{query}"
-
-Answer: "{answer}"
-
-Source Chunks:
-{chunk_texts}
-
-Rate the answer quality on these criteria:
-1. Completeness: Does it fully address the query?
-2. Accuracy: Is it consistent with the source chunks?
-3. Clarity: Is it clear and actionable?
-
-Respond with:
-Score: [0.0-1.0]
-Reason: [One sentence explanation]
-
-Format:
-Score: 0.85
-Reason: Answer is complete and accurate but could be more specific about torque values."""
-
-        response = client.models.generate_content(
-            model=config.LLM_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                max_output_tokens=100,
-                temperature=0.1,
-            )
-        )
-        
-        text = response.text.strip()
-        
-        # Parse response
-        score = 0.5
-        reason = "Unable to assess"
-        
-        for line in text.split('\n'):
-            if line.startswith('Score:'):
-                try:
-                    score = float(line.split(':')[1].strip())
-                except:
-                    pass
-            elif line.startswith('Reason:'):
-                reason = line.split(':', 1)[1].strip()
-        
-        logger.info(f"LLM quality assessment: {score:.2f} - {reason}")
-        return score, reason
-        
-    except Exception as e:
-        logger.error(f"LLM quality assessment failed: {e}")
-        return 0.5, "Assessment unavailable"
+    # Simple rule-based quality check
+    score = 0.5
+    reason = "Answer generated from retrieved knowledge"
+    
+    # Check if answer is not empty
+    if not answer or len(answer.strip()) < 20:
+        return 0.2, "Answer too short or empty"
+    
+    # Check if we have good retrieval
+    if retrieved_chunks and len(retrieved_chunks) > 0:
+        avg_relevance = np.mean([c.relevance_score for c in retrieved_chunks[:3]])
+        score = min(0.95, 0.5 + (avg_relevance * 0.5))
+        reason = f"Answer based on {len(retrieved_chunks)} retrieved chunks with avg relevance {avg_relevance:.2f}"
+    
+    logger.info(f"Rule-based quality assessment: {score:.2f} - {reason}")
+    return score, reason

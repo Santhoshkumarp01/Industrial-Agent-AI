@@ -1,39 +1,42 @@
 import logging
 from typing import List, Tuple
 
-from google import genai
-from google.genai import types
-
 from config import config
 from models.schemas import RetrievedChunk, AnswerResponse
 from citation.citation_mapper import map_citations
 from retrieval.confidence_scorer import generate_confidence_message
+from llm.local_llm import generate as llm_generate
 
 logger = logging.getLogger(__name__)
 
-_client = None
+_SYSTEM_PROMPT = """You are a strict maintenance QA assistant for the 1PH718 motor manual.
 
-_SYSTEM_PROMPT = """You are an expert industrial maintenance engineer AI assistant for steel manufacturing plants. \
-You answer questions based ONLY on the provided maintenance documents and knowledge base.
+TASK:
+Answer the user's question only from the provided manual context.
 
-Rules:
+STRICT RULES:
+1. Use only the retrieved manual text. Do not add outside knowledge unless the manual is silent.
+2. If the question uses different words than the manual, map them to the closest manual term only when the meaning clearly matches.
+   Example: "lockout/tagout" maps to "isolate," "protect against reconnection," and "verify that the equipment is not live."
+3. If the manual does not explicitly state the answer, say: "The manual does not explicitly state this, but the closest related instruction is..."
+4. Do not invent safety levels, procedures, or technical details.
+5. Keep the answer short, direct, and factual.
+6. If the retrieved context is weak or unrelated, say: "I could not confirm this from the manual."
+7. For safety questions, prefer exact manual wording over general safety language.
+8. Never answer with assumptions.
+
+CITATION RULES:
 - Always cite your sources inline using [C1], [C2], etc.
 - Every factual claim must have a citation.
-- If information is partially available across multiple sources, COMBINE all retrieved evidence to provide a complete answer.
-- Only say "This information is not available in the uploaded documents" when NO supporting evidence exists for the entire question.
-- Be specific about equipment names, part numbers, and measurements.
-- Structure your answer: first a brief summary, then detailed steps or analysis.
-- Never guess or invent maintenance procedures.
-- When answering questions about lists (e.g., "What are the five rules?"), always attempt to provide ALL items even if they appear in different sources.
-- If the confidence level is LOW, acknowledge uncertainty and suggest manual verification."""
+- Always include the page number when information is found.
 
+ANSWER FORMAT:
+- Direct answer in 1-2 sentences.
+- Then, if needed, a short note: "Based on page/section..."
 
-def _get_client():
-    """Return the singleton Gemini client."""
-    global _client
-    if _client is None:
-        _client = genai.Client(api_key=config.GOOGLE_API_KEY)
-    return _client
+EXAMPLE:
+User: When preparing to work on a 1PH718 motor, which action best reflects the lockout/tagout safety rule?
+Answer: Isolate the motor from power, protect against reconnection, and verify that it is not live before starting maintenance [C1]. This matches the manual's safety rules on page 57."""
 
 
 def _build_context_message(query: str, chunks: List[RetrievedChunk]) -> str:
@@ -91,8 +94,6 @@ def generate_answer(
         metadata["confidence_message"] = confidence_msg
         logger.info(f"Confidence: {confidence_msg}")
 
-    client = _get_client()
-    
     # Add confidence context to prompt for LOW confidence
     confidence_context = ""
     if confidence_level == "LOW":
@@ -102,39 +103,24 @@ def generate_answer(
     
     user_message = _build_context_message(query, chunks) + confidence_context
 
-    logger.info(f"Calling LLM ({config.LLM_MODEL}) with {confidence_level} confidence...")
+    logger.info(f"Calling fine-tuned model with {confidence_level} confidence...")
 
     try:
-        # Build the full prompt with system instructions
-        full_prompt = f"{_SYSTEM_PROMPT}\n\n{user_message}"
-        
-        response = client.models.generate_content(
-            model=config.LLM_MODEL,
-            contents=full_prompt,
-            config=types.GenerateContentConfig(
-                max_output_tokens=config.LLM_MAX_TOKENS,
-                temperature=config.LLM_TEMPERATURE,
-            )
+        # Use fine-tuned model for RAG answer generation
+        answer_text = llm_generate(
+            system_prompt=_SYSTEM_PROMPT,
+            user_prompt=user_message,
+            max_tokens=800
         )
-
-        # Check if response was blocked or empty
-        if not response.text:
-            logger.warning("Empty response from Gemini API")
-            answer_text = "I received an empty response. Please try rephrasing your question."
-        else:
-            answer_text = response.text
-            
-            # Prepend confidence message to answer
-            if metadata["confidence_message"] and confidence_level != "HIGH":
-                answer_text = f"{metadata['confidence_message']}\n\n{answer_text}"
-            
-            logger.info(f"LLM response received ({len(answer_text)} chars).")
-    except AttributeError as e:
-        logger.error(f"Gemini response blocked or invalid: {e}")
-        answer_text = "I couldn't generate a response. The content may have been blocked by safety filters. Please try rephrasing your question."
+        
+        # Prepend confidence message to answer
+        if metadata["confidence_message"] and confidence_level != "HIGH":
+            answer_text = f"{metadata['confidence_message']}\n\n{answer_text}"
+        
+        logger.info(f"Model response received ({len(answer_text)} chars).")
     except Exception as e:
-        logger.error(f"Gemini API error: {type(e).__name__}: {e}")
-        answer_text = f"Error generating response: {str(e)}. Please check your Gemini API key and quota."
+        logger.error(f"Model inference error: {type(e).__name__}: {e}")
+        answer_text = f"Error generating response: {str(e)}. The model may still be loading."
 
     # Map citation refs in the answer back to source metadata
     citations = map_citations(answer_text, chunks)

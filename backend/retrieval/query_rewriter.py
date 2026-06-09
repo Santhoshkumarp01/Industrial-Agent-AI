@@ -4,27 +4,14 @@ Query Rewriter — improves retrieval quality by rewriting vague queries.
 Strategies:
 1. Expand abbreviations (RM → Rolling Mill, VFD → Variable Frequency Drive)
 2. Add technical context
-3. Rephrase ambiguous questions
-4. Generate multiple query variations for better coverage
+3. Generate rule-based query variations for better coverage
 """
 
 import logging
-from google import genai
-from google.genai import types
+import re
 from typing import List
-from config import config
 
 logger = logging.getLogger(__name__)
-
-# Initialize client
-_client = None
-
-def _get_client():
-    """Get or create singleton client."""
-    global _client
-    if _client is None:
-        _client = genai.Client(api_key=config.GOOGLE_API_KEY)
-    return _client
 
 
 # Common industrial abbreviations
@@ -44,6 +31,20 @@ ABBREVIATION_MAP = {
     "rul": "remaining useful life",
 }
 
+# Domain-specific synonym map for better retrieval
+SYNONYMS = {
+    "safety levels": ["safety rules", "safety procedures", "five safety rules", "safety steps", "isolation safety"],
+    "safety level": ["safety rule", "safety procedure", "safety step"],
+    "maintenance steps": ["maintenance procedure", "service instructions", "maintenance instructions"],
+    "fault": ["error", "defect", "failure", "malfunction", "problem"],
+    "bearing": ["rolling contact bearing", "bearing assembly", "bearing replacement"],
+    "shutdown": ["isolate", "deactivate", "power off", "switch off", "de-energize"],
+    "vibration": ["oscillation", "vibration level", "mechanical vibration"],
+    "temperature": ["thermal", "heat", "temperature level", "operating temperature"],
+    "pressure": ["hydraulic pressure", "pneumatic pressure", "pressure level"],
+    "lubrication": ["lubricant", "grease", "oil", "lubrication system"],
+}
+
 
 def _expand_abbreviations(query: str) -> str:
     """Expand known abbreviations in query."""
@@ -52,7 +53,6 @@ def _expand_abbreviations(query: str) -> str:
     
     for abbr, full in ABBREVIATION_MAP.items():
         # Match whole words only
-        import re
         pattern = r'\b' + re.escape(abbr) + r'\b'
         if re.search(pattern, query_lower):
             expanded = re.sub(pattern, f"{abbr} ({full})", expanded, flags=re.IGNORECASE)
@@ -61,78 +61,119 @@ def _expand_abbreviations(query: str) -> str:
     return expanded
 
 
+def _expand_with_synonyms(query: str) -> List[str]:
+    """Expand query with domain-specific synonyms."""
+    query_lower = query.lower()
+    variations = []
+    
+    for key, synonyms in SYNONYMS.items():
+        if key in query_lower:
+            # Replace key phrase with each synonym
+            for synonym in synonyms:
+                variation = query_lower.replace(key, synonym)
+                if variation != query_lower:
+                    variations.append(variation)
+    
+    return variations[:3]  # Limit to top 3 synonym variations
+
+
 def _generate_query_variations(query: str) -> List[str]:
     """
-    Use Gemini to generate multiple query variations for better coverage.
+    Generate rule-based query variations for better coverage.
+    CRITICAL: Always return at least 3 variations (never empty).
     
     Example:
     Input: "How to fix vibration issue?"
     Output: [
-        "How to troubleshoot high vibration in rotating equipment?",
-        "What causes excessive vibration in motors?",
-        "Vibration diagnostic procedures and corrective actions"
+        "vibration troubleshooting diagnosis",
+        "high vibration causes solutions",
+        "vibration problem corrective action"
     ]
     """
-    try:
-        client = _get_client()
-        
-        prompt = f"""You are an industrial maintenance expert. Rewrite this user query into 3 precise technical variations that would retrieve relevant information from a maintenance manual.
-
-Original Query: "{query}"
-
-Requirements:
-1. Use proper technical terminology
-2. Make implicit context explicit
-3. Include diagnostic and corrective action angles
-4. Keep each variation concise (under 20 words)
-
-Output format (one per line):
-1. [First variation]
-2. [Second variation]
-3. [Third variation]"""
-
-        response = client.models.generate_content(
-            model=config.LLM_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                max_output_tokens=200,
-                temperature=0.7,  # Some creativity for variations
-            )
-        )
-        
-        text = response.text.strip()
-        
-        # Parse numbered list
-        variations = []
-        for line in text.split('\n'):
-            line = line.strip()
-            if line and any(line.startswith(f"{i}.") for i in range(1, 10)):
-                # Remove number prefix
-                cleaned = line.split('.', 1)[1].strip() if '.' in line else line
-                variations.append(cleaned)
-        
-        logger.info(f"Generated {len(variations)} query variations")
-        return variations[:3]  # Max 3 variations
-        
-    except Exception as e:
-        logger.error(f"Query variation generation failed: {e}")
-        return []
+    variations = []
+    
+    # Extract key technical terms
+    query_lower = query.lower()
+    
+    # Common patterns for maintenance queries
+    if "how to fix" in query_lower or "repair" in query_lower:
+        # Diagnostic angle
+        term = query_lower.replace("how to fix", "").replace("repair", "").strip()
+        variations.append(f"{term} troubleshooting diagnosis")
+        variations.append(f"{term} causes solutions")
+        variations.append(f"{term} repair procedure")
+    
+    if "what are" in query_lower or "what is" in query_lower:
+        # Definition/list angle
+        term = query_lower.replace("what are", "").replace("what is", "").replace("the", "").strip()
+        variations.append(f"{term} list")
+        variations.append(f"{term} description")
+        variations.append(f"{term} definition")
+    
+    if "vibration" in query_lower:
+        variations.append("vibration analysis bearing alignment")
+        variations.append("excessive vibration motor equipment")
+    
+    if "temperature" in query_lower or "overheat" in query_lower:
+        variations.append("temperature monitoring cooling lubrication")
+        variations.append("thermal failure overheating causes")
+    
+    if "pressure" in query_lower:
+        variations.append("pressure system leak valve")
+        variations.append("pressure abnormal hydraulic pneumatic")
+    
+    if "noise" in query_lower or "sound" in query_lower:
+        variations.append("abnormal noise bearing gearbox")
+        variations.append("acoustic signature mechanical fault")
+    
+    if "bearing" in query_lower:
+        variations.append("bearing failure wear diagnosis")
+        variations.append("bearing replacement lubrication procedure")
+    
+    if "motor" in query_lower:
+        variations.append("motor fault electrical winding")
+        variations.append("motor failure troubleshooting")
+    
+    if "safety" in query_lower:
+        variations.append("safety procedure steps")
+        variations.append("safety rules requirements")
+        variations.append("safety instructions guidelines")
+    
+    # Remove duplicates and limit
+    variations = list(dict.fromkeys(variations))[:5]
+    
+    # CRITICAL FIX: Never return empty - always provide at least basic variations
+    if not variations:
+        # Generic fallback variations
+        words = query_lower.split()
+        if len(words) > 2:
+            variations = [
+                " ".join(words[:3]),  # First 3 words
+                " ".join(words[-3:]),  # Last 3 words
+                query_lower  # Original as fallback
+            ]
+        else:
+            variations = [query_lower]  # At minimum, original query
+    
+    logger.info(f"Generated {len(variations)} query variations")
+    return variations
 
 
 def rewrite_query(query: str, use_variations: bool = True) -> List[str]:
     """
     Rewrite user query for better retrieval.
+    CRITICAL: Always returns at least the original query (never empty list).
     
     Args:
         query: Original user query
         use_variations: If True, generate multiple variations
     
     Returns:
-        List of rewritten queries (original + expanded + variations)
+        List of rewritten queries (original + expanded + synonym variations + rule-based)
     """
     queries = []
     
-    # 1. Original query
+    # 1. Original query (always include)
     queries.append(query)
     
     # 2. Expanded abbreviations
@@ -140,15 +181,23 @@ def rewrite_query(query: str, use_variations: bool = True) -> List[str]:
     if expanded != query:
         queries.append(expanded)
     
-    # 3. AI-generated variations (optional)
+    # 3. Synonym expansion
+    synonym_variations = _expand_with_synonyms(query)
+    queries.extend(synonym_variations)
+    
+    # 4. Rule-based variations (optional)
     if use_variations:
         variations = _generate_query_variations(query)
         queries.extend(variations)
     
-    # Deduplicate
-    queries = list(dict.fromkeys(queries))  # Preserves order
+    # Deduplicate while preserving order
+    queries = list(dict.fromkeys(queries))
     
-    logger.info(f"Query rewriter produced {len(queries)} queries")
+    # CRITICAL FIX: Ensure we never return empty
+    if not queries:
+        queries = [query]  # Minimum fallback
+    
+    logger.info(f"Query rewriter produced {len(queries)} queries (from: '{query}')")
     return queries
 
 

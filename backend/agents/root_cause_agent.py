@@ -7,12 +7,15 @@ Searches:
 - SOP documents
 
 Returns structured diagnosis with confidence score and evidence.
+Powered by fine-tuned Phi-3.5 Mini maintenance model.
 """
 
 import logging
+import re
+import json
 from retrieval.retriever import retrieve
 from database.db import get_connection
-import json
+from llm.local_llm import generate as llm_generate
 
 logger = logging.getLogger(__name__)
 
@@ -68,17 +71,11 @@ def analyze_root_cause(
     # Search historical incidents
     similar_incidents = _search_incident_history(equipment_id, sensor_data)
 
-    # Use Gemini to synthesize diagnosis from retrieved evidence
-    from google import genai
-    from google.genai import types
-    from config import config
+    # Use fine-tuned model to synthesize diagnosis from retrieved evidence
+    SYSTEM_PROMPT = "You are an expert industrial maintenance engineer analyzing equipment failure."
     
-    client = genai.Client(api_key=config.GOOGLE_API_KEY)
-    
-    # Build prompt for Gemini
-    prompt = f"""You are an expert industrial maintenance engineer analyzing equipment failure.
-
-Equipment: {equipment_name} ({equipment_id})
+    # Build user prompt
+    user_prompt = f"""Equipment: {equipment_name} ({equipment_id})
 Alert: {alert_description}
 
 Current Sensor Readings:
@@ -102,16 +99,13 @@ Based on the sensor readings and available evidence, provide:
 Respond in plain text, not JSON. Be specific and cite the evidence if available."""
 
     try:
-        response = client.models.generate_content(
-            model=config.LLM_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                max_output_tokens=1000,
-                temperature=config.LLM_TEMPERATURE,
-            )
+        raw = llm_generate(
+            system_prompt=SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+            max_tokens=1000
         )
         
-        diagnosis_text = response.text
+        diagnosis_text = raw
         
         # Parse Gemini response (simple extraction)
         lines = diagnosis_text.split('\n')
@@ -134,7 +128,7 @@ Respond in plain text, not JSON. Be specific and cite the evidence if available.
             confidence = min(confidence + 0.05, 0.95)
             
     except Exception as e:
-        logger.error(f"Gemini API failed: {e}")
+        logger.error(f"Fine-tuned model inference failed: {e}")
         # Fallback to rule-based diagnosis
         root_cause = "Unknown"
         confidence = 0.5

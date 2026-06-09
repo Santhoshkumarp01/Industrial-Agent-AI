@@ -7,11 +7,14 @@ Searches SOP documents and generates:
 - Long-term preventive measures
 
 Uses RAG to pull relevant SOP procedures.
+Powered by fine-tuned Phi-3.5 Mini maintenance model.
 """
 
 import logging
+import re
 from retrieval.retriever import retrieve
 from pathlib import Path
+from llm.local_llm import generate as llm_generate
 
 logger = logging.getLogger(__name__)
 
@@ -114,19 +117,14 @@ def _generate_immediate_actions(risk_level: str, root_cause: str) -> list[str]:
 
 
 def _generate_repair_steps_with_ai(root_cause: str, parts_required: list[str], sop_text: str, equipment_name: str) -> list[str]:
-    """Generate detailed repair procedure using Gemini + SOPs."""
-    from google import genai
-    from google.genai import types
-    from config import config
+    """Generate detailed repair procedure using fine-tuned model + SOPs."""
     
-    # If we have SOP documentation, use Gemini to extract steps
+    # If we have SOP documentation, use fine-tuned model to extract steps
     if sop_text and len(sop_text) > 100:
         try:
-            client = genai.Client(api_key=config.GOOGLE_API_KEY)
+            SYSTEM_PROMPT = "You are an expert industrial maintenance engineer creating repair procedures."
             
-            prompt = f"""You are an expert industrial maintenance engineer creating a repair procedure.
-
-Equipment: {equipment_name}
+            user_prompt = f"""Equipment: {equipment_name}
 Root Cause: {root_cause}
 Parts Required: {', '.join(parts_required) if parts_required else 'None specified'}
 
@@ -141,18 +139,15 @@ Create a detailed step-by-step repair procedure. Each step should be:
 
 Provide 8-12 numbered steps. Do not include JSON formatting, just numbered steps."""
 
-            response = client.models.generate_content(
-                model=config.LLM_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    max_output_tokens=1500,
-                    temperature=0.2,  # Lower temperature for procedural content
-                )
+            raw = llm_generate(
+                system_prompt=SYSTEM_PROMPT,
+                user_prompt=user_prompt,
+                max_tokens=1500
             )
             
             # Parse numbered steps from response
             steps = []
-            for line in response.text.split('\n'):
+            for line in raw.split('\n'):
                 line = line.strip()
                 # Match lines starting with number and dot/parenthesis
                 if line and (line[0].isdigit() or line.startswith('-')):
@@ -168,11 +163,11 @@ Provide 8-12 numbered steps. Do not include JSON formatting, just numbered steps
                     "Document all work performed in maintenance logbook",
                     "Update equipment maintenance history"
                 ])
-                logger.info(f"[Maintenance Agent] Generated {len(steps)} steps from SOPs using Gemini")
+                logger.info(f"[Maintenance Agent] Generated {len(steps)} steps from SOPs using fine-tuned model")
                 return steps
                 
         except Exception as e:
-            logger.error(f"Gemini repair step generation failed: {e}")
+            logger.error(f"Fine-tuned model repair step generation failed: {e}")
     
     # Fallback to rule-based procedure
     return _generate_repair_steps_fallback(root_cause, parts_required)

@@ -11,7 +11,6 @@ class Config:
     """Application configuration loaded from environment variables."""
     
     # --- API Keys ---
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", os.getenv("GEMINI_API_KEY", None))
     QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
     
     # --- Qdrant connection ---
@@ -19,11 +18,11 @@ class Config:
     QDRANT_COLLECTION = "maintenance_docs"
 
     # --- Vector dimensions ---
-    DENSE_DIM = 768   # text-embedding-004 output dimension
+    DENSE_DIM = 768   # all-mpnet-base-v2 output dimension
 
     # --- Embedding models ---
-    EMBEDDING_MODEL = "gemini-embedding-001"         # Google embedding model (768-dim with output_dimensionality)
-    SPARSE_MODEL = "Qdrant/bm25"                     # sparse (BM25 via fastembed)
+    EMBEDDING_MODEL = "sentence-transformers/all-mpnet-base-v2"  # Local embedding model (768-dim)
+    SPARSE_MODEL = "Qdrant/bm25"                                  # sparse (BM25 via fastembed)
 
     # --- Retrieval ---
     TOP_K_RETRIEVAL = 20   # candidates before rerank
@@ -41,10 +40,9 @@ class Config:
     MIN_CHUNK_TOKENS = 25            # Minimum to filter noise
     TABLE_ROW_TOKENS = 100           # Target tokens per table row group
 
-    # --- LLM ---
-    LLM_MODEL = "gemini-2.5-flash"  # Latest Gemini Flash model (verified working with v1beta API)
-    LLM_MAX_TOKENS = 2048
-    LLM_TEMPERATURE = 0.1
+    # --- Fine-tuned Local Model (Phi-3.5 Mini) ---
+    LOCAL_MODEL_BASE = os.getenv("LOCAL_MODEL_BASE", "ml/base_models/phi35_mini")
+    LOCAL_MODEL_ADAPTER = os.getenv("LOCAL_MODEL_ADAPTER", "ml/saved_models/phi35_mlx_lora")
 
     # --- Paths ---
     UPLOAD_DIR = "./data/uploads"

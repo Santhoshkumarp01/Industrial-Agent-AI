@@ -40,11 +40,44 @@ app.include_router(agent_router)
 
 @app.on_event("startup")
 async def startup():
+    """Initialize all components on server startup."""
+    print("🚀 Starting Industrial Agent AI backend...")
+    
+    # 1. Download NLTK data
     nltk.download("punkt", quiet=True)
     nltk.download("punkt_tab", quiet=True)
-    init_db()         # Initialize SQLite database
-    ensure_collection()   # creates Qdrant collection with dense + sparse vectors
-    print("✓ Industrial Agent AI API ready")
+    
+    # 2. Initialize database
+    init_db()
+    print("✓ SQLite database initialized")
+    
+    # 3. Ensure Qdrant collection exists
+    ensure_collection()
+    print("✓ Qdrant collection ready")
+    
+    # 4. Preload models for fast first request
+    print("⏳ Preloading models...")
+    try:
+        # Preload embedding model
+        from embeddings.embedder import _get_local_model
+        _get_local_model()
+        print("  ✓ Embedding model loaded (sentence-transformers)")
+        
+        # Preload cross-encoder for reranking
+        from retrieval.reranker import _get_cross_encoder
+        _get_cross_encoder()
+        print("  ✓ Cross-encoder loaded (reranking)")
+        
+        print("✓ All models preloaded - first request will be fast!")
+    except Exception as e:
+        print(f"⚠️  Model preloading failed: {e}")
+        print("   Models will load on first request instead.")
+    
+    print("\n" + "="*60)
+    print("✅ Industrial Agent AI API ready")
+    print("   Backend: http://localhost:8000")
+    print("   Fine-tuned model: Will load on first agent call (~15-20s)")
+    print("="*60 + "\n")
 
 
 @app.get("/health")
