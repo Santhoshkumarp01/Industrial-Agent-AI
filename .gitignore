@@ -48,6 +48,10 @@ maintenance_wizard.db
 *.onnx
 backend/ml/saved_models/*.pkl
 
+# Fine-tuned models and base models (too large for Git)
+backend/ml/saved_models/
+backend/ml/base_models/
+
 # Uploaded Files
 backend/data/uploads/*
 !backend/data/uploads/.gitkeep
