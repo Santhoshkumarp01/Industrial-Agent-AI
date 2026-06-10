@@ -8,7 +8,7 @@ from models.schemas import RetrievedChunk
 
 logger = logging.getLogger(__name__)
 
-_CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+_CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L-12-v2"  # Larger, more stable model
 _cross_encoder: CrossEncoder | None = None
 
 
@@ -54,11 +54,18 @@ def normalize_score(raw_score: float) -> float:
     """
     # CRITICAL: Handle NaN/Inf values BEFORE normalization
     import numpy as np
-    if not isinstance(raw_score, (int, float)) or np.isnan(raw_score) or np.isinf(raw_score):
-        logger.warning(f"Invalid raw_score: {raw_score}, using fallback 0.0")
+    
+    # Convert to float first (handles numpy types), then check for NaN/Inf
+    try:
+        score_float = float(raw_score)
+        if np.isnan(score_float) or np.isinf(score_float):
+            logger.warning(f"Invalid raw_score: {raw_score} (NaN/Inf), using fallback 0.0")
+            return 0.0
+    except (TypeError, ValueError):
+        logger.warning(f"Invalid raw_score type: {type(raw_score)} - {raw_score}, using fallback 0.0")
         return 0.0
     
-    return float(torch.sigmoid(torch.tensor(raw_score)))
+    return float(torch.sigmoid(torch.tensor(score_float)))
 
 
 def rerank(query: str, chunks: List[RetrievedChunk], top_k: int) -> List[RetrievedChunk]:
@@ -85,13 +92,21 @@ def rerank(query: str, chunks: List[RetrievedChunk], top_k: int) -> List[Retriev
 
     pairs = [(query, chunk.text) for chunk in chunks]
     
+    # Log sample for debugging
+    logger.info(f"Reranking {len(pairs)} pairs. Query length: {len(query)} chars")
+    if pairs:
+        sample_text = pairs[0][1][:200] if len(pairs[0][1]) > 200 else pairs[0][1]
+        logger.info(f"Sample chunk text: {sample_text}...")
+    
     try:
         # Use smaller batch size and disable progress bar to prevent hanging
         raw_scores = cross_encoder.predict(
             pairs,
             batch_size=16,  # Smaller batches for stability
-            show_progress_bar=False  # Disable tqdm progress bar that can cause issues
+            show_progress_bar=False,  # Disable tqdm progress bar that can cause issues
+            convert_to_numpy=True  # Ensure numpy output
         )
+        logger.info(f"Cross-encoder returned {len(raw_scores)} scores. Sample: {raw_scores[:3]}")
     except Exception as e:
         logger.error(f"Cross-encoder prediction failed: {e}. Using fallback scores.")
         raw_scores = [0.0] * len(pairs)
@@ -99,12 +114,33 @@ def rerank(query: str, chunks: List[RetrievedChunk], top_k: int) -> List[Retriev
     # Normalize raw logit scores to 0-1 probabilities
     # Handle any NaN/Inf values that come from the model
     normalized_scores = []
+    nan_count = 0
     for i, score in enumerate(raw_scores):
-        if not isinstance(score, (int, float)) or np.isnan(score) or np.isinf(score):
-            logger.warning(f"Invalid score at index {i}: {score}, using fallback 0.0")
+        try:
+            # Convert to float first (handles numpy types)
+            score_float = float(score)
+            if np.isnan(score_float) or np.isinf(score_float):
+                logger.warning(f"Invalid score at index {i}: {score} (NaN/Inf), using fallback 0.0")
+                normalized_scores.append(0.0)
+                nan_count += 1
+            else:
+                normalized_scores.append(normalize_score(score_float))
+        except (TypeError, ValueError):
+            logger.warning(f"Invalid score at index {i}: {score} (type: {type(score)}), using fallback 0.0")
             normalized_scores.append(0.0)
-        else:
-            normalized_scores.append(normalize_score(score))
+            nan_count += 1
+    
+    # If ALL scores are NaN, use dense vector scores instead
+    if nan_count == len(raw_scores):
+        logger.error(f"⚠️ ALL {nan_count} cross-encoder scores were NaN! Using dense vector scores as fallback.")
+        # Use original dense retrieval scores (stored in relevance_score)
+        normalized_scores = [chunk.relevance_score for chunk in chunks]
+        # Normalize to 0-1 range
+        max_score = max(normalized_scores) if normalized_scores else 1.0
+        if max_score > 0:
+            normalized_scores = [s / max_score for s in normalized_scores]
+    elif nan_count > len(raw_scores) * 0.5:
+        logger.warning(f"⚠️ {nan_count}/{len(raw_scores)} scores were NaN ({nan_count/len(raw_scores)*100:.1f}%)")
 
     # Attach updated relevance scores
     scored = list(zip(normalized_scores, chunks))

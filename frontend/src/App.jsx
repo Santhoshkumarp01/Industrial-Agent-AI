@@ -3,6 +3,7 @@ import Layout from './components/layout/Layout'
 import ChatPanel from './components/chat/ChatPanel'
 import MonitoringPanel from './components/monitoring/MonitoringPanel'
 import ReportsPanel from './components/monitoring/ReportsPanel'
+import LogbookPanel from './components/monitoring/LogbookPanel'
 import { useChat } from './hooks/useChat'
 import { useSensorStream } from './hooks/useSensorStream'
 import { useDocuments } from './hooks/useDocuments'
@@ -57,7 +58,7 @@ export default function App() {
         <div
           style={{
             flex: '0 0 55%',
-            display: activePanel === 'documents' || activePanel === 'reports' ? 'none' : 'flex',
+            display: activePanel === 'documents' || activePanel === 'reports' || activePanel === 'logbook' ? 'none' : 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
             minWidth: 0,
@@ -90,9 +91,14 @@ export default function App() {
           <DocumentsView documentsHook={documentsHook} />
         )}
 
-        {/* Reports placeholder */}
+        {/* Reports panel */}
         {activePanel === 'reports' && (
           <ReportsPanel />
+        )}
+
+        {/* Logbook panel */}
+        {activePanel === 'logbook' && (
+          <LogbookPanel />
         )}
       </div>
     </Layout>

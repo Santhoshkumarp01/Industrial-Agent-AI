@@ -57,6 +57,7 @@ class RetrievedChunk(BaseModel):
     section_heading: str
     relevance_score: float
     citation_ref: str  # [C1], [C2], etc.
+    parent_id: Optional[str] = None  # ← ADDED: Link to parent section for parent-child retrieval
 
 
 class CitationRef(BaseModel):

@@ -81,6 +81,7 @@ def _generate_query_variations(query: str) -> List[str]:
     """
     Generate rule-based query variations for better coverage.
     CRITICAL: Always return at least 3 variations (never empty).
+    CRITICAL: For exact manual questions with model names or numbered lists, preserve the original query.
     
     Example:
     Input: "How to fix vibration issue?"
@@ -95,7 +96,38 @@ def _generate_query_variations(query: str) -> List[str]:
     # Extract key technical terms
     query_lower = query.lower()
     
-    # Common patterns for maintenance queries
+    # CRITICAL FIX: Detect exact manual questions (section-like wording, model names, numbered items)
+    # These should NOT be rewritten into generic queries
+    is_exact_manual_question = bool(
+        re.search(r'\b(1ph718|siemens|manual)\b', query_lower) or
+        re.search(r'\b(five|three|four|six|seven|eight|ten)\s+(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        re.search(r'\bwhat are the\s+\d+\s+(rules?|steps?)\b', query_lower) or
+        re.search(r'\blist(ed)?\s+(in|on)\b', query_lower)
+    )
+    
+    # If exact manual question, add variations that preserve anchor terms
+    if is_exact_manual_question:
+        logger.info("Detected exact manual question - preserving anchor terms")
+        
+        # Extract model name if present
+        model_match = re.search(r'\b(1ph718)\b', query_lower)
+        model_name = model_match.group(1) if model_match else ""
+        
+        # Extract list terms (five rules, three steps, etc.)
+        list_match = re.search(r'\b(five|three|four|six|seven|eight|ten)\s+(rules?|steps?|requirements?|procedures?)\b', query_lower)
+        if list_match:
+            # Add variations that keep the enumeration and anchor terms
+            count_word = list_match.group(1)
+            item_type = list_match.group(2)
+            
+            variations.append(f"{count_word} {item_type} {model_name}".strip())
+            variations.append(f"observing the {count_word} {item_type}".strip())
+            variations.append(f"{item_type} {model_name}".strip())
+            
+            # Do NOT add generic queries like "safety procedure steps"
+            return variations[:3]
+    
+    # Common patterns for maintenance queries (generic cases only)
     if "how to fix" in query_lower or "repair" in query_lower:
         # Diagnostic angle
         term = query_lower.replace("how to fix", "").replace("repair", "").strip()
@@ -134,10 +166,9 @@ def _generate_query_variations(query: str) -> List[str]:
         variations.append("motor fault electrical winding")
         variations.append("motor failure troubleshooting")
     
-    if "safety" in query_lower:
-        variations.append("safety procedure steps")
-        variations.append("safety rules requirements")
-        variations.append("safety instructions guidelines")
+    # REMOVED: Generic safety variations that cause list truncation
+    # Old code was adding: "safety procedure steps", "safety rules requirements", "safety instructions guidelines"
+    # These are too vague and match partial list fragments instead of complete sections
     
     # Remove duplicates and limit
     variations = list(dict.fromkeys(variations))[:5]
@@ -163,6 +194,7 @@ def rewrite_query(query: str, use_variations: bool = True) -> List[str]:
     """
     Rewrite user query for better retrieval.
     CRITICAL: Always returns at least the original query (never empty list).
+    CRITICAL: For exact manual questions, original query is ALWAYS first (highest priority).
     
     Args:
         query: Original user query
@@ -172,10 +204,34 @@ def rewrite_query(query: str, use_variations: bool = True) -> List[str]:
         List of rewritten queries (original + expanded + synonym variations + rule-based)
     """
     queries = []
+    query_lower = query.lower()
     
-    # 1. Original query (always include)
+    # CRITICAL: Detect exact manual questions
+    is_exact_manual_question = bool(
+        re.search(r'\b(1ph718|siemens|manual)\b', query_lower) or
+        re.search(r'\b(five|three|four|six|seven|eight|ten)\s+(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        re.search(r'\bwhat are the\s+\d+\s+(rules?|steps?)\b', query_lower) or
+        re.search(r'\blist(ed)?\s+(in|on)\b', query_lower)
+    )
+    
+    # 1. Original query (ALWAYS FIRST - highest priority)
     queries.append(query)
     
+    # For exact manual questions, limit variations to preserve precision
+    if is_exact_manual_question:
+        logger.info("Exact manual question detected - original query prioritized, limited variations")
+        
+        # Only add 2-3 targeted variations that preserve key terms
+        if use_variations:
+            variations = _generate_query_variations(query)
+            queries.extend(variations[:2])  # Limit to 2 variations max
+        
+        # Deduplicate and return early
+        queries = list(dict.fromkeys(queries))
+        logger.info(f"Query rewriter produced {len(queries)} queries (from: '{query}')")
+        return queries
+    
+    # For generic questions, use full expansion pipeline
     # 2. Expanded abbreviations
     expanded = _expand_abbreviations(query)
     if expanded != query:

@@ -219,6 +219,20 @@ export const getReport = async (reportId) => {
 }
 
 /**
+ * Mark a logbook entry as resolved.
+ */
+export const resolveLogbookEntry = async (entryId, technician = 'Engineer') => {
+  try {
+    const res = await client.post(`/agents/logbook/${entryId}/resolve`, null, {
+      params: { technician }
+    })
+    return res.data
+  } catch (err) {
+    throw new Error(err.response?.data?.detail || 'Failed to resolve logbook entry.')
+  }
+}
+
+/**
  * Get feedback accuracy statistics.
  */
 export const getFeedbackStats = async () => {

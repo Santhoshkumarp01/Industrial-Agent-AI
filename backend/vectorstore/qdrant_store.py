@@ -161,6 +161,19 @@ def ensure_collection() -> None:
         
         print(f"✓ Created parent sections collection: {parent_collection}")
         logger.info(f"Created parent sections collection: {parent_collection}")
+    else:
+        # Collection exists - ensure parent_id index exists
+        try:
+            # Try to create index if it doesn't exist (idempotent operation)
+            client.create_payload_index(
+                collection_name=parent_collection,
+                field_name="parent_id",
+                field_schema=models.PayloadSchemaType.KEYWORD,
+            )
+            logger.info(f"✓ Ensured parent_id index exists on {parent_collection}")
+        except Exception as e:
+            # Index might already exist - that's fine
+            logger.info(f"Parent collection index check: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -351,41 +364,78 @@ def get_parent_sections(parent_ids: List[str]) -> dict[str, dict]:
     client = get_client()
     parent_collection = f"{config.QDRANT_COLLECTION}_parents"
     
-    # Scroll to find parents matching IDs
     parents_map = {}
+    parent_ids_set = set(parent_ids)
     
     try:
-        results, _ = client.scroll(
-            collection_name=parent_collection,
-            scroll_filter=Filter(
-                should=[
-                    FieldCondition(
-                        key="parent_id",
-                        match=MatchValue(value=pid)
-                    )
-                    for pid in parent_ids
-                ]
-            ),
-            limit=len(parent_ids),
-            with_payload=True,
-            with_vectors=False,
-        )
-        
-        for point in results:
-            p = point.payload
-            parents_map[p["parent_id"]] = {
-                "parent_id": p["parent_id"],
-                "doc_id": p["doc_id"],
-                "doc_name": p["doc_name"],
-                "equipment_tag": p.get("equipment_tag", ""),
-                "section_heading": p.get("section_heading", ""),
-                "full_text": p["full_text"],
-                "page_number": int(p["page_number"]),
-                "bbox": json.loads(p.get("bbox", "[]")),
-                "token_count": int(p.get("token_count", 0)),
-            }
+        # Method 1: Try with filter (requires index)
+        try:
+            results, _ = client.scroll(
+                collection_name=parent_collection,
+                scroll_filter=Filter(
+                    should=[
+                        FieldCondition(
+                            key="parent_id",
+                            match=MatchValue(value=pid)
+                        )
+                        for pid in parent_ids
+                    ]
+                ),
+                limit=len(parent_ids) * 2,  # Margin for safety
+                with_payload=True,
+                with_vectors=False,
+            )
+            
+            for point in results:
+                p = point.payload
+                if p.get("parent_id") in parent_ids_set:
+                    parents_map[p["parent_id"]] = {
+                        "parent_id": p["parent_id"],
+                        "doc_id": p["doc_id"],
+                        "doc_name": p["doc_name"],
+                        "equipment_tag": p.get("equipment_tag", ""),
+                        "section_heading": p.get("section_heading", ""),
+                        "full_text": p["full_text"],
+                        "page_number": int(p["page_number"]),
+                        "bbox": json.loads(p.get("bbox", "[]")),
+                        "token_count": int(p.get("token_count", 0)),
+                    }
+            
+            logger.info(f"✓ Retrieved {len(parents_map)}/{len(parent_ids)} parent sections via filter")
+            return parents_map
+            
+        except Exception as filter_error:
+            logger.warning(f"Filter-based parent fetch failed: {filter_error}. Trying fallback method...")
+            
+            # Method 2: Scroll all and filter in code (no index required)
+            results, _ = client.scroll(
+                collection_name=parent_collection,
+                limit=1000,  # Get all parents (typically <100)
+                with_payload=True,
+                with_vectors=False,
+            )
+            
+            for point in results:
+                p = point.payload
+                if p.get("parent_id") in parent_ids_set:
+                    parents_map[p["parent_id"]] = {
+                        "parent_id": p["parent_id"],
+                        "doc_id": p["doc_id"],
+                        "doc_name": p["doc_name"],
+                        "equipment_tag": p.get("equipment_tag", ""),
+                        "section_heading": p.get("section_heading", ""),
+                        "full_text": p["full_text"],
+                        "page_number": int(p["page_number"]),
+                        "bbox": json.loads(p.get("bbox", "[]")),
+                        "token_count": int(p.get("token_count", 0)),
+                    }
+            
+            logger.info(f"✓ Retrieved {len(parents_map)}/{len(parent_ids)} parent sections via scroll fallback")
+            return parents_map
+            
     except Exception as e:
-        logger.error(f"Failed to retrieve parent sections: {e}")
+        logger.error(f"⚠️ CRITICAL: Failed to retrieve parent sections: {type(e).__name__}: {e}")
+        logger.exception("Parent fetch traceback:")
     
     return parents_map
 
@@ -539,6 +589,7 @@ def _reciprocal_rank_fusion(
                 section_heading=p.get("section_heading", ""),
                 relevance_score=scores[cid],
                 citation_ref="",   # assigned by retriever.py
+                parent_id=p.get("parent_id") or None,  # ← ADDED: Extract parent_id from payload
             )
         )
 

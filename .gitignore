@@ -94,6 +94,10 @@ logs/
 htmlcov/
 .pytest_cache/
 .hypothesis/
+backend/test_results/
+
+# Training generation log
+backend/data/training/generation.log
 
 # OS
 Thumbs.db

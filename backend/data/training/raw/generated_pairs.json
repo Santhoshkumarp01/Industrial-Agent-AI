@@ -1,0 +1,458 @@
+[
+  {
+    "instruction": "What is the primary safety precaution that must be taken before commencing any work according to this SOP?",
+    "response": "The equipment must be isolated, and Lockout/Tagout (LOTO) procedures must be applied before starting any work."
+  },
+  {
+    "instruction": "What specific safety equipment is required when handling oil, particularly if it is hot?",
+    "response": "Heat-resistant gloves are required because oil can be hot (up to 70\u00b0C). Additionally, nitrile gloves should be worn to avoid skin contact with used oil."
+  },
+  {
+    "instruction": "What materials should be readily available at the work site for managing potential spills?",
+    "response": "A spill kit and absorbent pads must be ready at the work site to manage any oil spills."
+  },
+  {
+    "instruction": "What tools are specifically listed for oil drainage and filter replacement?",
+    "response": "An oil drain pump (if gravity drain is not available) and an oil filter wrench are required for oil drainage and filter replacement."
+  },
+  {
+    "instruction": "What specific tool is required for tightening components, and what is its specified torque range?",
+    "response": "A torque wrench with a range of 30\u201380 Nm is required for tightening components to ensure correct torque specifications are met."
+  },
+  {
+    "instruction": "What type and minimum quantity of fresh lubrication oil is required for replenishment?",
+    "response": "Fresh lubrication oil of type ISO VG 220 mineral oil is required, with a minimum quantity of 20 liters."
+  },
+  {
+    "instruction": "What is the acceptance criterion for the oil level during the pre-inspection visual check?",
+    "response": "The oil level in the sight glass should be between the MIN and MAX marks to be considered acceptable."
+  },
+  {
+    "instruction": "What does a dark brown or black oil color observed through the sight glass indicate, and what action is required?",
+    "response": "A dark brown or black oil color indicates oxidation, which means an oil change is needed."
+  },
+  {
+    "instruction": "What does a milky or cloudy oil appearance signify, and what immediate action is necessary?",
+    "response": "A milky or cloudy appearance indicates water contamination, and the source of this contamination must be investigated immediately."
+  },
+  {
+    "instruction": "What external checks are part of the Step 1 Pre-Inspection Visual Check?",
+    "response": "During the pre-inspection visual check, one must check for external leaks around seals, fittings, and pipe joints, and listen for unusual pump noise (cavitation, air entrainment)."
+  },
+  {
+    "instruction": "What is the preparatory step required before taking an oil sample for analysis?",
+    "response": "The equipment must be run at its normal operating temperature for 30 minutes before collecting an oil sample for analysis."
+  },
+  {
+    "instruction": "From where should the oil sample be taken, and what is the flushing procedure?",
+    "response": "The oil sample should be taken from the mid-point sampling valve (not from the drain or top-up port). The sampling valve must be flushed for 5 seconds before collecting the sample."
+  },
+  {
+    "instruction": "Which specific replacement oil filter is required for Rolling Mill #1 and Rolling Mill #3?",
+    "response": "The replacement oil filter required for Rolling Mill #1 and Rolling Mill #3 is OF-112."
+  },
+  {
+    "instruction": "How should used oil be disposed of after an oil change?",
+    "response": "Used oil must be disposed of according to environmental regulations, typically in designated waste oil drums."
+  },
+  {
+    "instruction": "What is the troubleshooting step if unusual pump noise, such as cavitation or air entrainment, is detected?",
+    "response": "If unusual pump noise like cavitation or air entrainment is detected, it should be noted as part of the pre-inspection visual check, implying further investigation or maintenance may be required."
+  },
+  {
+    "instruction": "What bearing is used on RM1|RM3?",
+    "response": "The Spherical Roller Bearing (part number SKF-22318) is used on RM1|RM3. Currently 2 units in stock at Warehouse-A Rack-3."
+  },
+  {
+    "instruction": "What is the procurement lead time for SKF-22318?",
+    "response": "SKF-22318 (Spherical Roller Bearing) has a lead time of 0 days. Current stock: 2 units. Supplier: SKF India."
+  },
+  {
+    "instruction": "Is SKF-22318 available in stock?",
+    "response": "SKF-22318 (Spherical Roller Bearing): Stock level 2 units at Warehouse-A Rack-3. Lead time if ordering: 0 days from SKF India."
+  },
+  {
+    "instruction": "What does vibration reading of 2.25 mm/s mean on Rolling Mill #1?",
+    "response": "Vibration reading of 2.25 mm/s on Rolling Mill #1 is in the NORMAL range (1.5-3.0 mm/s). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 vibration reaches 2.25 mm/s?",
+    "response": "Rolling Mill #1 vibration at 2.25 mm/s is NORMAL (threshold: 1.5-3.0 mm/s). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does vibration reading of 4.5 mm/s mean on Rolling Mill #1?",
+    "response": "Vibration reading of 4.5 mm/s on Rolling Mill #1 is in the WARNING range (3.0-6.0 mm/s). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 vibration reaches 4.5 mm/s?",
+    "response": "Rolling Mill #1 vibration at 4.5 mm/s is WARNING (threshold: 3.0-6.0 mm/s). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does vibration reading of 8.0 mm/s mean on Rolling Mill #1?",
+    "response": "Vibration reading of 8.0 mm/s on Rolling Mill #1 is in the CRITICAL range (6.0-10.0 mm/s). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 vibration reaches 8.0 mm/s?",
+    "response": "Rolling Mill #1 vibration at 8.0 mm/s is CRITICAL (threshold: 6.0-10.0 mm/s). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does temperature reading of 71.5 \u00b0C mean on Rolling Mill #1?",
+    "response": "Temperature reading of 71.5 \u00b0C on Rolling Mill #1 is in the NORMAL range (65-78 \u00b0C). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 temperature reaches 71.5 \u00b0C?",
+    "response": "Rolling Mill #1 temperature at 71.5 \u00b0C is NORMAL (threshold: 65-78 \u00b0C). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does temperature reading of 84.0 \u00b0C mean on Rolling Mill #1?",
+    "response": "Temperature reading of 84.0 \u00b0C on Rolling Mill #1 is in the WARNING range (78-90 \u00b0C). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 temperature reaches 84.0 \u00b0C?",
+    "response": "Rolling Mill #1 temperature at 84.0 \u00b0C is WARNING (threshold: 78-90 \u00b0C). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does temperature reading of 100.0 \u00b0C mean on Rolling Mill #1?",
+    "response": "Temperature reading of 100.0 \u00b0C on Rolling Mill #1 is in the CRITICAL range (90-110 \u00b0C). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 temperature reaches 100.0 \u00b0C?",
+    "response": "Rolling Mill #1 temperature at 100.0 \u00b0C is CRITICAL (threshold: 90-110 \u00b0C). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does current reading of 42.0 A mean on Rolling Mill #1?",
+    "response": "Current reading of 42.0 A on Rolling Mill #1 is in the NORMAL range (38-46 A). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 current reaches 42.0 A?",
+    "response": "Rolling Mill #1 current at 42.0 A is NORMAL (threshold: 38-46 A). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does current reading of 50.5 A mean on Rolling Mill #1?",
+    "response": "Current reading of 50.5 A on Rolling Mill #1 is in the WARNING range (46-55 A). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 current reaches 50.5 A?",
+    "response": "Rolling Mill #1 current at 50.5 A is WARNING (threshold: 46-55 A). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does current reading of 62.5 A mean on Rolling Mill #1?",
+    "response": "Current reading of 62.5 A on Rolling Mill #1 is in the CRITICAL range (55-70 A). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 current reaches 62.5 A?",
+    "response": "Rolling Mill #1 current at 62.5 A is CRITICAL (threshold: 55-70 A). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does pressure reading of 4.65 bar mean on Rolling Mill #1?",
+    "response": "Pressure reading of 4.65 bar on Rolling Mill #1 is in the NORMAL range (4.2-5.1 bar). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 pressure reaches 4.65 bar?",
+    "response": "Rolling Mill #1 pressure at 4.65 bar is NORMAL (threshold: 4.2-5.1 bar). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does pressure reading of 3.6 bar mean on Rolling Mill #1?",
+    "response": "Pressure reading of 3.6 bar on Rolling Mill #1 is in the WARNING range (3.0-4.2 bar). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 pressure reaches 3.6 bar?",
+    "response": "Rolling Mill #1 pressure at 3.6 bar is WARNING (threshold: 3.0-4.2 bar). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does pressure reading of 2.0 bar mean on Rolling Mill #1?",
+    "response": "Pressure reading of 2.0 bar on Rolling Mill #1 is in the CRITICAL range (1.0-3.0 bar). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #1 pressure reaches 2.0 bar?",
+    "response": "Rolling Mill #1 pressure at 2.0 bar is CRITICAL (threshold: 1.0-3.0 bar). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does vibration reading of 2.5 mm/s mean on Rolling Mill #3?",
+    "response": "Vibration reading of 2.5 mm/s on Rolling Mill #3 is in the NORMAL range (1.8-3.2 mm/s). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 vibration reaches 2.5 mm/s?",
+    "response": "Rolling Mill #3 vibration at 2.5 mm/s is NORMAL (threshold: 1.8-3.2 mm/s). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does vibration reading of 4.85 mm/s mean on Rolling Mill #3?",
+    "response": "Vibration reading of 4.85 mm/s on Rolling Mill #3 is in the WARNING range (3.2-6.5 mm/s). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 vibration reaches 4.85 mm/s?",
+    "response": "Rolling Mill #3 vibration at 4.85 mm/s is WARNING (threshold: 3.2-6.5 mm/s). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does vibration reading of 8.25 mm/s mean on Rolling Mill #3?",
+    "response": "Vibration reading of 8.25 mm/s on Rolling Mill #3 is in the CRITICAL range (6.5-10.0 mm/s). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 vibration reaches 8.25 mm/s?",
+    "response": "Rolling Mill #3 vibration at 8.25 mm/s is CRITICAL (threshold: 6.5-10.0 mm/s). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does temperature reading of 74.0 \u00b0C mean on Rolling Mill #3?",
+    "response": "Temperature reading of 74.0 \u00b0C on Rolling Mill #3 is in the NORMAL range (68-80 \u00b0C). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 temperature reaches 74.0 \u00b0C?",
+    "response": "Rolling Mill #3 temperature at 74.0 \u00b0C is NORMAL (threshold: 68-80 \u00b0C). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does temperature reading of 87.5 \u00b0C mean on Rolling Mill #3?",
+    "response": "Temperature reading of 87.5 \u00b0C on Rolling Mill #3 is in the WARNING range (80-95 \u00b0C). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 temperature reaches 87.5 \u00b0C?",
+    "response": "Rolling Mill #3 temperature at 87.5 \u00b0C is WARNING (threshold: 80-95 \u00b0C). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does temperature reading of 105.0 \u00b0C mean on Rolling Mill #3?",
+    "response": "Temperature reading of 105.0 \u00b0C on Rolling Mill #3 is in the CRITICAL range (95-115 \u00b0C). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 temperature reaches 105.0 \u00b0C?",
+    "response": "Rolling Mill #3 temperature at 105.0 \u00b0C is CRITICAL (threshold: 95-115 \u00b0C). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does current reading of 44.0 A mean on Rolling Mill #3?",
+    "response": "Current reading of 44.0 A on Rolling Mill #3 is in the NORMAL range (40-48 A). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 current reaches 44.0 A?",
+    "response": "Rolling Mill #3 current at 44.0 A is NORMAL (threshold: 40-48 A). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does current reading of 53.0 A mean on Rolling Mill #3?",
+    "response": "Current reading of 53.0 A on Rolling Mill #3 is in the WARNING range (48-58 A). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 current reaches 53.0 A?",
+    "response": "Rolling Mill #3 current at 53.0 A is WARNING (threshold: 48-58 A). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does current reading of 65.0 A mean on Rolling Mill #3?",
+    "response": "Current reading of 65.0 A on Rolling Mill #3 is in the CRITICAL range (58-72 A). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 current reaches 65.0 A?",
+    "response": "Rolling Mill #3 current at 65.0 A is CRITICAL (threshold: 58-72 A). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does pressure reading of 4.5 bar mean on Rolling Mill #3?",
+    "response": "Pressure reading of 4.5 bar on Rolling Mill #3 is in the NORMAL range (4.0-5.0 bar). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 pressure reaches 4.5 bar?",
+    "response": "Rolling Mill #3 pressure at 4.5 bar is NORMAL (threshold: 4.0-5.0 bar). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does pressure reading of 3.5 bar mean on Rolling Mill #3?",
+    "response": "Pressure reading of 3.5 bar on Rolling Mill #3 is in the WARNING range (3.0-4.0 bar). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 pressure reaches 3.5 bar?",
+    "response": "Rolling Mill #3 pressure at 3.5 bar is WARNING (threshold: 3.0-4.0 bar). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does pressure reading of 2.0 bar mean on Rolling Mill #3?",
+    "response": "Pressure reading of 2.0 bar on Rolling Mill #3 is in the CRITICAL range (1.0-3.0 bar). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Rolling Mill #3 pressure reaches 2.0 bar?",
+    "response": "Rolling Mill #3 pressure at 2.0 bar is CRITICAL (threshold: 1.0-3.0 bar). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does vibration reading of 1.4 mm/s mean on BF Blower #1?",
+    "response": "Vibration reading of 1.4 mm/s on BF Blower #1 is in the NORMAL range (0.8-2.0 mm/s). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 vibration reaches 1.4 mm/s?",
+    "response": "BF Blower #1 vibration at 1.4 mm/s is NORMAL (threshold: 0.8-2.0 mm/s). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does vibration reading of 3.25 mm/s mean on BF Blower #1?",
+    "response": "Vibration reading of 3.25 mm/s on BF Blower #1 is in the WARNING range (2.0-4.5 mm/s). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 vibration reaches 3.25 mm/s?",
+    "response": "BF Blower #1 vibration at 3.25 mm/s is WARNING (threshold: 2.0-4.5 mm/s). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does vibration reading of 6.25 mm/s mean on BF Blower #1?",
+    "response": "Vibration reading of 6.25 mm/s on BF Blower #1 is in the CRITICAL range (4.5-8.0 mm/s). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 vibration reaches 6.25 mm/s?",
+    "response": "BF Blower #1 vibration at 6.25 mm/s is CRITICAL (threshold: 4.5-8.0 mm/s). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does temperature reading of 62.5 \u00b0C mean on BF Blower #1?",
+    "response": "Temperature reading of 62.5 \u00b0C on BF Blower #1 is in the NORMAL range (55-70 \u00b0C). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 temperature reaches 62.5 \u00b0C?",
+    "response": "BF Blower #1 temperature at 62.5 \u00b0C is NORMAL (threshold: 55-70 \u00b0C). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does temperature reading of 77.5 \u00b0C mean on BF Blower #1?",
+    "response": "Temperature reading of 77.5 \u00b0C on BF Blower #1 is in the WARNING range (70-85 \u00b0C). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 temperature reaches 77.5 \u00b0C?",
+    "response": "BF Blower #1 temperature at 77.5 \u00b0C is WARNING (threshold: 70-85 \u00b0C). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does temperature reading of 92.5 \u00b0C mean on BF Blower #1?",
+    "response": "Temperature reading of 92.5 \u00b0C on BF Blower #1 is in the CRITICAL range (85-100 \u00b0C). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 temperature reaches 92.5 \u00b0C?",
+    "response": "BF Blower #1 temperature at 92.5 \u00b0C is CRITICAL (threshold: 85-100 \u00b0C). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does current reading of 57.0 A mean on BF Blower #1?",
+    "response": "Current reading of 57.0 A on BF Blower #1 is in the NORMAL range (52-62 A). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 current reaches 57.0 A?",
+    "response": "BF Blower #1 current at 57.0 A is NORMAL (threshold: 52-62 A). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does current reading of 67.0 A mean on BF Blower #1?",
+    "response": "Current reading of 67.0 A on BF Blower #1 is in the WARNING range (62-72 A). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 current reaches 67.0 A?",
+    "response": "BF Blower #1 current at 67.0 A is WARNING (threshold: 62-72 A). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does current reading of 78.5 A mean on BF Blower #1?",
+    "response": "Current reading of 78.5 A on BF Blower #1 is in the CRITICAL range (72-85 A). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 current reaches 78.5 A?",
+    "response": "BF Blower #1 current at 78.5 A is CRITICAL (threshold: 72-85 A). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does pressure reading of 6.75 bar mean on BF Blower #1?",
+    "response": "Pressure reading of 6.75 bar on BF Blower #1 is in the NORMAL range (6.1-7.4 bar). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 pressure reaches 6.75 bar?",
+    "response": "BF Blower #1 pressure at 6.75 bar is NORMAL (threshold: 6.1-7.4 bar). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does pressure reading of 5.3 bar mean on BF Blower #1?",
+    "response": "Pressure reading of 5.3 bar on BF Blower #1 is in the WARNING range (4.5-6.1 bar). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 pressure reaches 5.3 bar?",
+    "response": "BF Blower #1 pressure at 5.3 bar is WARNING (threshold: 4.5-6.1 bar). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does pressure reading of 3.25 bar mean on BF Blower #1?",
+    "response": "Pressure reading of 3.25 bar on BF Blower #1 is in the CRITICAL range (2.0-4.5 bar). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when BF Blower #1 pressure reaches 3.25 bar?",
+    "response": "BF Blower #1 pressure at 3.25 bar is CRITICAL (threshold: 2.0-4.5 bar). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does vibration reading of 2.0 mm/s mean on Compressor A?",
+    "response": "Vibration reading of 2.0 mm/s on Compressor A is in the NORMAL range (1.2-2.8 mm/s). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A vibration reaches 2.0 mm/s?",
+    "response": "Compressor A vibration at 2.0 mm/s is NORMAL (threshold: 1.2-2.8 mm/s). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does vibration reading of 4.15 mm/s mean on Compressor A?",
+    "response": "Vibration reading of 4.15 mm/s on Compressor A is in the WARNING range (2.8-5.5 mm/s). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A vibration reaches 4.15 mm/s?",
+    "response": "Compressor A vibration at 4.15 mm/s is WARNING (threshold: 2.8-5.5 mm/s). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does vibration reading of 7.5 mm/s mean on Compressor A?",
+    "response": "Vibration reading of 7.5 mm/s on Compressor A is in the CRITICAL range (5.5-9.5 mm/s). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A vibration reaches 7.5 mm/s?",
+    "response": "Compressor A vibration at 7.5 mm/s is CRITICAL (threshold: 5.5-9.5 mm/s). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does temperature reading of 80.0 \u00b0C mean on Compressor A?",
+    "response": "Temperature reading of 80.0 \u00b0C on Compressor A is in the NORMAL range (72-88 \u00b0C). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A temperature reaches 80.0 \u00b0C?",
+    "response": "Compressor A temperature at 80.0 \u00b0C is NORMAL (threshold: 72-88 \u00b0C). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does temperature reading of 96.5 \u00b0C mean on Compressor A?",
+    "response": "Temperature reading of 96.5 \u00b0C on Compressor A is in the WARNING range (88-105 \u00b0C). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A temperature reaches 96.5 \u00b0C?",
+    "response": "Compressor A temperature at 96.5 \u00b0C is WARNING (threshold: 88-105 \u00b0C). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does temperature reading of 115.0 \u00b0C mean on Compressor A?",
+    "response": "Temperature reading of 115.0 \u00b0C on Compressor A is in the CRITICAL range (105-125 \u00b0C). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A temperature reaches 115.0 \u00b0C?",
+    "response": "Compressor A temperature at 115.0 \u00b0C is CRITICAL (threshold: 105-125 \u00b0C). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does current reading of 32.0 A mean on Compressor A?",
+    "response": "Current reading of 32.0 A on Compressor A is in the NORMAL range (28-36 A). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A current reaches 32.0 A?",
+    "response": "Compressor A current at 32.0 A is NORMAL (threshold: 28-36 A). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does current reading of 40.0 A mean on Compressor A?",
+    "response": "Current reading of 40.0 A on Compressor A is in the WARNING range (36-44 A). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A current reaches 40.0 A?",
+    "response": "Compressor A current at 40.0 A is WARNING (threshold: 36-44 A). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does current reading of 49.5 A mean on Compressor A?",
+    "response": "Current reading of 49.5 A on Compressor A is in the CRITICAL range (44-55 A). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A current reaches 49.5 A?",
+    "response": "Compressor A current at 49.5 A is CRITICAL (threshold: 44-55 A). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  },
+  {
+    "instruction": "What does pressure reading of 9.35 bar mean on Compressor A?",
+    "response": "Pressure reading of 9.35 bar on Compressor A is in the NORMAL range (8.5-10.2 bar). Normal operation."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A pressure reaches 9.35 bar?",
+    "response": "Compressor A pressure at 9.35 bar is NORMAL (threshold: 8.5-10.2 bar). Action: Continue normal operation. Monitor trends."
+  },
+  {
+    "instruction": "What does pressure reading of 7.25 bar mean on Compressor A?",
+    "response": "Pressure reading of 7.25 bar on Compressor A is in the WARNING range (6.0-8.5 bar). WARNING: Monitor closely and plan intervention."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A pressure reaches 7.25 bar?",
+    "response": "Compressor A pressure at 7.25 bar is WARNING (threshold: 6.0-8.5 bar). Action: Increase monitoring frequency. Plan maintenance intervention within 24-48 hours. Reduce load if possible."
+  },
+  {
+    "instruction": "What does pressure reading of 4.5 bar mean on Compressor A?",
+    "response": "Pressure reading of 4.5 bar on Compressor A is in the CRITICAL range (3.0-6.0 bar). CRITICAL: Immediate action required to prevent failure."
+  },
+  {
+    "instruction": "What action should be taken when Compressor A pressure reaches 4.5 bar?",
+    "response": "Compressor A pressure at 4.5 bar is CRITICAL (threshold: 3.0-6.0 bar). Action: IMMEDIATE ACTION: Reduce equipment speed by 40%. Initiate emergency maintenance protocol. Prepare for controlled shutdown."
+  }
+]

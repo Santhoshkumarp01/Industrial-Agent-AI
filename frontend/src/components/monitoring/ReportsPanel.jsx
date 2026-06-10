@@ -38,6 +38,32 @@ export default function ReportsPanel() {
     }
   }
 
+  const handleExportReport = (report) => {
+    const dataStr = JSON.stringify(report, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `report_${report.report_id || 'export'}_${Date.now()}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExportAll = () => {
+    const dataStr = JSON.stringify(filteredReports, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `all_reports_${Date.now()}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   const filteredReports = filterEquipment
     ? reports.filter((r) => 
         r.incident_summary?.equipment_id?.toLowerCase().includes(filterEquipment.toLowerCase())
@@ -91,24 +117,44 @@ export default function ReportsPanel() {
             }}>
               ANALYSIS REPORTS
             </div>
-            <button
-              onClick={loadReports}
-              disabled={isLoading}
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                padding: '4px 10px',
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--text-secondary)',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                letterSpacing: '0.05em',
-                opacity: isLoading ? 0.5 : 1
-              }}
-            >
-              {isLoading ? 'LOADING...' : '↻ REFRESH'}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={handleExportAll}
+                disabled={filteredReports.length === 0}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  padding: '4px 10px',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--text-secondary)',
+                  cursor: filteredReports.length === 0 ? 'not-allowed' : 'pointer',
+                  letterSpacing: '0.05em',
+                  opacity: filteredReports.length === 0 ? 0.5 : 1
+                }}
+              >
+                ⬇ EXPORT ALL
+              </button>
+              <button
+                onClick={loadReports}
+                disabled={isLoading}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  padding: '4px 10px',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--text-secondary)',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  letterSpacing: '0.05em',
+                  opacity: isLoading ? 0.5 : 1
+                }}
+              >
+                {isLoading ? 'LOADING...' : '↻ REFRESH'}
+              </button>
+            </div>
           </div>
           
           {/* Filter */}
@@ -165,6 +211,7 @@ export default function ReportsPanel() {
                   report={report}
                   isSelected={selectedReport?.report_id === reportId}
                   onClick={() => handleReportClick(reportId)}
+                  onExport={() => handleExportReport(report)}
                 />
               )
             })}
@@ -199,7 +246,7 @@ export default function ReportsPanel() {
   )
 }
 
-function ReportCard({ report, isSelected, onClick }) {
+function ReportCard({ report, isSelected, onClick, onExport }) {
   const timestamp = new Date(report.incident_summary?.timestamp || report.generated_at)
   const formattedDate = timestamp.toLocaleDateString('en-US', { 
     month: 'short', 
@@ -216,7 +263,6 @@ function ReportCard({ report, isSelected, onClick }) {
 
   return (
     <div
-      onClick={onClick}
       style={{
         background: isSelected ? 'var(--bg-surface-2)' : 'var(--bg-surface)',
         border: `1px solid ${isSelected ? 'var(--accent-amber)' : 'var(--border)'}`,
@@ -224,6 +270,7 @@ function ReportCard({ report, isSelected, onClick }) {
         padding: '12px 14px',
         cursor: 'pointer',
         transition: 'var(--transition)',
+        position: 'relative'
       }}
       onMouseEnter={(e) => {
         if (!isSelected) e.currentTarget.style.borderColor = 'var(--border-active)'
@@ -232,53 +279,88 @@ function ReportCard({ report, isSelected, onClick }) {
         if (!isSelected) e.currentTarget.style.borderColor = 'var(--border)'
       }}
     >
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        marginBottom: 6
-      }}>
+      <div onClick={onClick}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: 6
+        }}>
+          <div style={{ 
+            fontFamily: 'var(--font-mono)', 
+            fontSize: 12, 
+            color: 'var(--text-primary)',
+            fontWeight: 600
+          }}>
+            {equipmentName}
+          </div>
+          <RiskBadge level={riskLevel} />
+        </div>
+
         <div style={{ 
           fontFamily: 'var(--font-mono)', 
-          fontSize: 12, 
-          color: 'var(--text-primary)',
-          fontWeight: 600
+          fontSize: 10, 
+          color: 'var(--text-secondary)',
+          marginBottom: 4
         }}>
-          {equipmentName}
+          {equipmentId} • #{incidentId.substring(0, 8)}
         </div>
-        <RiskBadge level={riskLevel} />
-      </div>
 
-      <div style={{ 
-        fontFamily: 'var(--font-mono)', 
-        fontSize: 10, 
-        color: 'var(--text-secondary)',
-        marginBottom: 4
-      }}>
-        {equipmentId} • #{incidentId.substring(0, 8)}
-      </div>
+        <div style={{ 
+          fontFamily: 'var(--font-sans)', 
+          fontSize: 12, 
+          color: 'var(--text-secondary)',
+          marginBottom: 6,
+          lineHeight: 1.4,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden'
+        }}>
+          {rootCause}
+        </div>
 
-      <div style={{ 
-        fontFamily: 'var(--font-sans)', 
-        fontSize: 12, 
-        color: 'var(--text-secondary)',
-        marginBottom: 6,
-        lineHeight: 1.4,
-        display: '-webkit-box',
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: 'vertical',
-        overflow: 'hidden'
-      }}>
-        {rootCause}
+        <div style={{ 
+          fontFamily: 'var(--font-mono)', 
+          fontSize: 10, 
+          color: 'var(--text-muted)'
+        }}>
+          {formattedDate}
+        </div>
       </div>
-
-      <div style={{ 
-        fontFamily: 'var(--font-mono)', 
-        fontSize: 10, 
-        color: 'var(--text-muted)'
-      }}>
-        {formattedDate}
-      </div>
+      
+      {/* Export button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          onExport()
+        }}
+        style={{
+          position: 'absolute',
+          bottom: 8,
+          right: 8,
+          fontFamily: 'var(--font-mono)',
+          fontSize: 9,
+          padding: '3px 8px',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-sm)',
+          color: 'var(--text-secondary)',
+          cursor: 'pointer',
+          letterSpacing: '0.05em',
+          opacity: 0.7
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.opacity = '1'
+          e.currentTarget.style.borderColor = 'var(--accent-amber)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.opacity = '0.7'
+          e.currentTarget.style.borderColor = 'var(--border)'
+        }}
+      >
+        ⬇ JSON
+      </button>
     </div>
   )
 }

@@ -4,8 +4,9 @@ import useAppStore from '../../store/appStore'
 const NAV_ITEMS = [
   { id: 'chat',      icon: '💬', label: 'Chat Assistant' },
   { id: 'monitor',   icon: '📡', label: 'Live Monitor' },
-  { id: 'documents', icon: '📁', label: 'Documents' },
+  { id: 'logbook',   icon: '📋', label: 'Logbook' },
   { id: 'reports',   icon: '📊', label: 'Reports' },
+  { id: 'documents', icon: '📁', label: 'Documents' },
 ]
 
 const SECTION_LABEL_STYLE = {

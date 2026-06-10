@@ -41,6 +41,7 @@ class Config:
     TABLE_ROW_TOKENS = 100           # Target tokens per table row group
 
     # --- Fine-tuned Local Model (Phi-3.5 Mini) ---
+    USE_LOCAL_MODEL = os.getenv("USE_LOCAL_MODEL", "false").lower() == "true"
     LOCAL_MODEL_BASE = os.getenv("LOCAL_MODEL_BASE", "ml/base_models/phi35_mini")
     LOCAL_MODEL_ADAPTER = os.getenv("LOCAL_MODEL_ADAPTER", "ml/saved_models/phi35_mlx_lora")
 

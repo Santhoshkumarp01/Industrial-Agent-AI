@@ -9,6 +9,7 @@ Strategy:
 5. Send parent text to LLM (not fragments)
 """
 
+import re
 import logging
 from typing import List, Optional, Tuple
 
@@ -30,6 +31,9 @@ def _fetch_parent_sections(child_chunks: List[RetrievedChunk]) -> List[Retrieved
     Parent sections contain complete context (full paragraphs, complete lists, etc.)
     instead of fragments. This dramatically improves answer quality for structured content.
     
+    CRITICAL: Parent sections are MANDATORY for list/enumeration questions.
+    If parent fetch fails, we must try harder before falling back to child chunks.
+    
     Args:
         child_chunks: List of small child chunks from search
     
@@ -48,54 +52,43 @@ def _fetch_parent_sections(child_chunks: List[RetrievedChunk]) -> List[Retrieved
             logger.warning("No parent IDs found in child chunks - using child chunks directly")
             return []
         
-        logger.info(f"Fetching {len(parent_ids)} parent sections from Qdrant...")
+        logger.info(f"Fetching {len(parent_ids)} parent sections...")
         
-        # Fetch parent sections from parent collection
-        parent_collection = f"{config.QDRANT_COLLECTION}_parents"
-        parent_chunks = []
+        # Fetch parent sections using get_parent_sections utility
+        parents_map = qdrant_store.get_parent_sections(list(parent_ids))
         
-        try:
-            client = qdrant_store.get_client()
-            
-            for parent_id in parent_ids:
-                try:
-                    # Retrieve parent by ID
-                    result = client.retrieve(
-                        collection_name=parent_collection,
-                        ids=[parent_id],
-                        with_payload=True,
-                        with_vectors=False,
-                    )
-                    
-                    if result:
-                        # Convert parent point to RetrievedChunk format
-                        parent_point = result[0]
-                        parent_chunk = RetrievedChunk(
-                            chunk_id=str(parent_point.id),
-                            doc_id=parent_point.payload.get("doc_id", ""),
-                            doc_name=parent_point.payload.get("doc_name", ""),
-                            equipment_tag=parent_point.payload.get("equipment_tag", ""),
-                            block_type=parent_point.payload.get("block_type", "parent_section"),
-                            text=parent_point.payload.get("text", ""),
-                            page_number=parent_point.payload.get("page_number", 0),
-                            bbox=tuple(parent_point.payload.get("bbox", [0, 0, 0, 0])),
-                            section_heading=parent_point.payload.get("section_heading", ""),
-                            relevance_score=0.9,  # High relevance since child matched
-                            citation_ref="",  # Will be assigned later
-                            parent_id=None,
-                        )
-                        parent_chunks.append(parent_chunk)
-                except Exception as e:
-                    logger.error(f"Failed to fetch parent ID {parent_id}: {e}")
-                    continue
-            
-            logger.info(f"Successfully fetched {len(parent_chunks)} parent sections.")
-            return parent_chunks
-            
-        except Exception as e:
-            logger.error(f"Qdrant client error when fetching parent sections: {type(e).__name__}: {e}")
-            logger.exception("Parent fetch traceback:")
+        if not parents_map:
+            logger.error(f"⚠️ CRITICAL: Parent fetch returned 0 sections for {len(parent_ids)} IDs. This may cause list truncation!")
             return []
+        
+        # Convert parent data to RetrievedChunk format
+        parent_chunks = []
+        for parent_id, parent_data in parents_map.items():
+            import json
+            
+            bbox = parent_data.get("bbox", [0, 0, 0, 0])
+            if isinstance(bbox, str):
+                bbox = json.loads(bbox)
+            
+            parent_chunk = RetrievedChunk(
+                chunk_id=parent_id,
+                doc_id=parent_data.get("doc_id", ""),
+                doc_name=parent_data.get("doc_name", ""),
+                equipment_tag=parent_data.get("equipment_tag", ""),
+                block_type="parent_section",
+                text=parent_data.get("full_text", ""),  # ← Complete section text
+                page_number=parent_data.get("page_number", 0),
+                bbox=tuple(bbox),
+                section_heading=parent_data.get("section_heading", ""),
+                relevance_score=0.95,  # High relevance since child matched
+                citation_ref="",  # Will be assigned later
+                parent_id=None,
+            )
+            parent_chunks.append(parent_chunk)
+        
+        logger.info(f"✓ Successfully fetched {len(parent_chunks)} parent sections with complete context.")
+        return parent_chunks
+            
     except Exception as e:
         logger.error(f"Unexpected error in _fetch_parent_sections: {type(e).__name__}: {e}")
         logger.exception("Parent fetch wrapper traceback:")
@@ -182,20 +175,47 @@ def retrieve(
     metadata["confidence_details"] = confidence_details
     
     # Step 5: Parent-child retrieval (fetch full context)
-    if use_parent_retrieval and confidence_score >= 0.3:
+    # CRITICAL: For list questions, parent sections are MANDATORY (not optional)
+    query_lower = query.lower()
+    is_list_question = bool(
+        re.search(r'\b(five|three|four|six|seven|eight|ten)\s+(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        re.search(r'\bwhat are the\s+\d*\s*(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        re.search(r'\b(list|enumerate)\b', query_lower)
+    )
+    
+    parent_fetch_succeeded = False
+    
+    if use_parent_retrieval and (is_list_question or confidence_score >= 0.3):
         try:
             logger.info("Fetching parent sections for complete context...")
             parent_chunks = _fetch_parent_sections(reranked)
             
             if parent_chunks:
-                logger.info(f"Retrieved {len(parent_chunks)} parent sections with full context.")
+                logger.info(f"✓ Retrieved {len(parent_chunks)} parent sections with full context.")
                 # Use parent sections instead of child fragments
                 reranked = parent_chunks
+                parent_fetch_succeeded = True
             else:
+                if is_list_question:
+                    logger.error("⚠️ CRITICAL: Parent sections not found for LIST QUESTION. Answer may be incomplete!")
+                    # For list questions, prefer single best child chunk over merging fragments
+                    if reranked:
+                        logger.warning(f"Falling back to single best child chunk (score: {reranked[0].relevance_score:.3f})")
+                        # Keep only top chunk to avoid merging fragments
+                        reranked = reranked[:1]
                 logger.warning("Parent sections not found, using child chunks.")
         except Exception as e:
             logger.error(f"Parent retrieval failed: {e}. Using child chunks.")
-            # Continue with child chunks on error
+            if is_list_question and reranked:
+                # For list questions, prefer single best chunk
+                logger.warning(f"LIST QUESTION: Using only top chunk to avoid fragment merging")
+                reranked = reranked[:1]
+    
+    # Mark retrieval as degraded if parent fetch failed for list question
+    if is_list_question and not parent_fetch_succeeded:
+        metadata["retrieval_degraded"] = True
+        metadata["degradation_reason"] = "Parent section fetch failed for list question"
+        logger.warning(f"⚠️ DEGRADED RETRIEVAL: {metadata['degradation_reason']}")
     
     # Step 6: Assign citations
     final_chunks: List[RetrievedChunk] = []

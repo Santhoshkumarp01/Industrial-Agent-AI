@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import CitationTag from './CitationTag'
+import FeedbackForm from './FeedbackForm'
 import { formatTimestamp } from '../../utils/formatters'
-import { submitFeedback } from '../../services/api'
 import useAppStore from '../../store/appStore'
 
 function ThinkingDots() {
@@ -38,31 +38,22 @@ function ThinkingDots() {
 }
 
 function AgentAnalysisContent({ analysis, logbookEntryId, onFeedbackSubmit }) {
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false)
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const setActivePanel = useAppStore((s) => s.setActivePanel)
 
-  const handleFeedback = async (verdict) => {
-    if (isSubmitting || feedbackSubmitted) return
-    
-    setIsSubmitting(true)
-    try {
-      await submitFeedback({
-        logbook_entry_id: logbookEntryId,
-        verdict: verdict, // "confirmed" or "incorrect"
-        engineer_name: "Engineer", // Can be enhanced to get real name
-      })
-      setFeedbackSubmitted(verdict)
-      if (onFeedbackSubmit) onFeedbackSubmit(verdict)
-    } catch (error) {
-      console.error('Failed to submit feedback:', error)
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleFeedbackSuccess = (verdict) => {
+    setFeedbackSubmitted(true)
+    setShowFeedbackForm(false)
+    if (onFeedbackSubmit) onFeedbackSubmit(verdict)
   }
 
   const handleViewReport = () => {
     setActivePanel('reports')
+  }
+
+  const handleViewLogbook = () => {
+    setActivePanel('logbook')
   }
 
   return (
@@ -227,90 +218,110 @@ function AgentAnalysisContent({ analysis, logbookEntryId, onFeedbackSubmit }) {
         </div>
       )}
 
-      {/* Feedback Buttons */}
+      {/* Feedback Section */}
       <div style={{ 
         marginTop: 16, 
         paddingTop: 12, 
-        borderTop: '1px solid var(--border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        flexWrap: 'wrap'
+        borderTop: '1px solid var(--border-subtle)'
       }}>
-        <span style={{ 
-          fontFamily: 'var(--font-mono)', 
-          fontSize: 10, 
-          color: 'var(--text-secondary)',
-          letterSpacing: '0.08em'
-        }}>
-          WAS THIS ANALYSIS HELPFUL?
-        </span>
-        {!feedbackSubmitted ? (
-          <>
+        {!feedbackSubmitted && !showFeedbackForm && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <button
-              onClick={() => handleFeedback('confirmed')}
-              disabled={isSubmitting}
+              onClick={() => setShowFeedbackForm(true)}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--accent-amber)',
+                background: 'var(--accent-amber-glow)',
+                color: 'var(--accent-amber)',
+                cursor: 'pointer',
+                letterSpacing: '0.06em'
+              }}
+            >
+              📝 PROVIDE FEEDBACK
+            </button>
+            <button
+              onClick={handleViewLogbook}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-active)',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                letterSpacing: '0.06em'
+              }}
+            >
+              📋 VIEW IN LOGBOOK
+            </button>
+            <button
+              onClick={handleViewReport}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-active)',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                letterSpacing: '0.06em',
+                marginLeft: 'auto'
+              }}
+            >
+              📊 VIEW REPORT →
+            </button>
+          </div>
+        )}
+
+        {showFeedbackForm && !feedbackSubmitted && (
+          <FeedbackForm 
+            logbookEntryId={logbookEntryId}
+            onSuccess={handleFeedbackSuccess}
+          />
+        )}
+
+        {feedbackSubmitted && (
+          <div style={{
+            background: 'rgba(93, 232, 145, 0.1)',
+            border: '1px solid var(--status-ok)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              color: 'var(--status-ok)',
+              letterSpacing: '0.08em'
+            }}>
+              ✓ FEEDBACK RECORDED - Thank you!
+            </span>
+            <button
+              onClick={handleViewLogbook}
               style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: 10,
                 padding: '4px 10px',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--status-ok)',
-                background: 'rgba(93, 232, 145, 0.1)',
+                background: 'transparent',
                 color: 'var(--status-ok)',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 letterSpacing: '0.06em',
-                opacity: isSubmitting ? 0.5 : 1
+                marginLeft: 'auto'
               }}
             >
-              ✓ CONFIRMED
+              VIEW IN LOGBOOK
             </button>
-            <button
-              onClick={() => handleFeedback('incorrect')}
-              disabled={isSubmitting}
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                padding: '4px 10px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--status-critical)',
-                background: 'rgba(232, 93, 93, 0.1)',
-                color: 'var(--status-critical)',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                letterSpacing: '0.06em',
-                opacity: isSubmitting ? 0.5 : 1
-              }}
-            >
-              ✗ INCORRECT
-            </button>
-          </>
-        ) : (
-          <span style={{ 
-            fontFamily: 'var(--font-mono)', 
-            fontSize: 10, 
-            color: feedbackSubmitted === 'confirmed' ? 'var(--status-ok)' : 'var(--status-critical)',
-            letterSpacing: '0.08em'
-          }}>
-            {feedbackSubmitted === 'confirmed' ? '✓ FEEDBACK RECORDED' : '✗ MARKED AS INCORRECT'}
-          </span>
+          </div>
         )}
-        <button
-          onClick={handleViewReport}
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 10,
-            padding: '4px 10px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--accent-amber)',
-            background: 'var(--accent-amber-glow)',
-            color: 'var(--accent-amber)',
-            cursor: 'pointer',
-            letterSpacing: '0.06em',
-            marginLeft: 'auto'
-          }}
-        >
-          VIEW REPORT →
-        </button>
       </div>
     </div>
   )
