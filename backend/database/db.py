@@ -1,7 +1,7 @@
 """
 SQLite database setup.
 
-Single file: maintenance_wizard.db
+Single file: industrial_agent.db
 Tables: incidents, logbook_entries, feedback, reports
 """
 
@@ -9,7 +9,7 @@ import sqlite3
 from pathlib import Path
 from contextlib import contextmanager
 
-DB_PATH = Path("maintenance_wizard.db")
+DB_PATH = Path("industrial_agent.db")
 
 
 def init_db():
@@ -75,7 +75,7 @@ def init_db():
                 FOREIGN KEY (incident_id) REFERENCES incidents(id)
             );
         """)
-    print("✓ SQLite database initialized: maintenance_wizard.db")
+    print("✓ SQLite database initialized: industrial_agent.db")
 
 
 @contextmanager
