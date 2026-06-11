@@ -165,7 +165,7 @@ def retrieve(
     reranked = rerank(query=query, chunks=all_candidates, top_k=config.TOP_K_FINAL)
     logger.info(f"Reranked to {len(reranked)} child chunks.")
 
-    # Step 4: Calculate confidence
+    # Step 4: Calculate CHILD confidence (used as baseline before parent upgrade)
     confidence_score, confidence_level, confidence_details = calculate_confidence(
         query=query,
         retrieved_chunks=reranked
@@ -195,19 +195,30 @@ def retrieve(
                 # Use parent sections instead of child fragments
                 reranked = parent_chunks
                 parent_fetch_succeeded = True
+
+                # Phase 2 Fix: Recalculate confidence using parent sections.
+                # Parent sections have relevance_score=0.95 (high match since child matched).
+                # This avoids cross-encoder child scores (0.5-0.75) dragging confidence to MEDIUM.
+                parent_confidence, parent_level, parent_details = calculate_confidence(
+                    query=query,
+                    retrieved_chunks=reranked
+                )
+                # Only upgrade confidence — never downgrade from child-level assessment
+                if parent_confidence > confidence_score:
+                    metadata["confidence_score"] = parent_confidence
+                    metadata["confidence_level"] = parent_level
+                    metadata["confidence_details"] = parent_details
+                    logger.info(f"Confidence upgraded after parent retrieval: {confidence_level}→{parent_level} ({confidence_score:.2f}→{parent_confidence:.2f})")
             else:
                 if is_list_question:
                     logger.error("⚠️ CRITICAL: Parent sections not found for LIST QUESTION. Answer may be incomplete!")
-                    # For list questions, prefer single best child chunk over merging fragments
                     if reranked:
                         logger.warning(f"Falling back to single best child chunk (score: {reranked[0].relevance_score:.3f})")
-                        # Keep only top chunk to avoid merging fragments
                         reranked = reranked[:1]
                 logger.warning("Parent sections not found, using child chunks.")
         except Exception as e:
             logger.error(f"Parent retrieval failed: {e}. Using child chunks.")
             if is_list_question and reranked:
-                # For list questions, prefer single best chunk
                 logger.warning(f"LIST QUESTION: Using only top chunk to avoid fragment merging")
                 reranked = reranked[:1]
     

@@ -101,10 +101,14 @@ def calculate_confidence(
     # Ensure it's in valid range
     confidence_score = float(max(0.0, min(1.0, confidence_score)))
     
-    # Determine confidence level
-    if confidence_score >= 0.75:
+    # Phase 4 Fix: Recalibrated thresholds
+    # Old thresholds (HIGH ≥ 0.75, MEDIUM 0.45–0.75) were too strict.
+    # Cross-encoder child scores (0.5–0.93) after parent retrieval (all set to 0.95)
+    # means effective range for correct answers is 0.55–0.80.
+    # New thresholds match the realistic score distribution.
+    if confidence_score >= 0.60:
         confidence_level = "HIGH"
-    elif confidence_score >= 0.45:
+    elif confidence_score >= 0.35:
         confidence_level = "MEDIUM"
     else:
         confidence_level = "LOW"
@@ -168,29 +172,42 @@ def generate_confidence_message(
 ) -> str:
     """
     Generate user-friendly confidence message.
-    
+
+    Phase 4 Fix:
+    - HIGH → no prefix (clean answer)
+    - MEDIUM → brief verification note
+    - LOW → explicit warning with reason
+    - Answers from memory (no citation) get a special note instead
+
     Returns:
-        Message to display to user about answer quality
+        Message to prepend to answer, or empty string for HIGH confidence.
     """
     if confidence_level == "HIGH":
-        return f"✓ High confidence answer (score: {confidence_score:.0%}) based on {details['num_chunks']} relevant manual sections."
-    
+        # Phase 4 Fix: No prefix for HIGH confidence — don't clutter correct answers
+        return ""
+
     elif confidence_level == "MEDIUM":
-        return f"⚠ Moderate confidence (score: {confidence_score:.0%}). Answer based on {details['num_chunks']} chunks. Please verify with supervisor if critical."
-    
+        return (
+            f"⚠ Moderate confidence ({confidence_score:.0%}). "
+            f"Verify with manual if used for critical operations."
+        )
+
     else:  # LOW
         reasons = []
         breakdown = details.get("breakdown", {})
-        
+
         if breakdown.get("top_chunk_score", 0) < 0.4:
-            reasons.append("low relevance")
+            reasons.append("low retrieval relevance")
         if breakdown.get("coverage", 0) < 0.4:
-            reasons.append("insufficient detail")
+            reasons.append("insufficient context detail")
         if breakdown.get("chunk_consistency", 0) < 0.4:
-            reasons.append("inconsistent information")
-        
-        reason_text = ", ".join(reasons) if reasons else "limited evidence"
-        return f"⚠ Low confidence (score: {confidence_score:.0%}) due to {reason_text}. Answer may be incomplete or unreliable. Please consult manual directly."
+            reasons.append("inconsistent sources")
+
+        reason_text = ", ".join(reasons) if reasons else "limited evidence in retrieved sections"
+        return (
+            f"⚠ Low confidence ({confidence_score:.0%}) — {reason_text}. "
+            f"Please consult the manual directly for critical decisions."
+        )
 
 
 def assess_answer_quality_with_llm(

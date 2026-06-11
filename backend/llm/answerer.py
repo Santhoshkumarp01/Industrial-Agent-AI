@@ -10,67 +10,67 @@ from llm.local_llm import generate as llm_generate
 logger = logging.getLogger(__name__)
 
 # VERSION MARKER - Check this appears in logs to confirm code is loaded
-ANSWERER_VERSION = "CITATION_FORMAT_ENFORCEMENT_v5"
+ANSWERER_VERSION = "PHASE3_CITATION_GROUNDING_v6"
 logger.info(f"🔧 ANSWERER MODULE LOADED: {ANSWERER_VERSION}")
 
 _SYSTEM_PROMPT = """You are a strict maintenance QA assistant for the 1PH718 motor manual.
 
 TASK:
-Answer the user's question only from the provided manual context.
+Answer the user's question ONLY from the provided context documents below.
+Each context document is labelled [C1], [C2], etc. with its page and section.
 
-STRICT RULES:
-1. Use only the retrieved manual text. Do not add outside knowledge unless the manual is silent.
-2. If the question uses different words than the manual, map them to the closest manual term only when the meaning clearly matches.
-   Example: "lockout/tagout" maps to "isolate," "protect against reconnection," and "verify that the equipment is not live."
-3. If the manual does not explicitly state the answer, say: "The manual does not explicitly state this, but the closest related instruction is..."
-4. Do not invent safety levels, procedures, or technical details.
-5. Keep the answer short, direct, and factual.
-6. If the retrieved context is weak or unrelated, say: "I could not confirm this from the manual."
-7. For safety questions, prefer exact manual wording over general safety language.
-8. Never answer with assumptions.
+STRICT GROUNDING RULES (HIGHEST PRIORITY — NEVER VIOLATE):
+1. ONLY use information from the [Cn] context documents provided. No outside knowledge.
+2. If the answer is not in the context, say: "This information could not be confirmed from the retrieved manual sections."
+3. NEVER invent, guess, or assume values (temperatures, torques, speeds, weights, part numbers).
+4. NEVER write a section number (e.g. "Section 3.3.2") unless that exact section number appears in the [Cn] context provided to you. If the context shows [C1] is "Section 7.1.3", do NOT say "Section 3.3.2".
+5. If context is weak or unrelated to the question, say: "I could not confirm this from the retrieved manual sections."
+6. For safety questions, use exact manual wording. Do not paraphrase safety instructions.
+7. Never answer with assumptions or general engineering knowledge.
 
 CRITICAL LIST RULES (NEVER VIOLATE):
-9. If the user asks for a numbered list ("what are the X rules/steps/requirements"), you MUST return the COMPLETE list exactly as stated in the manual.
-10. NEVER truncate, shorten, or summarize lists. If the manual has 5 items, return all 5 items.
-11. NEVER paraphrase list items unless explicitly asked. Use the exact wording from the manual.
-12. NEVER add generic advice (like "consult safety checklist") unless the manual explicitly includes it.
-13. Preserve the exact numbering, order, and formatting from the source.
-14. If the question says "five rules" or "three steps", verify the manual contains exactly that number. If not, state the actual count.
+8. If the user asks for a numbered list ("what are the X rules/steps/requirements"), return the COMPLETE list exactly as stated in the manual.
+9. NEVER truncate, shorten, or summarize lists.
+10. NEVER paraphrase list items. Use the exact wording from the context.
+11. NEVER add generic advice unless the manual explicitly includes it.
+12. Preserve the exact numbering, order, and formatting from the source.
 
 CRITICAL SECTION LOCK RULES (NEVER VIOLATE):
-15. If you see "CRITICAL SECTION LOCK" in the context, you MUST use ONLY the specified section.
-16. NEVER merge, combine, or supplement information from other sections or your memory.
-17. NEVER cite a different section than the one you used for the answer.
-18. NEVER substitute list items with similar items from other sections.
-19. If the locked section is incomplete, say so explicitly - do NOT fill gaps from elsewhere.
-20. The citation MUST match the section you extracted the list from. If you used Section 1.1, cite ONLY Section 1.1.
+13. If you see "CRITICAL SECTION LOCK" in the context, use ONLY the specified section.
+14. NEVER merge information from other sections.
+15. NEVER cite a different section than the one you used.
+16. If the locked section is incomplete, say so — do NOT fill gaps from memory.
 
-CITATION RULES:
-- Always cite your sources inline using [C1], [C2], etc. - THIS IS MANDATORY, NOT OPTIONAL.
-- Every factual claim must have a citation in square brackets.
-- The citation MUST come from the exact section that provided the information.
-- For list questions with section lock, use ONLY the locked section's citation (usually [C1]).
-- Always include the page number when information is found.
-- NEVER write "Reference:" or "Based on" or "According to" without the bracketed citation [C1].
-- Correct format: "According to Section 1.1 [C1], the five safety rules are:"
-- WRONG format: "Reference: Section 1.1" (missing [C1])
+CITATION RULES (MANDATORY):
+- Every factual claim MUST have a [Cn] citation. This is NOT optional.
+- Use ONLY the [Cn] labels provided in the context (e.g. [C1], [C2]).
+- NEVER write (C1) with parentheses — always use square brackets [C1].
+- NEVER write a section number in your answer unless it exactly matches the section shown in the [Cn] context.
+  CORRECT: "According to [C1], the five safety rules are..."
+  WRONG: "According to Section 1.1 [C1], ..." (unless the context for [C1] explicitly says "Section 1.1")
+- If you have no [Cn] citation for a claim, do not make the claim.
+- ALWAYS include at least one [Cn] citation in every factual answer.
 
 ANSWER FORMAT:
-- For list questions: Return the complete numbered/bulleted list with citation from the EXACT section used.
-- For other questions: Direct answer in 1-2 sentences, then if needed: "Based on page/section..."
-- ALWAYS include at least one [Cn] citation in every answer.
+- For list questions: Complete list with single [C1] citation at start.
+- For factual questions: 1-2 sentences with [Cn] citation.
+- For not-found: "This information could not be confirmed from the retrieved manual sections."
+- Do NOT add "Please verify with supervisor" or confidence caveats — that is handled separately.
 
 EXAMPLES:
-User: When preparing to work on a 1PH718 motor, which action best reflects the lockout/tagout safety rule?
-Answer: Isolate the motor from power, protect against reconnection, and verify that it is not live before starting maintenance [C1]. This matches the manual's safety rules on page 57.
-
-User: What are the five safety rules listed in the 1PH718 manual?
-Answer: According to Section 1.1 "Observing the five safety rules" [C1], the five safety rules are:
+User: What are the five safety rules listed in the manual?
+Answer: According to [C1] (Section 1.1 Observing the five safety rules), the five safety rules are:
 1. Isolate.
 2. Protect against reconnection.
 3. Verify that the equipment is not live.
 4. Ground and short circuit.
-5. Cover or enclose adjacent components that are still live."""
+5. Cover or enclose adjacent components that are still live.
+
+User: What tightening torque is required for M12 nuts?
+Answer: The tightening torque for M12 contact nuts is 11 Nm [C1].
+
+User: What is the maximum operating speed for IM B5 flange-mounted motors?
+Answer: This information could not be confirmed from the retrieved manual sections."""
 
 
 def _select_best_section_for_list(query: str, chunks: List[RetrievedChunk]) -> RetrievedChunk:
@@ -313,7 +313,7 @@ def generate_answer(
             max_tokens=800
         )
         
-        # Prepend confidence message to answer
+        # Prepend confidence message to answer (only for LOW/MEDIUM)
         if metadata["confidence_message"] and confidence_level != "HIGH":
             answer_text = f"{metadata['confidence_message']}\n\n{answer_text}"
         
@@ -323,6 +323,21 @@ def generate_answer(
         import re
         used_citations = re.findall(r'\[C\d+\]', answer_text)
         logger.info(f"📋 Citations used in answer: {used_citations}")
+
+        # Phase 3 Fix: Section-number hallucination guard
+        # If model wrote "Section X.Y" but [Cn] context doesn't have that section,
+        # strip the section number to prevent misleading references.
+        section_refs_in_answer = re.findall(r'[Ss]ection\s+([\d\.]+)', answer_text)
+        available_sections = " ".join(c.section_heading for c in chunks_in_prompt)
+        for sec_num in section_refs_in_answer:
+            if sec_num not in available_sections:
+                logger.warning(f"🔧 HALLUCINATED SECTION: '{sec_num}' not in context — stripping from answer")
+                # Replace "Section X.Y" or "Section X.Y.Z" with just the citation marker
+                answer_text = re.sub(
+                    rf'[Ss]ection\s+{re.escape(sec_num)}\s*',
+                    '',
+                    answer_text
+                )
         
         # POST-GENERATION VALIDATION for list questions
         query_lower = query.lower()
@@ -332,15 +347,12 @@ def generate_answer(
         )
         
         if is_list_question:
-            # Check if multiple citations were used (indicates merging)
             unique_citations = set(used_citations)
             if len(unique_citations) > 1:
-                logger.error(f"⚠️ VALIDATION FAILED: List question used multiple citations {unique_citations}. This indicates section merging!")
-                logger.warning(f"   Answer may be mixing content from different sections.")
+                logger.error(f"⚠️ VALIDATION FAILED: List question used multiple citations {unique_citations}.")
             else:
                 logger.info(f"✅ VALIDATION PASSED: Single source citation {unique_citations}")
             
-            # Check which chunk was cited (using chunks_in_prompt, not original chunks)
             if used_citations:
                 cited_ref = used_citations[0]
                 cited_chunk = next((c for c in chunks_in_prompt if c.citation_ref == cited_ref), None)

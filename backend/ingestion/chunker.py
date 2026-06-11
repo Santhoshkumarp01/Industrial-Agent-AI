@@ -36,9 +36,10 @@ def _is_low_quality(text: str) -> bool:
     
     # Special case: if text contains numbered list items, keep it even if short
     if any(stripped.startswith(f"{i}.") for i in range(1, 10)):
-        return _token_count(stripped) < 15  # Lower threshold for lists
-    
-    if _token_count(stripped) < config.MIN_CHUNK_TOKENS:
+        return _token_count(stripped) < 10  # Lower threshold for lists
+
+    # Phase 1 Fix: lowered from 25 → 10 to keep short spec values (e.g. "nmax = 4500 rpm")
+    if _token_count(stripped) < 10:
         return True
     if _SEPARATOR_PATTERN.match(stripped):
         return True
@@ -163,7 +164,13 @@ def _chunk_list_with_parent(block: ExtractedBlock, chunk_index_start: int, secti
 
 
 def _chunk_table_with_parent(block: ExtractedBlock, chunk_index_start: int, parent_id: str) -> List[Chunk]:
-    """Convert table to prose chunks linked to parent."""
+    """
+    Convert table to prose chunks linked to parent.
+
+    Phase 1 Fix: Section heading prefix is already in block.text (added by extractor).
+    parse_table_to_prose receives the full text including the section prefix,
+    so each prose chunk carries context like '§3.3.1 Terminal assignment: ...'
+    """
     raw_rows = [
         [cell.strip() for cell in line.split("|")]
         for line in block.text.splitlines()
@@ -179,6 +186,11 @@ def _chunk_table_with_parent(block: ExtractedBlock, chunk_index_start: int, pare
         )
     except Exception as e:
         logger.warning(f"Table parse failed: {e}")
+        # Phase 1 Fix: fallback — store raw pipe-delimited rows as single chunk
+        # so spec values are not silently lost
+        raw_text = block.text.strip()
+        if raw_text and not _is_low_quality(raw_text):
+            return [_make_chunk(block, raw_text, chunk_index_start, parent_id)]
         return []
 
     chunks: List[Chunk] = []
@@ -187,6 +199,12 @@ def _chunk_table_with_parent(block: ExtractedBlock, chunk_index_start: int, pare
         if not _is_low_quality(prose):
             chunks.append(_make_chunk(block, prose, idx, parent_id))
             idx += 1
+
+    # Phase 1 Fix: if prose conversion produced nothing, store raw text as fallback
+    if not chunks:
+        raw_text = block.text.strip()
+        if raw_text and not _is_low_quality(raw_text):
+            chunks.append(_make_chunk(block, raw_text, chunk_index_start, parent_id))
 
     return chunks
 

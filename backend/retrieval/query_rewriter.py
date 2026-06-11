@@ -43,6 +43,15 @@ SYNONYMS = {
     "temperature": ["thermal", "heat", "temperature level", "operating temperature"],
     "pressure": ["hydraulic pressure", "pneumatic pressure", "pressure level"],
     "lubrication": ["lubricant", "grease", "oil", "lubrication system"],
+    # Phase 2 Fix — new synonyms for high-failure queries
+    "qualified personnel": ["authorized personnel", "qualified electrician", "specialist", "trained personnel"],
+    "clearance in air": ["creepage distance", "air gap", "minimum clearance", "clearance distance live parts"],
+    "maximum speed": ["nmax", "permissible speed", "operating speed limit", "max rpm", "speed limit"],
+    "bearing relubrication": ["bearing grease", "regreasing interval", "lubrication period", "grease replacement"],
+    "degree of protection": ["ip rating", "ip55", "ip44", "protection class", "ingress protection"],
+    "insulation resistance": ["winding resistance", "megohm", "megaohm", "IR value", "insulation test"],
+    "tightening torque": ["torque value", "bolt torque", "nm torque", "fastener torque", "screw torque"],
+    "weight": ["mass", "kg", "kilogram", "motor weight", "approximate weight"],
 }
 
 
