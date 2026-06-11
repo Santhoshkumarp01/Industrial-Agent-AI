@@ -576,23 +576,35 @@ def _reciprocal_rank_fusion(
         bbox_raw = json.loads(p.get("bbox", "[]"))
         bbox = tuple(float(v) for v in bbox_raw) if bbox_raw else (0.0, 0.0, 0.0, 0.0)
 
+        # ── Feedback correction boost ────────────────────────────────────────
+        # Engineer-verified corrections are more trustworthy than raw manual text.
+        # Boost their RRF score by 30% so they surface above generic manual chunks
+        # when a similar fault pattern recurs on the same equipment.
+        block_type = p.get("block_type", "paragraph")
+        rrf_score = scores[cid]
+        if block_type == "feedback_correction":
+            rrf_score *= 1.3
+            logger.debug(f"[RRF] Boosted feedback_correction chunk {cid}: {scores[cid]:.4f} → {rrf_score:.4f}")
+
         retrieved.append(
             RetrievedChunk(
                 chunk_id=cid,
-                doc_id=p["doc_id"],        # ← Ensure this is included
+                doc_id=p["doc_id"],
                 doc_name=p["doc_name"],
                 equipment_tag=p.get("equipment_tag", ""),
-                block_type=p.get("block_type", "paragraph"),  # ← FIXED: Added block_type
+                block_type=block_type,
                 text=p["text"],
                 page_number=int(p["page_number"]),
                 bbox=bbox,
                 section_heading=p.get("section_heading", ""),
-                relevance_score=scores[cid],
-                citation_ref="",   # assigned by retriever.py
-                parent_id=p.get("parent_id") or None,  # ← ADDED: Extract parent_id from payload
+                relevance_score=rrf_score,
+                citation_ref="",
+                parent_id=p.get("parent_id") or None,
             )
         )
 
+    # Re-sort after boost so corrections surface to top
+    retrieved.sort(key=lambda c: c.relevance_score, reverse=True)
     return retrieved
 
 

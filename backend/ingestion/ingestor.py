@@ -112,7 +112,8 @@ def ingest_text_chunk(
 ) -> str:
     """
     Ingest a single text chunk directly into Qdrant.
-    Used for feedback loop - when engineer corrections are stored back into knowledge base.
+    Used ONLY for: engineer feedback corrections, historical reports, SOPs.
+    NEVER call this with runtime machine logs, sensor readings, or transient anomaly events.
 
     Args:
         text: Text content to store
@@ -124,6 +125,16 @@ def ingest_text_chunk(
     Returns:
         chunk_id of the stored chunk
     """
+    # Guard: refuse to index machine log / sensor stream content into RAG
+    blocked_block_types = {"machine_log", "sensor_reading", "anomaly_event", "live_data"}
+    blocked_sources = {"machine_logs", "sensor_stream", "runtime_log", "live_monitor"}
+    if block_type in blocked_block_types or source in blocked_sources:
+        raise ValueError(
+            f"Blocked attempt to index live machine data into RAG. "
+            f"block_type='{block_type}' source='{source}'. "
+            "Live data must go to in-memory store, not Qdrant."
+        )
+
     chunk_id = str(uuid.uuid4())
     doc_id = str(uuid.uuid4())
 

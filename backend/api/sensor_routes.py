@@ -38,6 +38,67 @@ _alert_cooldown: dict[str, float] = {}
 ALERT_COOLDOWN_SECONDS = 30
 
 
+def _threshold_based_prediction(reading: SensorReading) -> PredictionResult:
+    """
+    Fallback anomaly detection using simple thresholds.
+    Used when ML models are not available.
+    """
+    # Define thresholds per equipment type
+    THRESHOLDS = {
+        "ROLLING-MILL-MAIN-DRIVE-MOTOR": {
+            "vibration": 7.5, "temperature": 95.0, "current": 62.0, "pressure": 2.8
+        },
+        "GENERAL-PLANT-MOTOR": {
+            "vibration": 6.5, "temperature": 92.0, "current": 44.0, "pressure": 2.4
+        },
+        "INDUSTRIAL-INDUCTION-COMPRESSOR-MOTOR": {
+            "vibration": 8.0, "temperature": 110.0, "current": 52.0, "pressure": 5.0
+        },
+        "BLOWER-LARGE-MOTOR-REFERENCE": {
+            "vibration": 6.5, "temperature": 90.0, "current": 82.0, "pressure": 3.5
+        },
+        # Legacy equipment IDs
+        "RM1": {"vibration": 7.5, "temperature": 95.0, "current": 62.0, "pressure": 2.8},
+        "RM3": {"vibration": 7.5, "temperature": 95.0, "current": 62.0, "pressure": 2.8},
+        "BF1": {"vibration": 6.5, "temperature": 90.0, "current": 82.0, "pressure": 3.5},
+        "COMP_A": {"vibration": 8.0, "temperature": 110.0, "current": 52.0, "pressure": 5.0},
+    }
+    
+    equip_id = reading.equipment_id.upper()
+    thresholds = THRESHOLDS.get(equip_id, THRESHOLDS["RM1"])
+    
+    # Check if any sensor exceeds threshold
+    violations = 0
+    if reading.vibration > thresholds["vibration"]:
+        violations += 1
+    if reading.temperature > thresholds["temperature"]:
+        violations += 1
+    if reading.current > thresholds["current"]:
+        violations += 1
+    if reading.pressure < thresholds["pressure"]:  # Low pressure is bad
+        violations += 1
+    
+    is_anomaly = violations > 0
+    anomaly_score = min(violations * 0.3, 1.0)
+    
+    if anomaly_score >= 0.75:
+        risk_level = "CRITICAL"
+    elif anomaly_score >= 0.50:
+        risk_level = "HIGH"
+    elif anomaly_score >= 0.25:
+        risk_level = "MEDIUM"
+    else:
+        risk_level = "LOW"
+    
+    return PredictionResult(
+        equipment_id=reading.equipment_id,
+        is_anomaly=is_anomaly,
+        anomaly_score=round(anomaly_score, 4),
+        risk_level=risk_level,
+        timestamp=reading.timestamp
+    )
+
+
 @router.post("/reading", response_model=PredictionResult)
 async def receive_reading(reading: SensorReading):
     """
@@ -45,8 +106,13 @@ async def receive_reading(reading: SensorReading):
     Backend scores it with ML model and returns prediction.
     If anomaly detected, fires an alert.
     """
-    # Score with Isolation Forest
-    result = predict(reading)
+    # Score with Isolation Forest (fallback to threshold-based if model not found)
+    try:
+        result = predict(reading)
+    except FileNotFoundError:
+        # Fallback: use simple threshold-based detection
+        # This allows the system to work without trained ML models
+        result = _threshold_based_prediction(reading)
 
     # Store in buffer
     await add_reading(reading, result)

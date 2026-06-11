@@ -26,7 +26,7 @@ export default function TopBar() {
         zIndex: 100,
       }}
     >
-      {/* Left */}
+      {/* Left — branding */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {/* Logo icon */}
         <div
@@ -44,13 +44,13 @@ export default function TopBar() {
           <span
             style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: 600,
               color: 'var(--bg-base)',
               letterSpacing: '-0.02em',
             }}
           >
-            MW
+            IA
           </span>
         </div>
 
@@ -64,7 +64,7 @@ export default function TopBar() {
             textTransform: 'uppercase',
           }}
         >
-          Maintenance Wizard
+          Industrial Agent
         </span>
 
         <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>|</span>
@@ -76,7 +76,7 @@ export default function TopBar() {
             color: 'var(--text-secondary)',
           }}
         >
-          Maintenance Wizard AI
+          Industrial Agent AI
         </span>
       </div>
 

@@ -1,5 +1,6 @@
 import logging
 from typing import List
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -7,7 +8,25 @@ logger = logging.getLogger(__name__)
 KEY_COLUMN_KEYWORDS = [
     "parameter", "description", "component", "equipment",
     "fault", "symptom", "action", "part", "name", "item",
+    # Phase 1 Fix: added more domain-relevant keywords
+    "programme", "program", "course", "type", "motor", "model",
+    "category", "specification", "property", "feature", "metric",
 ]
+
+
+def _clean_cell(text: str) -> str:
+    """
+    Clean a table cell: collapse internal whitespace and newlines.
+
+    Phase 1 Fix: PyMuPDF extracts table cells with embedded newlines
+    (e.g. 'Engineering\\nand\\nTechnology*'). This collapses them to
+    clean single-line text so the model can read values clearly.
+    """
+    if text is None:
+        return ""
+    # Replace any combination of whitespace (including \n) with a single space
+    cleaned = re.sub(r'\s+', ' ', str(text)).strip()
+    return cleaned
 
 
 def _detect_key_column(headers: List[str]) -> int:
@@ -16,21 +35,26 @@ def _detect_key_column(headers: List[str]) -> int:
     Returns the index of the key column, or 0 as default.
     """
     for idx, header in enumerate(headers):
-        if header.strip().lower() in KEY_COLUMN_KEYWORDS:
+        if _clean_cell(header).lower() in KEY_COLUMN_KEYWORDS:
             return idx
     return 0  # default to first column
 
 
 def _row_to_sentence(headers: List[str], row: List[str], key_col_idx: int) -> str:
-    """Convert a table row to natural language prose."""
-    key_val = str(row[key_col_idx]).strip() if key_col_idx < len(row) else ""
+    """
+    Convert a table row to natural language prose.
+
+    Phase 1 Fix: cells are cleaned before conversion to remove embedded newlines.
+    """
+    key_val = _clean_cell(row[key_col_idx]) if key_col_idx < len(row) else ""
     parts = []
     for i, (header, cell) in enumerate(zip(headers, row)):
         if i == key_col_idx:
             continue
-        cell_str = str(cell).strip() if cell is not None else ""
-        if cell_str:
-            parts.append(f"{header.strip()} is {cell_str}")
+        cell_str = _clean_cell(cell)
+        header_str = _clean_cell(header)
+        if cell_str and cell_str not in ("-", "—", "N/A", ""):
+            parts.append(f"{header_str} is {cell_str}")
     sentence = f"{key_val}: " + "; ".join(parts) + "." if parts else f"{key_val}."
     return sentence
 
@@ -44,6 +68,9 @@ def parse_table_to_prose(
 ) -> List[str]:
     """
     Convert a table (list of rows) to natural language prose chunks.
+
+    Phase 1 Fix: All cells are cleaned (newlines collapsed) before processing.
+    This fixes tables where PyMuPDF stores multi-line cell values.
 
     Args:
         rows: Table rows including the header row as rows[0].
@@ -62,8 +89,16 @@ def parse_table_to_prose(
         logger.warning("Table has no data rows, skipping.")
         return []
 
-    headers = [str(h).strip() if h is not None else "" for h in rows[0]]
-    data_rows = rows[1:]
+    # Phase 1 Fix: clean all headers and cells upfront
+    headers = [_clean_cell(h) for h in rows[0]]
+    data_rows = [[_clean_cell(cell) for cell in row] for row in rows[1:]]
+
+    # Filter completely empty data rows
+    data_rows = [row for row in data_rows if any(cell.strip() for cell in row)]
+
+    if not data_rows:
+        logger.warning("Table has no non-empty data rows after cleaning.")
+        return []
 
     key_col_idx = _detect_key_column(headers)
     prefix = f"From {document_title}, Section: {section_heading}, Table: {caption}. "

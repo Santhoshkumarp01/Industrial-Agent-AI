@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import EquipmentCard from './EquipmentCard'
 import SensorChart from './SensorChart'
 import AlertBanner from './AlertBanner'
+import MonitorChatPanel from './MonitorChatPanel'
 import { formatRelativeTime } from '../../utils/formatters'
 import { EQUIPMENT_LIST } from '../../services/sensorSimulator'
-import { runAnalysis } from '../../services/api'
+import { runMachineAnalysis, injectMachineAnomaly, getMachineLogs } from '../../services/api'
 import useAppStore from '../../store/appStore'
 
 const SENSOR_LABELS = {
@@ -14,90 +15,136 @@ const SENSOR_LABELS = {
   pressure:    'Lube Pressure (bar)',
 }
 
-export default function MonitoringPanel({ sensorHook, onSendAlertToChat, chatHook }) {
+export default function MonitoringPanel({ sensorHook, chatHook, documentsHook }) {
   const {
     equipmentData,
     alerts,
     selectedEquipment,
     selectEquipment,
     dismissAlert,
-    triggerAnomaly,
   } = sensorHook
 
-  const setActivePanel = useAppStore((s) => s.setActivePanel)
+  const setActiveCitation = useAppStore((s) => s.setActiveCitation)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [backendMachineLogs, setBackendMachineLogs] = useState({})
+  const analyzingIdRef = useRef(null) // tracks the "analyzing..." message id so we can replace it
 
   const lastUpdated = new Date()
   const topAlert = alerts[0] || null
   const selectedEquip = equipmentData[selectedEquipment]
 
-  const handleViewAnalysis = async (alert) => {
-    if (isAnalyzing) return
-    
-    setIsAnalyzing(true)
-    try {
-      // Get current sensor data for the equipment
-      const equipData = equipmentData[alert.equipmentId]
-      const sensorData = {
-        vibration: equipData?.sensors?.vibration?.value || 0,
-        temperature: equipData?.sensors?.temperature?.value || 0,
-        current: equipData?.sensors?.current?.value || 0,
-        pressure: equipData?.sensors?.pressure?.value || 0,
+  // ── Fetch backend machine logs every 5s ──────────────────────────────────
+  useEffect(() => {
+    const fetchAllMachineLogs = async () => {
+      try {
+        const results = await Promise.all(
+          EQUIPMENT_LIST.map(async (equip) => {
+            const data = await getMachineLogs(equip.id, 5)
+            return { machineTag: equip.id, data }
+          })
+        )
+        const logsMap = {}
+        results.forEach(({ machineTag, data }) => {
+          logsMap[machineTag] = data
+        })
+        setBackendMachineLogs(logsMap)
+      } catch (error) {
+        console.error('Failed to fetch backend machine logs:', error)
       }
+    }
+    fetchAllMachineLogs()
+    const intervalId = setInterval(fetchAllMachineLogs, 5000)
+    return () => clearInterval(intervalId)
+  }, [])
 
-      // Call agent analysis API
-      const analysisResult = await runAnalysis({
-        equipment_id: alert.equipmentId,
-        equipment_name: alert.equipmentName,
-        alert_description: `${alert.sensorKey} anomaly detected (${alert.value?.toFixed(1)} ${alert.unit || ''})`,
-        sensor_data: sensorData,
-        anomaly_score: alert.anomalyScore || 0.85,
-        risk_level: alert.riskLevel || 'HIGH',
-        rul_hours: alert.rulHours || null,
-        triggered_by: 'alert',
-        alert_id: alert.id,
+  // ── Open the PDF for the machine's mapped manual ─────────────────────────
+  const openMachineManual = (mappedDocName) => {
+    if (!mappedDocName) return
+    const docs = documentsHook?.documents || []
+    // doc_name in Qdrant is the original filename (e.g. "Steel Plant - Rolling Mill...")
+    const doc = docs.find(
+      (d) => d.doc_name === mappedDocName || d.doc_name?.includes(mappedDocName)
+    )
+    if (doc) {
+      // Open PDF viewer at page 1 with the doc_id
+      setActiveCitation({
+        doc_id:      doc.doc_id,
+        doc_name:    doc.doc_name,
+        page_number: 1,
+        bbox:        null,
+        ref:         '📄 MANUAL',
       })
+    }
+  }
 
-      // Switch to chat panel and add the analysis as a message
-      setActivePanel('chat')
-      
-      // Add the analysis result as an assistant message in chat
-      if (chatHook && chatHook.addAnalysisMessage) {
-        chatHook.addAnalysisMessage(analysisResult)
-      }
+  // ── Run analysis and post result in monitor chat ─────────────────────────
+  const runAnalysis = async (machineTag, machineName) => {
+    if (isAnalyzing) return
+    setIsAnalyzing(true)
 
-      // Dismiss the alert
-      dismissAlert(alert.id)
-    } catch (error) {
-      console.error('Failed to run analysis:', error)
-      // Fallback: send as chat message
-      const sensorCfg = EQUIPMENT_LIST.find((e) => e.id === alert.equipmentId)
-        ?.sensors?.[alert.sensorKey]
-      const threshold = sensorCfg ? (sensorCfg.normal[1]).toFixed(1) : 'N/A'
-      const query =
-        `ALERT: ${alert.sensorKey} anomaly detected on ${alert.equipmentName}. ` +
-        `Reading: ${alert.value?.toFixed(1)} (threshold: ${threshold}). ` +
-        `Error running automated analysis: ${error.message}. Please analyze manually.`
-      onSendAlertToChat(query)
-      dismissAlert(alert.id)
+    // Show immediate "Analyzing..." bubble and keep its id to replace later
+    const analyzingId = chatHook?.addAnalyzingMessage(
+      `🔍 Analyzing ${machineName}...`
+    )
+    analyzingIdRef.current = analyzingId
+
+    try {
+      const result = await runMachineAnalysis(machineTag, { includeLogs: 10 })
+      chatHook?.replaceAnalyzingMessage(analyzingId, result)
+    } catch (err) {
+      console.error('Analysis failed:', err)
+      chatHook?.replaceAnalyzingWithError(analyzingId, `Analysis failed for ${machineName}: ${err.message}`)
     } finally {
       setIsAnalyzing(false)
     }
   }
 
+  // ── Equipment card clicked → show quick-action prompt in monitor chat ──
+  const handleCardClick = (machineTag, machineName, latestLog) => {
+    selectEquipment(machineTag)
+    // Open the machine's mapped PDF manual
+    openMachineManual(latestLog?.mapped_document)
+
+    const severity = latestLog?.severity || 'NORMAL'
+    const faultCode = latestLog?.fault_code && latestLog.fault_code !== '—' ? ` (${latestLog.fault_code})` : ''
+    const statusLine = severity === 'NORMAL'
+      ? `✅ All sensors within normal range.`
+      : severity === 'WARNING'
+        ? `⚠️ WARNING detected${faultCode} — sensor anomaly present.`
+        : `🚨 CRITICAL fault${faultCode} — immediate attention required.`
+
+    // Show a contextual prompt card in monitor chat
+    chatHook?.addEquipmentPrompt({
+      machineTag,
+      machineName,
+      severity,
+      statusLine,
+      latestLog,
+    })
+  }
+  const handleViewAnalysis = async (alert) => {
+    if (isAnalyzing) return
+    const machineTag = alert.equipmentId
+    const machineName = alert.equipmentName
+
+    // Inject backend anomaly first so logs show the issue
+    try {
+      await injectMachineAnomaly(machineTag)
+      await new Promise((res) => setTimeout(res, 400))
+    } catch (_) { /* ignore */ }
+
+    dismissAlert(alert.id)
+    await runAnalysis(machineTag, machineName)
+  }
+
   return (
-    <div
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        minWidth: 0,
-      }}
-    >
-      {/* Panel header */}
-      <div
-        style={{
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', minWidth: 0 }}>
+
+      {/* ── Left: equipment dashboard ──────────────────────────────────── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+
+        {/* Panel header */}
+        <div style={{
           height: 44,
           borderBottom: '1px solid var(--border)',
           display: 'flex',
@@ -105,82 +152,86 @@ export default function MonitoringPanel({ sensorHook, onSendAlertToChat, chatHoo
           justifyContent: 'space-between',
           padding: '0 16px',
           flexShrink: 0,
-        }}
-      >
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-amber)', letterSpacing: '0.08em' }}>
-          LIVE MONITOR
-        </span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>
-          UPDATED {formatRelativeTime(lastUpdated).toUpperCase()}
-        </span>
-      </div>
-
-      {/* Alert banner */}
-      {topAlert && (
-        <AlertBanner
-          alert={topAlert}
-          onDismiss={dismissAlert}
-          onViewAnalysis={handleViewAnalysis}
-        />
-      )}
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 0' }}>
-        {/* Equipment cards grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 8,
-            marginBottom: 16,
-          }}
-        >
-          {EQUIPMENT_LIST.map((e) => {
-            const equip = equipmentData[e.id]
-            return (
-              <EquipmentCard
-                key={e.id}
-                equip={equip}
-                isSelected={selectedEquipment === e.id}
-                onClick={() => selectEquipment(e.id)}
-              />
-            )
-          })}
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 14 }}>📡</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-amber)', letterSpacing: '0.08em' }}>
+              LIVE MONITOR INTELLIGENCE
+            </span>
+          </div>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>
+            UPDATED {formatRelativeTime(lastUpdated).toUpperCase()}
+          </span>
         </div>
 
-        {/* Selected equipment sensor charts */}
-        {selectedEquip && (
-          <>
-            <div
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                color: 'var(--text-muted)',
-                letterSpacing: '0.10em',
-                marginBottom: 8,
-                textTransform: 'uppercase',
-              }}
-            >
-              {selectedEquip.name} — Sensor Trends
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 8,
-                paddingBottom: 16,
-              }}
-            >
-              {Object.entries(selectedEquip.sensors).map(([key, sensor]) => (
-                <SensorChart
-                  key={key}
-                  sensorKey={key}
-                  sensor={sensor}
-                  title={SENSOR_LABELS[key] || key}
-                />
-              ))}
-            </div>
-          </>
+        {/* Alert banner */}
+        {topAlert && (
+          <AlertBanner
+            alert={topAlert}
+            onDismiss={dismissAlert}
+            onViewAnalysis={handleViewAnalysis}
+          />
         )}
+
+        {/* Scrollable content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 0' }}>
+
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.10em', marginBottom: 8, textTransform: 'uppercase' }}>
+            Equipment Status — {EQUIPMENT_LIST.length} machines monitored
+          </div>
+
+          {/* Equipment cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 16 }}>
+            {EQUIPMENT_LIST.map((e) => {
+              const equip = equipmentData[e.id]
+              const machineLogData = backendMachineLogs[e.id]
+              const latestBackendLog = machineLogData?.logs?.[machineLogData.logs.length - 1]
+
+              return (
+                <EquipmentCard
+                  key={e.id}
+                  equip={equip}
+                  backendLog={latestBackendLog}
+                  isSelected={selectedEquipment === e.id}
+                  isAnalyzing={isAnalyzing && selectedEquipment === e.id}
+                  onClick={() => {
+                    handleCardClick(e.id, equip?.name || e.id, latestBackendLog)
+                  }}
+                />
+              )
+            })}
+          </div>
+
+          {/* Sensor charts for selected machine */}
+          {selectedEquip && (
+            <>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.10em', marginBottom: 8, textTransform: 'uppercase' }}>
+                {selectedEquip.name} — Live Sensor Trends
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, paddingBottom: 16 }}>
+                {Object.entries(selectedEquip.sensors).map(([key, sensor]) => (
+                  <SensorChart key={key} sensorKey={key} sensor={sensor} title={SENSOR_LABELS[key] || key} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── Right: Monitor AI chat (always visible, separate history) ──── */}
+      <div style={{
+        width: 400,
+        flexShrink: 0,
+        borderLeft: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        <MonitorChatPanel
+          chatHook={chatHook}
+          isAnalyzing={isAnalyzing}
+          onRunAnalysis={runAnalysis}
+        />
       </div>
     </div>
   )

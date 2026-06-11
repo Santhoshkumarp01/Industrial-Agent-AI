@@ -3,10 +3,10 @@ import useAppStore from '../../store/appStore'
 
 const NAV_ITEMS = [
   { id: 'chat',      icon: '💬', label: 'Chat Assistant' },
-  { id: 'monitor',   icon: '📡', label: 'Live Monitor' },
-  { id: 'logbook',   icon: '📋', label: 'Logbook' },
-  { id: 'reports',   icon: '📊', label: 'Reports' },
+  { id: 'monitor',   icon: '📡', label: 'Live Monitor Intelligence' },
   { id: 'documents', icon: '📁', label: 'Documents' },
+  { id: 'reports',   icon: '🗂️',  label: 'Analysis Reports' },
+  { id: 'logbook',   icon: '📋', label: 'Operations Logbook' },
 ]
 
 const SECTION_LABEL_STYLE = {
@@ -16,21 +16,19 @@ const SECTION_LABEL_STYLE = {
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   padding: '0 12px',
-  marginBottom: 6,
-  marginTop: 20,
+  marginBottom: 4,
+  marginTop: 16,
   display: 'block',
 }
 
 export default function Sidebar({ documents = [] }) {
-  const activePanel = useAppStore((s) => s.activePanel)
-  const selectedTag = useAppStore((s) => s.selectedEquipmentTag)
+  const activePanel    = useAppStore((s) => s.activePanel)
+  const selectedTag    = useAppStore((s) => s.selectedEquipmentTag)
   const setActivePanel = useAppStore((s) => s.setActivePanel)
   const setSelectedTag = useAppStore((s) => s.setSelectedTag)
 
-  // Extract unique equipment tags from documents
   const equipmentTags = [...new Set(documents.map((d) => d.equipment_tag).filter(Boolean))]
-
-  const totalChunks = documents.reduce((acc, d) => acc + (d.chunk_count || 0), 0)
+  const totalChunks   = documents.reduce((acc, d) => acc + (d.chunk_count || 0), 0)
 
   return (
     <aside
@@ -45,7 +43,7 @@ export default function Sidebar({ documents = [] }) {
       }}
     >
       {/* Navigation */}
-      <nav style={{ marginTop: 16 }}>
+      <nav style={{ marginTop: 8 }}>
         <span style={SECTION_LABEL_STYLE}>Navigation</span>
         {NAV_ITEMS.map((item) => {
           const isActive = activePanel === item.id
@@ -67,13 +65,14 @@ export default function Sidebar({ documents = [] }) {
                 textAlign: 'left',
               }}
             >
-              <span style={{ fontSize: 16 }}>{item.icon}</span>
+              <span style={{ fontSize: 14 }}>{item.icon}</span>
               <span
                 style={{
                   fontFamily: 'var(--font-sans)',
-                  fontSize: 13,
+                  fontSize: 12,
                   color: isActive ? 'var(--accent-amber)' : 'var(--text-secondary)',
                   transition: 'var(--transition)',
+                  lineHeight: 1.2,
                 }}
               >
                 {item.label}
@@ -83,10 +82,10 @@ export default function Sidebar({ documents = [] }) {
         })}
       </nav>
 
-      {/* Equipment filter */}
+      {/* Equipment tag filter */}
       {equipmentTags.length > 0 && (
         <div style={{ marginTop: 8 }}>
-          <span style={SECTION_LABEL_STYLE}>Equipment</span>
+          <span style={SECTION_LABEL_STYLE}>Filter by Equipment</span>
           <div style={{ padding: '0 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <button
               onClick={() => setSelectedTag(null)}
@@ -97,7 +96,7 @@ export default function Sidebar({ documents = [] }) {
                 background: !selectedTag ? 'var(--accent-amber-glow)' : 'var(--bg-surface-2)',
                 color: !selectedTag ? 'var(--accent-amber)' : 'var(--text-secondary)',
                 fontFamily: 'var(--font-sans)',
-                fontSize: 12,
+                fontSize: 11,
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'var(--transition)',
@@ -116,7 +115,7 @@ export default function Sidebar({ documents = [] }) {
                   background: selectedTag === tag ? 'var(--accent-amber-glow)' : 'var(--bg-surface-2)',
                   color: selectedTag === tag ? 'var(--accent-amber)' : 'var(--text-secondary)',
                   fontFamily: 'var(--font-sans)',
-                  fontSize: 12,
+                  fontSize: 11,
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'var(--transition)',
@@ -130,7 +129,7 @@ export default function Sidebar({ documents = [] }) {
       )}
 
       {/* Knowledge base stats */}
-      <div style={{ marginTop: 'auto', padding: '16px 12px', borderTop: '1px solid var(--border-subtle)' }}>
+      <div style={{ marginTop: 'auto', padding: '14px 12px', borderTop: '1px solid var(--border-subtle)' }}>
         <span style={{ ...SECTION_LABEL_STYLE, padding: 0, marginTop: 0, marginBottom: 8 }}>
           Knowledge Base
         </span>
@@ -144,11 +143,11 @@ export default function Sidebar({ documents = [] }) {
         >
           <div>
             <span style={{ color: 'var(--accent-amber)' }}>{documents.length}</span>
-            {' '}Documents
+            {' '}Documents indexed
           </div>
           <div>
             <span style={{ color: 'var(--accent-blue)' }}>{totalChunks.toLocaleString()}</span>
-            {' '}Chunks indexed
+            {' '}Chunks stored
           </div>
         </div>
       </div>

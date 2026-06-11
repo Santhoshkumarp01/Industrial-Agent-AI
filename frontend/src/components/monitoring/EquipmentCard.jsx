@@ -2,10 +2,13 @@ import React from 'react'
 import StatusDot from '../shared/StatusDot'
 import { formatSensorValue } from '../../utils/formatters'
 
-export default function EquipmentCard({ equip, isSelected, onClick }) {
+export default function EquipmentCard({ equip, backendLog, isSelected, onClick }) {
   if (!equip) return null
 
-  const isCritical = equip.status === 'critical'
+  // Use backend severity if available, otherwise fall back to frontend status
+  const backendSeverity = backendLog?.severity
+  const isCritical = backendSeverity === 'CRITICAL' || backendSeverity === 'WARNING' || equip.status === 'critical'
+  const displayStatus = backendSeverity || (equip.status === 'critical' ? 'CRITICAL' : 'NORMAL')
 
   // Pick the 3 key sensor values to show
   const sensorKeys = Object.keys(equip.sensors || {}).slice(0, 3)
@@ -62,41 +65,67 @@ export default function EquipmentCard({ equip, isSelected, onClick }) {
         <StatusDot status={equip.status === 'critical' ? 'critical' : 'ok'} size="small" />
       </div>
 
-      {/* Risk level */}
-      <div style={{ marginBottom: 8 }}>
+      {/* Status row: backend severity + fault code */}
+      <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span
           style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 11,
-            color: isCritical ? 'var(--status-critical)' : 'var(--status-ok)',
+            color: displayStatus === 'CRITICAL' ? 'var(--status-critical)' : displayStatus === 'WARNING' ? 'var(--accent-amber)' : 'var(--status-ok)',
             letterSpacing: '0.04em',
           }}
         >
-          {equip.riskLevel}
+          {displayStatus}
         </span>
+        {backendLog?.fault_code && backendLog.fault_code !== '—' && (
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              color: 'var(--text-muted)',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {backendLog.fault_code}
+          </span>
+        )}
       </div>
 
-      {/* 3 sensor quick values */}
+      {/* Sensor values from backend log if available, otherwise frontend */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {sensorKeys.map((key) => {
-          const sensor = equip.sensors[key]
-          const val = sensor?.latestValue
-          const isAnom = sensor?.isAnomaly
-          return (
-            <span
-              key={key}
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                color: isAnom ? 'var(--status-critical)' : 'var(--text-secondary)',
-                letterSpacing: '0.02em',
-                animation: 'countUp 0.3s ease',
-              }}
-            >
-              {key.slice(0, 3).toUpperCase()} {val !== null ? val?.toFixed(1) : '--'}
+        {backendLog ? (
+          <>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: backendLog.anomaly_sensors?.includes('vibration_mm_s') ? 'var(--status-critical)' : 'var(--text-secondary)', letterSpacing: '0.02em' }}>
+              VIB {backendLog.vibration_mm_s?.toFixed(1)}
             </span>
-          )
-        })}
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: backendLog.anomaly_sensors?.includes('bearing_temp_c') ? 'var(--status-critical)' : 'var(--text-secondary)', letterSpacing: '0.02em' }}>
+              TMP {backendLog.bearing_temp_c?.toFixed(1)}
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: backendLog.anomaly_sensors?.includes('motor_current_a') ? 'var(--status-critical)' : 'var(--text-secondary)', letterSpacing: '0.02em' }}>
+              CUR {backendLog.motor_current_a?.toFixed(1)}
+            </span>
+          </>
+        ) : (
+          sensorKeys.map((key) => {
+            const sensor = equip.sensors[key]
+            const val = sensor?.latestValue
+            const isAnom = sensor?.isAnomaly
+            return (
+              <span
+                key={key}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  color: isAnom ? 'var(--status-critical)' : 'var(--text-secondary)',
+                  letterSpacing: '0.02em',
+                  animation: 'countUp 0.3s ease',
+                }}
+              >
+                {key.slice(0, 3).toUpperCase()} {val !== null ? val?.toFixed(1) : '--'}
+              </span>
+            )
+          })
+        )}
       </div>
     </button>
   )

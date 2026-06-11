@@ -9,6 +9,15 @@ const DOT_GRID_BG = {
   backgroundSize: '20px 20px',
 }
 
+// Quick action prompts — prefill input with a structured query
+const QUICK_ACTIONS = [
+  { label: 'Fault Diagnosis',      icon: '🔍', prompt: 'Perform a fault diagnosis based on the uploaded manual. Identify the most likely fault causes and recommended actions.' },
+  { label: 'Summarize Document',   icon: '📝', prompt: 'Summarize the key sections, safety rules, and maintenance procedures from the uploaded document.' },
+  { label: 'Extract SOP',          icon: '📋', prompt: 'Extract all standard operating procedures (SOPs) from the document as a numbered step-by-step list.' },
+  { label: 'Generate Report',      icon: '📊', prompt: 'Generate a structured maintenance report based on the document content including specifications, procedures, and safety requirements.' },
+  { label: 'Inspection Checklist', icon: '✅', prompt: 'Create an inspection checklist based on the maintenance procedures in the document.' },
+]
+
 export default function ChatPanel({ chatHook, documentsHook }) {
   const { messages, isLoading, sendMessage } = chatHook
   const { uploadDocument, fetchDocuments } = documentsHook
@@ -21,7 +30,6 @@ export default function ChatPanel({ chatHook, documentsHook }) {
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
 
-  // Auto-scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
@@ -31,9 +39,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
     if (!text || isLoading) return
     sendMessage(text, selectedTag)
     setInputValue('')
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-    }
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
   }
 
   const handleKeyDown = (e) => {
@@ -45,7 +51,6 @@ export default function ChatPanel({ chatHook, documentsHook }) {
 
   const handleTextareaChange = (e) => {
     setInputValue(e.target.value)
-    // Auto-grow textarea (max 3 lines)
     const ta = e.target
     ta.style.height = 'auto'
     ta.style.height = Math.min(ta.scrollHeight, 72) + 'px'
@@ -57,13 +62,19 @@ export default function ChatPanel({ chatHook, documentsHook }) {
     return result
   }
 
+  const handleQuickAction = (prompt) => {
+    setInputValue(prompt)
+    textareaRef.current?.focus()
+  }
+
+  const hasMessages = messages.length > 0
+
   return (
     <div
       style={{
         flex: isPDFViewerOpen ? '0 0 55%' : 1,
         display: 'flex',
         flexDirection: 'column',
-        borderRight: '1px solid var(--border)',
         overflow: 'hidden',
         position: 'relative',
         transition: 'flex var(--transition)',
@@ -81,17 +92,22 @@ export default function ChatPanel({ chatHook, documentsHook }) {
           flexShrink: 0,
         }}
       >
-        <span
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 11,
-            color: 'var(--accent-amber)',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-          }}
-        >
-          Chat Assistant
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 14 }}>💬</span>
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              color: 'var(--accent-amber)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Chat Assistant — Document Intelligence
+          </span>
+        </div>
+
+        {/* Equipment filter dropdown */}
         <select
           value={selectedTag || ''}
           onChange={(e) => {
@@ -119,6 +135,66 @@ export default function ChatPanel({ chatHook, documentsHook }) {
         </select>
       </div>
 
+      {/* Quick actions bar — shown only when no messages yet */}
+      {!hasMessages && (
+        <div
+          style={{
+            borderBottom: '1px solid var(--border-subtle)',
+            padding: '8px 16px',
+            display: 'flex',
+            gap: 6,
+            flexWrap: 'wrap',
+            flexShrink: 0,
+            background: 'var(--bg-surface)',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              color: 'var(--text-muted)',
+              letterSpacing: '0.08em',
+              alignSelf: 'center',
+              marginRight: 4,
+            }}
+          >
+            QUICK ACTIONS:
+          </span>
+          {QUICK_ACTIONS.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => handleQuickAction(action.prompt)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border)',
+                background: 'var(--bg-surface-2)',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-sans)',
+                fontSize: 11,
+                cursor: 'pointer',
+                transition: 'var(--transition)',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent-amber-dim)'
+                e.currentTarget.style.color = 'var(--accent-amber)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border)'
+                e.currentTarget.style.color = 'var(--text-secondary)'
+              }}
+            >
+              <span>{action.icon}</span>
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Message history */}
       <div
         style={{
@@ -128,7 +204,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
           display: 'flex',
           flexDirection: 'column',
           gap: 16,
-          ...(messages.length <= 1 ? DOT_GRID_BG : {}),
+          ...(messages.length === 0 ? DOT_GRID_BG : {}),
         }}
       >
         {messages.length === 0 && (
@@ -136,15 +212,25 @@ export default function ChatPanel({ chatHook, documentsHook }) {
             style={{
               flex: 1,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: 10,
               color: 'var(--text-muted)',
               fontFamily: 'var(--font-sans)',
               fontSize: 13,
               textAlign: 'center',
+              paddingTop: 60,
             }}
           >
-            Upload a document and ask your first question.
+            <span style={{ fontSize: 32 }}>🤖</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--accent-amber)', letterSpacing: '0.08em' }}>
+              INDUSTRIAL AGENT AI
+            </span>
+            <span style={{ color: 'var(--text-secondary)', maxWidth: 340 }}>
+              Upload a manual, SOP, or maintenance document and ask questions about it.
+              Use quick actions above to get started instantly.
+            </span>
           </div>
         )}
         {messages.map((msg) => (
@@ -171,10 +257,10 @@ export default function ChatPanel({ chatHook, documentsHook }) {
           flexShrink: 0,
         }}
       >
-        {/* Equipment tag input row */}
+        {/* Equipment tag row */}
         <div
           style={{
-            padding: '8px 12px 4px',
+            padding: '6px 12px 4px',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
@@ -183,14 +269,15 @@ export default function ChatPanel({ chatHook, documentsHook }) {
         >
           <label
             style={{
-              fontSize: 11,
+              fontSize: 10,
               color: 'var(--text-muted)',
               fontFamily: 'var(--font-mono)',
               textTransform: 'uppercase',
-              letterSpacing: '0.05em',
+              letterSpacing: '0.06em',
+              whiteSpace: 'nowrap',
             }}
           >
-            Equipment:
+            Scope:
           </label>
           <select
             value={selectedTag || ''}
@@ -202,7 +289,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
               flex: 1,
               fontFamily: 'var(--font-sans)',
               fontSize: 12,
-              padding: '4px 8px',
+              padding: '3px 8px',
               borderRadius: 'var(--radius-sm)',
               color: 'var(--text-secondary)',
               background: 'var(--bg-surface-2)',
@@ -210,7 +297,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
               cursor: 'pointer',
             }}
           >
-            <option value="">All Equipment</option>
+            <option value="">All Documents</option>
             {documentsHook.documents
               .map((d) => d.equipment_tag)
               .filter((v, i, a) => v && a.indexOf(v) === i)
@@ -225,7 +312,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
           style={{
             display: 'flex',
             alignItems: 'flex-end',
-            padding: '10px 12px',
+            padding: '8px 12px',
             gap: 8,
           }}
         >
@@ -238,14 +325,14 @@ export default function ChatPanel({ chatHook, documentsHook }) {
               alignItems: 'center',
               justifyContent: 'center',
               color: uploaderExpanded ? 'var(--accent-amber)' : 'var(--text-secondary)',
-              fontSize: 16,
+              fontSize: 15,
               flexShrink: 0,
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border)',
               background: 'var(--bg-surface-2)',
               transition: 'var(--transition)',
             }}
-            title="Attach document"
+            title="Upload document"
           >
             📎
           </button>

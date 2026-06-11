@@ -19,8 +19,9 @@ export default function PDFViewer() {
   if (!isPDFViewerOpen || !activeCitation) return null
 
   // citation shape:
-  // { doc_id, page_number, bbox: [x0, y0, x1, y1], doc_name, ref }
+  // { doc_id, page_number, bbox: [x0, y0, x1, y1] | null, doc_name, ref }
   const pdfUrl = getPDFUrl(activeCitation.doc_id)
+  const hasBbox = activeCitation.bbox && activeCitation.bbox.length === 4
 
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages)
@@ -28,12 +29,10 @@ export default function PDFViewer() {
 
   // Draw amber highlight rectangle over bbox after page renders
   function onPageRenderSuccess(page) {
-    // PDF coordinate space: origin bottom-left
-    // Canvas coordinate space: origin top-left
-    // We need to convert
+    if (!hasBbox) return  // no bbox for manual-open, skip highlight
 
     const canvas = containerRef.current?.querySelector('canvas')
-    if (!canvas || !activeCitation.bbox) return
+    if (!canvas) return
 
     const [x0, y0, x1, y1] = activeCitation.bbox
 

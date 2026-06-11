@@ -1,6 +1,7 @@
 import logging
 import uuid
 from pathlib import Path
+from collections import defaultdict
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
@@ -20,16 +21,17 @@ from models.schemas import (
 
 logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-
 router = APIRouter()
 
-# Ensure upload directory exists
 Path(config.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 
-# In-memory citation cache: session_id → {ref_id: CitationRef}
-# (Optional enhancement for GET /citation endpoint)
+# ── In-memory citation cache: session_id → {ref_id: CitationRef}
 _citation_cache: dict[str, dict[str, CitationRef]] = {}
+
+# ── In-memory conversation history: session_id → list of {role, content}
+# Keeps last 6 turns (3 user + 3 assistant) per session as a sliding window
+_session_history: dict[str, list[dict]] = defaultdict(list)
+MAX_HISTORY_TURNS = 6  # total messages (user + assistant) to retain
 
 
 @router.post("/upload", response_model=IngestResult)
@@ -83,17 +85,36 @@ async def upload_document(
 async def chat(request: ChatRequest) -> AnswerResponse:
     """
     Accept a natural language query and return a cited answer with confidence scoring.
+    Supports multi-turn context-aware conversations via session_id.
     """
     if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
     try:
         logger.info(f"[CHAT] Processing query: {request.query[:100]}")
-        
-        # Retrieve with query rewriting and confidence scoring
+
+        # ── Build conversation history context ───────────────────────────────
+        # Prepend last N turns to the query so the LLM understands follow-ups
+        history_context = ""
+        if request.session_id and _session_history[request.session_id]:
+            history_lines = []
+            for turn in _session_history[request.session_id]:
+                role_label = "Engineer" if turn["role"] == "user" else "Assistant"
+                # Truncate long assistant answers to 300 chars to save tokens
+                content = turn["content"]
+                if turn["role"] == "assistant" and len(content) > 300:
+                    content = content[:300] + "..."
+                history_lines.append(f"{role_label}: {content}")
+            history_context = "=== PREVIOUS CONVERSATION ===\n" + "\n".join(history_lines) + "\n=== END PREVIOUS CONVERSATION ===\n\n"
+            logger.info(f"[CHAT] Injecting {len(_session_history[request.session_id])} history turns")
+
+        # Compose the enriched query: history + current question
+        enriched_query = history_context + request.query if history_context else request.query
+
+        # ── Retrieval ────────────────────────────────────────────────────────
         try:
             chunks, retrieval_metadata = retrieve(
-                query=request.query,
+                query=request.query,  # retrieve on original query, not history-padded
                 equipment_tag=request.equipment_tag,
                 use_query_rewriting=True,
                 use_parent_retrieval=True,
@@ -101,27 +122,18 @@ async def chat(request: ChatRequest) -> AnswerResponse:
             logger.info(f"[CHAT] Retrieval successful: {len(chunks)} chunks")
         except Exception as e:
             logger.error(f"[CHAT] Retrieval failed: {type(e).__name__}: {e}")
-            logger.exception("Retrieval traceback:")
             raise HTTPException(status_code=500, detail=f"Retrieval error: {str(e)}")
-        
-        # Ensure confidence score is valid (not NaN or Inf)
+
         confidence_score = retrieval_metadata.get("confidence_score", 0.0)
-        if not isinstance(confidence_score, (int, float)) or confidence_score != confidence_score:  # NaN check
-            logger.warning(f"Invalid confidence score: {confidence_score}, using fallback 0.1")
+        if not isinstance(confidence_score, (int, float)) or confidence_score != confidence_score:
             confidence_score = 0.1
             retrieval_metadata["confidence_score"] = 0.1
             retrieval_metadata["confidence_level"] = "LOW"
-        
-        logger.info(
-            f"[CHAT] Retrieved {len(chunks)} chunks with {retrieval_metadata['confidence_level']} "
-            f"confidence ({confidence_score:.2f})"
-        )
-        
-        # Generate answer with confidence awareness
+
+        # ── Answer generation (with history injected into prompt) ────────────
         try:
-            logger.info(f"[CHAT] Calling generate_answer...")
             answer_response, answer_metadata = generate_answer(
-                query=request.query, 
+                query=enriched_query,
                 chunks=chunks,
                 confidence_score=confidence_score,
                 confidence_level=retrieval_metadata.get("confidence_level"),
@@ -130,26 +142,30 @@ async def chat(request: ChatRequest) -> AnswerResponse:
             logger.info(f"[CHAT] Answer generation successful")
         except Exception as e:
             logger.error(f"[CHAT] Answer generation failed: {type(e).__name__}: {e}")
-            logger.exception("Answer generation traceback:")
             raise HTTPException(status_code=500, detail=f"Answer generation error: {str(e)}")
 
-        # Cache citations if session_id provided
+        # ── Update session history (sliding window) ──────────────────────────
         if request.session_id:
+            history = _session_history[request.session_id]
+            history.append({"role": "user",      "content": request.query})
+            history.append({"role": "assistant",  "content": answer_response.answer})
+            # Keep only last MAX_HISTORY_TURNS messages
+            if len(history) > MAX_HISTORY_TURNS:
+                _session_history[request.session_id] = history[-MAX_HISTORY_TURNS:]
+
+            # Cache citations
             _citation_cache[request.session_id] = {
                 c.ref: c for c in answer_response.citations
             }
 
         logger.info(f"[CHAT] Request completed successfully")
         return answer_response
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"[CHAT] Unexpected error: {type(e).__name__}: {e}")
-        logger.exception("Full traceback:")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Failed to generate response: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
 
 @router.get("/documents", response_model=list[DocumentInfo])

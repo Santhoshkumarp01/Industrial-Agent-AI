@@ -327,6 +327,160 @@ function AgentAnalysisContent({ analysis, logbookEntryId, onFeedbackSubmit }) {
   )
 }
 
+// ── Machine Analysis Content ──────────────────────────────────────────────────
+function MachineAnalysisContent({ data }) {
+  const setActivePanel = useAppStore((s) => s.setActivePanel)
+
+  if (!data) return null
+
+  const analysis       = data.analysis || {}
+  const readings       = data.latest_readings || {}
+  const severity       = data.current_severity || 'UNKNOWN'
+  const faultCode      = data.fault_code || '—'
+  const eventSummary   = data.event_summary || ''
+  const mappedDoc      = data.mapped_document || ''
+  const answerText     = analysis.answer || ''
+  const citations      = analysis.citations || []
+  const isGrounded     = analysis.grounded_in_doc
+
+  const SEV_COLOR = {
+    CRITICAL: 'var(--status-critical)',
+    WARNING:  'var(--accent-amber)',
+    NORMAL:   'var(--status-ok)',
+    UNKNOWN:  'var(--text-muted)',
+  }
+
+  return (
+    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7 }}>
+
+      {/* Header */}
+      <div style={{
+        background: 'rgba(232,188,93,0.08)',
+        padding: '8px 12px',
+        borderRadius: 'var(--radius-sm)',
+        marginBottom: 12,
+        border: '1px solid rgba(232,188,93,0.2)',
+      }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-amber)', letterSpacing: '0.08em', marginBottom: 4 }}>
+          MACHINE ANALYSIS REPORT
+        </div>
+        <div style={{ color: 'var(--text-primary)', fontSize: 13 }}>
+          <strong>{data.display_name}</strong>
+          {' · '}
+          <span style={{ color: SEV_COLOR[severity] || 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+            {severity}
+          </span>
+          {faultCode !== '—' && (
+            <span style={{ marginLeft: 8, fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>
+              {faultCode}
+            </span>
+          )}
+        </div>
+        {eventSummary && (
+          <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4 }}>{eventSummary}</div>
+        )}
+      </div>
+
+      {/* Latest sensor readings */}
+      {Object.keys(readings).length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-amber)', letterSpacing: '0.08em', marginBottom: 6 }}>
+            CURRENT SENSOR READINGS
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {readings.vibration_mm_s != null && (
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                VIB {readings.vibration_mm_s} mm/s
+              </span>
+            )}
+            {readings.bearing_temp_c != null && (
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                TEMP {readings.bearing_temp_c}°C
+              </span>
+            )}
+            {readings.motor_current_a != null && (
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                CURR {readings.motor_current_a} A
+              </span>
+            )}
+            {readings.lube_pressure_bar != null && (
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                PRES {readings.lube_pressure_bar} bar
+              </span>
+            )}
+            {readings.rpm != null && (
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                RPM {readings.rpm}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Document-grounded LLM answer */}
+      {answerText && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-amber)', letterSpacing: '0.08em', marginBottom: 8 }}>
+            AI DIAGNOSIS & RECOMMENDATION
+            {isGrounded && (
+              <span style={{ marginLeft: 8, color: 'var(--status-ok)', fontSize: 10 }}>● GROUNDED IN MANUAL</span>
+            )}
+          </div>
+          <p style={{ color: 'var(--text-primary)', fontSize: 13, lineHeight: 1.75, whiteSpace: 'pre-wrap', margin: 0 }}>
+            {answerText}
+          </p>
+        </div>
+      )}
+
+      {/* Citations */}
+      {citations.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-amber)', letterSpacing: '0.08em', marginBottom: 6 }}>
+            MANUAL REFERENCES
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {citations.map((cit, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', border: '1px solid var(--accent-amber-dim)', padding: '1px 6px', borderRadius: 'var(--radius-sm)', flexShrink: 0 }}>
+                  {cit.ref}
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)' }}>
+                  p.{cit.page} · {cit.section?.trim()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Source document */}
+      {mappedDoc && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.06em' }}>
+            📄 Source: {mappedDoc}
+          </div>
+        </div>
+      )}
+
+      {/* Footer actions */}
+      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button
+          onClick={() => setActivePanel('logbook')}
+          style={{ fontFamily: 'var(--font-mono)', fontSize: 11, padding: '5px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-active)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', letterSpacing: '0.05em' }}
+        >
+          📋 LOGBOOK
+        </button>
+        <button
+          onClick={() => setActivePanel('reports')}
+          style={{ fontFamily: 'var(--font-mono)', fontSize: 11, padding: '5px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-active)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', letterSpacing: '0.05em' }}
+        >
+          📊 REPORTS
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function MessageBubble({ message, isLoading = false }) {
   if (isLoading) {
     return (
@@ -377,6 +531,7 @@ export default function MessageBubble({ message, isLoading = false }) {
 
   // Assistant message - check if it's an agent analysis
   const isAgentAnalysis = message.analysisData && message.logbookEntryId
+  const isMachineAnalysis = message.isMachineAnalysis && message.analysisData
 
   return (
     <div
@@ -386,9 +541,11 @@ export default function MessageBubble({ message, isLoading = false }) {
         animation: 'fadeIn 0.2s ease',
       }}
     >
-      {isAgentAnalysis ? (
-        <AgentAnalysisContent 
-          analysis={message.analysisData} 
+      {isMachineAnalysis ? (
+        <MachineAnalysisContent data={message.analysisData} />
+      ) : isAgentAnalysis ? (
+        <AgentAnalysisContent
+          analysis={message.analysisData}
           logbookEntryId={message.logbookEntryId}
           onFeedbackSubmit={message.onFeedbackSubmit}
         />
@@ -407,14 +564,7 @@ export default function MessageBubble({ message, isLoading = false }) {
           </p>
 
           {message.citations && message.citations.length > 0 && (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 6,
-                marginTop: 10,
-              }}
-            >
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
               {message.citations.map((cit) => (
                 <CitationTag key={cit.ref} citation={cit} />
               ))}
@@ -424,13 +574,7 @@ export default function MessageBubble({ message, isLoading = false }) {
       )}
 
       <div style={{ marginTop: 6 }}>
-        <span
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 11,
-            color: 'var(--text-muted)',
-          }}
-        >
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>
           {formatTimestamp(message.timestamp)}
         </span>
       </div>

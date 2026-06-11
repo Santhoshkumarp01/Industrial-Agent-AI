@@ -243,3 +243,72 @@ export const getFeedbackStats = async () => {
     throw new Error(err.response?.data?.detail || 'Failed to fetch feedback stats.')
   }
 }
+
+// ========== MACHINE ANALYSIS API ==========
+
+/**
+ * Get latest dynamic machine logs for a specific equipment tag.
+ */
+export const getMachineLogs = async (machineTag, count = 10) => {
+  try {
+    const res = await client.get(`/machine-analysis/logs/${machineTag}`, {
+      params: { count },
+    })
+    return res.data
+  } catch (err) {
+    throw new Error(err.response?.data?.detail || 'Failed to fetch machine logs.')
+  }
+}
+
+/**
+ * Get machine summary (latest reading + thresholds).
+ */
+export const getMachineSummary = async (machineTag) => {
+  try {
+    const res = await client.get(`/machine-analysis/summary/${machineTag}`)
+    return res.data
+  } catch (err) {
+    throw new Error(err.response?.data?.detail || 'Failed to fetch machine summary.')
+  }
+}
+
+/**
+ * Run full RAG analysis for a machine:
+ * fetches logs → retrieves PDF chunks → generates LLM answer.
+ * Answer is NEVER predefined — dynamically generated from logs + document.
+ */
+export const runMachineAnalysis = async (machineTag, options = {}) => {
+  try {
+    const res = await client.post(`/machine-analysis/analyze/${machineTag}`, {
+      include_logs: options.includeLogs || 10,
+      inject_anomaly: options.injectAnomaly || false,
+    })
+    return res.data
+  } catch (err) {
+    throw new Error(err.response?.data?.detail || 'Failed to run machine analysis.')
+  }
+}
+
+/**
+ * Inject a demo anomaly for a machine (spikes a random sensor to critical).
+ */
+export const injectMachineAnomaly = async (machineTag) => {
+  try {
+    const res = await client.post(`/machine-analysis/inject-anomaly/${machineTag}`)
+    return res.data
+  } catch (err) {
+    throw new Error(err.response?.data?.detail || 'Failed to inject anomaly.')
+  }
+}
+
+/**
+ * List all configured machines with their document mappings.
+ */
+export const listMachines = async () => {
+  try {
+    const res = await client.get('/machine-analysis/machines')
+    return res.data
+  } catch (err) {
+    throw new Error(err.response?.data?.detail || 'Failed to list machines.')
+  }
+}

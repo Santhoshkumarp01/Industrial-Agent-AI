@@ -44,7 +44,7 @@ export default function AlertBanner({ alert, onDismiss, onViewAnalysis }) {
             textOverflow: 'ellipsis',
           }}
         >
-          CRITICAL ALERT — {alert.equipmentName} — {alert.sensorKey} anomaly detected
+          ⚠ CRITICAL — {alert.equipmentName} — {alert.sensorKey.toUpperCase()} anomaly detected
           {' '}({alert.value?.toFixed(1)} {alert.unit || ''})
         </span>
       </div>
@@ -68,7 +68,7 @@ export default function AlertBanner({ alert, onDismiss, onViewAnalysis }) {
           onMouseEnter={(e) => !isAnalyzing && (e.currentTarget.style.background = 'rgba(232,93,93,0.22)')}
           onMouseLeave={(e) => !isAnalyzing && (e.currentTarget.style.background = 'rgba(232,93,93,0.12)')}
         >
-          {isAnalyzing ? 'ANALYZING...' : 'VIEW ANALYSIS'}
+          {isAnalyzing ? 'ANALYZING...' : 'RUN AI ANALYSIS'}
         </button>
         <button
           onClick={() => onDismiss(alert.id)}

@@ -12,8 +12,16 @@ const WELCOME_MESSAGE = {
   timestamp: new Date(),
 }
 
-export const useChat = () => {
-  const [messages, setMessages] = useState([WELCOME_MESSAGE])
+const MONITOR_WELCOME_MESSAGE = {
+  id: 'monitor-welcome',
+  role: 'assistant',
+  content: 'Live Monitor AI ready. Click a machine card or press Ctrl+Shift+D to run a diagnostic analysis.',
+  citations: [],
+  timestamp: new Date(),
+}
+
+export const useChat = ({ isMonitor = false } = {}) => {
+  const [messages, setMessages] = useState([isMonitor ? MONITOR_WELCOME_MESSAGE : WELCOME_MESSAGE])
   const [sessionId] = useState(() => uuidv4())
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -65,22 +73,103 @@ export const useChat = () => {
   )
 
   const clearChat = useCallback(() => {
-    setMessages([WELCOME_MESSAGE])
+    setMessages([isMonitor ? MONITOR_WELCOME_MESSAGE : WELCOME_MESSAGE])
     setError(null)
-  }, [])
+  }, [isMonitor])
 
   const addAnalysisMessage = useCallback((analysisResult) => {
+    // Detect machine analysis format vs old agent format
+    const isMachineAnalysis = !!analysisResult.machine_tag
+
     const analysisMsg = {
       id: uuidv4(),
       role: 'assistant',
-      content: '', // Content will be rendered by AgentAnalysisContent component
-      citations: [],
+      content: isMachineAnalysis ? analysisResult.analysis?.answer || '' : '',
+      citations: isMachineAnalysis ? (analysisResult.analysis?.citations || []) : [],
       timestamp: new Date(),
       analysisData: analysisResult,
-      logbookEntryId: analysisResult.logbook_entry_id,
+      // Old agent format uses logbook_entry_id; machine analysis doesn't
+      logbookEntryId: analysisResult.logbook_entry_id || null,
+      isMachineAnalysis,
     }
     setMessages((prev) => [...prev, analysisMsg])
   }, [])
 
-  return { messages, sessionId, isLoading, error, sendMessage, clearChat, addAnalysisMessage }
+  const addEquipmentPrompt = useCallback(({ machineTag, machineName, severity, statusLine, latestLog }) => {
+    const id = uuidv4()
+    const promptMsg = {
+      id,
+      role: 'assistant',
+      content: '',
+      citations: [],
+      timestamp: new Date(),
+      isEquipmentPrompt: true,
+      equipmentPrompt: { machineTag, machineName, severity, statusLine, latestLog },
+    }
+    // Replace any existing equipment prompt — don't stack multiple cards
+    setMessages((prev) => {
+      const withoutOldPrompts = prev.filter((m) => !m.isEquipmentPrompt)
+      return [...withoutOldPrompts, promptMsg]
+    })
+    return id
+  }, [])
+
+  const addAnalyzingMessage = useCallback((text) => {
+    const id = uuidv4()
+    const analyzingMsg = {
+      id,
+      role: 'assistant',
+      content: text,
+      citations: [],
+      timestamp: new Date(),
+      isAnalyzing: true,
+    }
+    setMessages((prev) => [...prev, analyzingMsg])
+    return id  // caller can use this to replace the message later
+  }, [])
+
+  // Replace an "analyzing..." placeholder with the real analysis result
+  const replaceAnalyzingMessage = useCallback((analyzingId, analysisResult) => {
+    const isMachineAnalysis = !!analysisResult.machine_tag
+    const finalMsg = {
+      id: analyzingId || uuidv4(),
+      role: 'assistant',
+      content: isMachineAnalysis ? analysisResult.analysis?.answer || '' : '',
+      citations: isMachineAnalysis ? (analysisResult.analysis?.citations || []) : [],
+      timestamp: new Date(),
+      analysisData: analysisResult,
+      logbookEntryId: analysisResult.logbook_entry_id || null,
+      isMachineAnalysis,
+      isAnalyzing: false,
+    }
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === analyzingId)
+      if (idx === -1) return [...prev, finalMsg]
+      const next = [...prev]
+      next[idx] = finalMsg
+      return next
+    })
+  }, [])
+
+  // Replace an "analyzing..." placeholder with an error message
+  const replaceAnalyzingWithError = useCallback((analyzingId, errorText) => {
+    const errMsg = {
+      id: analyzingId || uuidv4(),
+      role: 'assistant',
+      content: errorText,
+      citations: [],
+      timestamp: new Date(),
+      isError: true,
+      isAnalyzing: false,
+    }
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === analyzingId)
+      if (idx === -1) return [...prev, errMsg]
+      const next = [...prev]
+      next[idx] = errMsg
+      return next
+    })
+  }, [])
+
+  return { messages, sessionId, isLoading, error, sendMessage, clearChat, addAnalysisMessage, addAnalyzingMessage, replaceAnalyzingMessage, replaceAnalyzingWithError, addEquipmentPrompt }
 }
