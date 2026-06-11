@@ -5,9 +5,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def parse_gemini_json(raw_text: str) -> dict:
+def parse_llm_json(raw_text: str) -> dict:
     """
-    Robustly parse JSON from Gemini response.
+    Robustly parse JSON from LLM response.
     
     Handles:
     - Markdown code fences (```)
@@ -16,7 +16,7 @@ def parse_gemini_json(raw_text: str) -> dict:
     - Extra text before/after JSON block
     
     Args:
-        raw_text: Raw response text from Gemini
+        raw_text: Raw response text from LLM
         
     Returns:
         Parsed JSON as dict
@@ -52,6 +52,6 @@ def parse_gemini_json(raw_text: str) -> dict:
         logger.error(f"JSON parse failed: {e}")
         logger.error(f"Raw text (first 500 chars): {raw_text[:500]}")
         raise ValueError(
-            f"Could not parse Gemini JSON response: {e}\n"
+            f"Could not parse LLM JSON response: {e}\n"
             f"Raw text preview: {raw_text[:200]}..."
         )

@@ -10,7 +10,7 @@ load_dotenv(dotenv_path=env_path)
 class Config:
     """Application configuration loaded from environment variables."""
     
-    # --- API Keys ---
+    # --- Qdrant ---
     QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
     
     # --- Qdrant connection ---

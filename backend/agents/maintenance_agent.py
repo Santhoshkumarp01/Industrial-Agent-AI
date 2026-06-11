@@ -62,7 +62,7 @@ def generate_maintenance_plan(
     # Generate immediate actions based on risk level
     immediate_actions = _generate_immediate_actions(risk_level, root_cause)
 
-    # Generate repair steps using Gemini + retrieved SOPs
+    # Generate repair steps using fine-tuned model + retrieved SOPs
     repair_steps = _generate_repair_steps_with_ai(root_cause, parts_required, sop_text, equipment_name)
 
     # Generate long-term recommendations

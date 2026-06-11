@@ -107,7 +107,7 @@ Respond in plain text, not JSON. Be specific and cite the evidence if available.
         
         diagnosis_text = raw
         
-        # Parse Gemini response (simple extraction)
+        # Parse model response (simple extraction)
         lines = diagnosis_text.split('\n')
         root_cause = "Analysis provided by AI"
         fault_description = diagnosis_text[:500]  # First 500 chars
