@@ -159,9 +159,52 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
               LIVE MONITOR INTELLIGENCE
             </span>
           </div>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>
-            UPDATED {formatRelativeTime(lastUpdated).toUpperCase()}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={async () => {
+                const machineTag = 'rolling-mill-main-drive-motor'
+                const machineName = 'Rolling Mill Main Drive Motor'
+                
+                // Inject anomaly
+                try {
+                  await injectMachineAnomaly(machineTag)
+                  selectEquipment(machineTag)
+                  
+                  // Wait and run analysis
+                  setTimeout(async () => {
+                    await runAnalysis(machineTag, machineName)
+                  }, 2000)
+                } catch (err) {
+                  console.error('Demo anomaly failed:', err)
+                }
+              }}
+              disabled={isAnalyzing}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                padding: '5px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--status-critical)',
+                background: isAnalyzing ? 'var(--bg-surface)' : 'rgba(232,93,93,0.08)',
+                color: isAnalyzing ? 'var(--text-muted)' : 'var(--status-critical)',
+                cursor: isAnalyzing ? 'not-allowed' : 'pointer',
+                letterSpacing: '0.04em',
+                opacity: isAnalyzing ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!isAnalyzing) e.currentTarget.style.background = 'rgba(232,93,93,0.15)'
+              }}
+              onMouseLeave={(e) => {
+                if (!isAnalyzing) e.currentTarget.style.background = 'rgba(232,93,93,0.08)'
+              }}
+              title="Inject demo vibration anomaly on Rolling Mill for testing"
+            >
+              DEMO ANOMALY
+            </button>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>
+              UPDATED {formatRelativeTime(lastUpdated).toUpperCase()}
+            </span>
+          </div>
         </div>
 
         {/* Alert banner */}

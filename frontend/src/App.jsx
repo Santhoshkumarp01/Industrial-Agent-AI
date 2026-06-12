@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import Layout from './components/layout/Layout'
+import QuickStartGuide from './components/layout/QuickStartGuide'
 import ChatPanel from './components/chat/ChatPanel'
 import MonitoringPanel from './components/monitoring/MonitoringPanel'
 import ReportsPanel from './components/monitoring/ReportsPanel'
@@ -64,8 +65,10 @@ export default function App() {
   }, [sensorHook, monitorChatHook, setActivePanel])
 
   return (
-    <Layout documents={documentsHook.documents}>
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', height: '100%' }}>
+    <>
+      <QuickStartGuide />
+      <Layout documents={documentsHook.documents}>
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', height: '100%' }}>
 
         {/* ── CHAT ASSISTANT — has its own history, PDF viewer, documents ── */}
         {activePanel === 'chat' && (
@@ -93,6 +96,7 @@ export default function App() {
         {activePanel === 'logbook' && <LogbookPanel />}
       </div>
     </Layout>
+    </>
   )
 }
 

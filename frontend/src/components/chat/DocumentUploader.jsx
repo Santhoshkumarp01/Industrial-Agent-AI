@@ -115,19 +115,53 @@ export default function DocumentUploader({ onUpload, isExpanded, onToggle }) {
       </div>
 
       {/* Equipment tag input */}
-      <input
-        placeholder="Equipment tag (e.g. Rolling Mill #3)"
-        value={equipmentTag}
-        onChange={(e) => setEquipmentTag(e.target.value)}
-        style={{
-          width: '100%',
-          padding: '6px 10px',
-          fontSize: 13,
-          borderRadius: 'var(--radius-sm)',
-          marginBottom: 10,
-          height: 34,
-        }}
-      />
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+          <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+            EQUIPMENT TAG (REQUIRED)
+          </label>
+          <button
+            type="button"
+            title="Valid tags: rolling-mill-main-drive-motor, industrial-induction-compressor-motor, blower-large-motor-reference, general-plant-motor"
+            style={{
+              width: 14,
+              height: 14,
+              borderRadius: '50%',
+              border: '1px solid var(--border)',
+              background: 'var(--bg-surface-2)',
+              color: 'var(--text-muted)',
+              fontSize: 9,
+              cursor: 'help',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
+            ?
+          </button>
+        </div>
+        <input
+          placeholder="e.g. rolling-mill-main-drive-motor"
+          value={equipmentTag}
+          onChange={(e) => setEquipmentTag(e.target.value)}
+          list="equipment-tags"
+          style={{
+            width: '100%',
+            padding: '6px 10px',
+            fontSize: 12,
+            borderRadius: 'var(--radius-sm)',
+            height: 32,
+            fontFamily: 'var(--font-mono)',
+          }}
+        />
+        <datalist id="equipment-tags">
+          <option value="rolling-mill-main-drive-motor" />
+          <option value="industrial-induction-compressor-motor" />
+          <option value="blower-large-motor-reference" />
+          <option value="general-plant-motor" />
+        </datalist>
+      </div>
 
       {/* Drop zone */}
       <div
