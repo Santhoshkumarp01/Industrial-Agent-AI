@@ -7,8 +7,8 @@
 ## 🌐 Live Demo
 
 **🚀 Frontend**: https://industrial-agent-ai.vercel.app/  
-**⚙️ Backend API**: https://Santhoshkumarp-industrial-agent-ai.hf.space  
-**📖 API Docs**: https://Santhoshkumarp-industrial-agent-ai.hf.space/docs
+**⚙️ Backend API**: https://santhoshkumarp-industrial-agent-ai.hf.space  
+**📖 API Docs**: https://santhoshkumarp-industrial-agent-ai.hf.space/docs
 
 **Quick Test:**
 - Visit the live frontend
@@ -164,7 +164,7 @@ Vercel Frontend (React + Vite)
 https://industrial-agent-ai.vercel.app/
     ↓ API calls
 HF Spaces Backend (FastAPI + Python)
-https://Santhoshkumarp-industrial-agent-ai.hf.space
+https://santhoshkumarp-industrial-agent-ai.hf.space
     ↓
 ├── SQLite (ephemeral - logbook, reports, feedback)
 └── Qdrant Cloud (persistent - vector DB with documents)
@@ -211,4 +211,4 @@ LOCAL_MODEL_ADAPTER=Santhoshkumarp/phi35-maintenance-wizard-lora
 **Domain**: Steel Manufacturing Plant Maintenance  
 **GitHub**: https://github.com/Santhoshkumarp01/Industrial-Agent-AI  
 **Live Demo**: https://industrial-agent-ai.vercel.app/  
-**Backend**: https://Santhoshkumarp-industrial-agent-ai.hf.space
+**Backend**: https://santhoshkumarp-industrial-agent-ai.hf.space

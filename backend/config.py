@@ -40,10 +40,10 @@ class Config:
     MIN_CHUNK_TOKENS = 25            # Minimum to filter noise
     TABLE_ROW_TOKENS = 100           # Target tokens per table row group
 
-    # --- Fine-tuned Local Model (Phi-3.5 Mini) ---
+    # --- Fine-tuned LLM (Phi-3.5 Mini + LoRA for Industrial Maintenance) ---
     USE_LOCAL_MODEL = os.getenv("USE_LOCAL_MODEL", "false").lower() == "true"
-    LOCAL_MODEL_BASE = os.getenv("LOCAL_MODEL_BASE", "ml/base_models/phi35_mini")
-    LOCAL_MODEL_ADAPTER = os.getenv("LOCAL_MODEL_ADAPTER", "ml/saved_models/phi35_mlx_lora")
+    LOCAL_MODEL_BASE = os.getenv("LOCAL_MODEL_BASE", "microsoft/Phi-3.5-mini-instruct")
+    LOCAL_MODEL_ADAPTER = os.getenv("LOCAL_MODEL_ADAPTER", "Santhoshkumarp/phi35-maintenance-wizard-lora")
 
     # --- Paths ---
     UPLOAD_DIR = "./data/uploads"

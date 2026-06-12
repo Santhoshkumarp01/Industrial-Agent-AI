@@ -124,7 +124,7 @@ function DocumentsView({ documentsHook }) {
   }
 
   const pdfUrl = selectedDoc
-    ? `http://localhost:8000/pdf/${selectedDoc.doc_id}`
+    ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/pdf/${selectedDoc.doc_id}`
     : null
 
   return (
