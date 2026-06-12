@@ -150,6 +150,18 @@ def _index_incidents_if_needed():
         print(f"⚠️  Failed to index incidents: {e}")
 
 
+@app.get("/")
+async def root() -> dict:
+    """Root endpoint - API info."""
+    return {
+        "name": "Industrial Agent AI API",
+        "version": "2.0.0",
+        "status": "online",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
+
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok"}
