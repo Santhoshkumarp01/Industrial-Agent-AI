@@ -20,7 +20,7 @@ from peft import LoraConfig, get_peft_model, TaskType
 from trl import SFTTrainer, SFTConfig
 
 print("=" * 60)
-print("MAINTENANCE WIZARD — Phi-3.5 Mini Fine-tuning")
+print("INDUSTRIAL AGENT AI — Phi-3.5 Mini Fine-tuning")
 print("=" * 60)
 
 # ============================================================================

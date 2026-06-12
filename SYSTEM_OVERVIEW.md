@@ -1,11 +1,11 @@
-# Industrial Agent AI — Maintenance Wizard
+# Industrial Agent AI
 ## Complete System Overview
 
 ---
 
 ## 1. Project Summary
 
-**Maintenance Wizard** is an intelligent, offline-first maintenance decision-support system built for steel plant equipment. It combines a fine-tuned Large Language Model, a production-grade RAG pipeline, real-time sensor monitoring, multi-agent orchestration, engineer feedback learning, and multi-turn conversational AI — all running locally on Apple Silicon with no cloud LLM dependency.
+**Industrial Agent AI** is an intelligent, offline-first maintenance decision-support system built for steel plant equipment. It combines a fine-tuned Large Language Model, a production-grade RAG pipeline, real-time sensor monitoring, multi-agent orchestration, engineer feedback learning, and multi-turn conversational AI — all running locally on Apple Silicon with no cloud LLM dependency.
 
 **Hackathon**: AI Hackathon Round 2 — Agentic AI Challenge
 **Domain**: Steel manufacturing (Rolling Mills, BF Blowers, Compressors, Plant Motors)

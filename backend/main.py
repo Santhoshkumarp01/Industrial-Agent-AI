@@ -19,9 +19,10 @@ logging.basicConfig(
 app = FastAPI(
     title="Industrial Agent AI — RAG API",
     description=(
-        "RAG pipeline for industrial maintenance decision support. "
-        "Upload equipment manuals and SOPs, then ask natural language questions "
-        "with exact source citations and PDF highlight coordinates."
+        "Industrial AI system for steel plant maintenance. "
+        "Upload equipment manuals and SOPs, monitor live sensor streams, "
+        "detect anomalies, diagnose faults, and get cited answers from "
+        "a fine-tuned LLM grounded in equipment documentation."
     ),
     version="2.0.0",
 )

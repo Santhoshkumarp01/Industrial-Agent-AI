@@ -110,3 +110,4 @@ huggingface/
 
 # Docker
 .dockerignore
+hf-space/
