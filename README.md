@@ -4,9 +4,21 @@
 
 🤖 **Fine-tuned Model**: [Santhoshkumarp/phi35-maintenance-wizard-lora](https://huggingface.co/Santhoshkumarp/phi35-maintenance-wizard-lora)
 
+## 🌐 Live Demo
+
+**🚀 Frontend**: https://industrial-agent-ai.vercel.app/  
+**⚙️ Backend API**: https://Santhoshkumarp-industrial-agent-ai.hf.space  
+**📖 API Docs**: https://Santhoshkumarp-industrial-agent-ai.hf.space/docs
+
+**Quick Test:**
+- Visit the live frontend
+- Navigate to **Live Monitor Intelligence**
+- Press `Ctrl+Shift+D` to trigger demo anomaly
+- Watch AI analysis with PDF citations appear automatically
+
 ---
 
-## 🚀 Quick Start
+## 🚀 Local Setup
 
 ### Backend Setup
 ```bash
@@ -141,8 +153,62 @@ LOCAL_MODEL_ADAPTER=Santhoshkumarp/phi35-maintenance-wizard-lora
 
 ---
 
+---
+
+## 🌐 Deployment Architecture
+
+```
+User Browser
+    ↓
+Vercel Frontend (React + Vite)
+https://industrial-agent-ai.vercel.app/
+    ↓ API calls
+HF Spaces Backend (FastAPI + Python)
+https://Santhoshkumarp-industrial-agent-ai.hf.space
+    ↓
+├── SQLite (ephemeral - logbook, reports, feedback)
+└── Qdrant Cloud (persistent - vector DB with documents)
+```
+
+**Backend Features:**
+- Dual LLM backend: MLX (Mac) + Transformers (Linux/Windows)
+- Auto-downloads fine-tuned model from HuggingFace (~24 MB)
+- Ephemeral SQLite for session-based data
+- Persistent Qdrant for knowledge base
+
+**Frontend Features:**
+- Static deployment on Vercel
+- Environment variable: `VITE_API_BASE_URL` points to HF backend
+- Real-time monitoring with live API polling
+- PDF citation viewer with exact page highlighting
+
+---
+
+## 📦 Deployment Files
+
+**For HF Spaces:**
+- `Dockerfile` - Container configuration
+- `backend/app.py` - HF Spaces entry point (port 7860)
+- `backend/requirements_spaces.txt` - Linux dependencies
+
+**For Vercel:**
+- `frontend/vercel.json` - Build configuration
+- `frontend/.env` - API base URL configuration
+
+**Required Secrets (HF Spaces):**
+```env
+QDRANT_URL=your_qdrant_cloud_url
+QDRANT_API_KEY=your_qdrant_api_key
+LOCAL_MODEL_BASE=microsoft/Phi-3.5-mini-instruct
+LOCAL_MODEL_ADAPTER=Santhoshkumarp/phi35-maintenance-wizard-lora
+```
+
+---
+
 ## 🏆 Built For
 
 **AI Hackathon Round 2 — Agentic AI Challenge**  
 **Domain**: Steel Manufacturing Plant Maintenance  
-**GitHub**: https://github.com/Santhoshkumarp01/Industrial-Agent-AI
+**GitHub**: https://github.com/Santhoshkumarp01/Industrial-Agent-AI  
+**Live Demo**: https://industrial-agent-ai.vercel.app/  
+**Backend**: https://Santhoshkumarp-industrial-agent-ai.hf.space

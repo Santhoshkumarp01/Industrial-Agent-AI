@@ -5,10 +5,23 @@
 
 ## 1. Project Summary
 
-**Industrial Agent AI** is an intelligent, offline-first maintenance decision-support system built for steel plant equipment. It combines a fine-tuned Large Language Model, a production-grade RAG pipeline, real-time sensor monitoring, multi-agent orchestration, engineer feedback learning, and multi-turn conversational AI — all running locally on Apple Silicon with no cloud LLM dependency.
+**Industrial Agent AI** is an intelligent, offline-first maintenance decision-support system built for steel plant equipment. It combines a fine-tuned Large Language Model, a production-grade RAG pipeline, real-time sensor monitoring, multi-agent orchestration, engineer feedback learning, and multi-turn conversational AI.
 
-**Hackathon**: AI Hackathon Round 2 — Agentic AI Challenge
-**Domain**: Steel manufacturing (Rolling Mills, BF Blowers, Compressors, Plant Motors)
+**Live System:**
+- **Frontend**: https://industrial-agent-ai.vercel.app/ (Vercel)
+- **Backend**: https://Santhoshkumarp-industrial-agent-ai.hf.space (HuggingFace Spaces)
+- **Model**: https://huggingface.co/Santhoshkumarp/phi35-maintenance-wizard-lora
+
+**Deployment Status:** ✅ Fully deployed and operational
+
+**Key Architecture:**
+- **Frontend**: React 18 + Vite on Vercel (static hosting)
+- **Backend**: FastAPI on HuggingFace Spaces (Docker container)
+- **Database**: SQLite (ephemeral, resets on container restart) + Qdrant Cloud (persistent)
+- **LLM**: Dual backend support - MLX (Apple Silicon) + Transformers (Linux/Windows)
+
+**Hackathon**: AI Hackathon Round 2 — Agentic AI Challenge  
+**Domain**: Steel manufacturing (Rolling Mills, BF Blowers, Compressors, Plant Motors)  
 **HF Model**: https://huggingface.co/Santhoshkumarp/phi35-maintenance-wizard-lora
 
 ---
@@ -33,7 +46,25 @@
 
 ## 3. Fine-Tuned LLM — The Core Innovation
 
-### 3.1 Base Model
+### 3.1 Deployment Configuration
+
+**Production Deployment (HuggingFace Spaces):**
+- Base model: `microsoft/Phi-3.5-mini-instruct` (auto-downloaded, ~7.6 GB)
+- LoRA adapter: `Santhoshkumarp/phi35-maintenance-wizard-lora` (auto-downloaded, ~24 MB)
+- Backend: Transformers + PEFT (4-bit quantization on GPU, float32 on CPU)
+- Environment variables set in HF Spaces secrets
+
+**Local Development (macOS):**
+- Same base model + adapter
+- Backend: Apple MLX (optimized for Apple Silicon)
+- ~10-15× faster inference on M-series chips
+
+**Backend Selection:** Automatic based on platform detection
+```python
+USE_MLX = platform.system() == "Darwin" and platform.machine() == "arm64"
+```
+
+### 3.2 Base Model
 - **Microsoft Phi-3.5 Mini Instruct** (3.8B parameters)
 - Chosen for Apple Silicon compatibility, small size, strong instruction following
 
@@ -632,7 +663,30 @@ backend/ml/saved_models/isolation_forest_*.pkl — ML anomaly models
 
 ## 16. Setup & Run
 
-### Backend
+### Production (Deployed)
+
+**Frontend (Vercel):**
+```
+URL: https://industrial-agent-ai.vercel.app/
+Auto-deploys on git push to main branch
+Environment variable: VITE_API_BASE_URL (set in Vercel dashboard)
+```
+
+**Backend (HuggingFace Spaces):**
+```
+URL: https://Santhoshkumarp-industrial-agent-ai.hf.space
+Container: Docker (python:3.11-slim)
+Port: 7860
+Secrets configured in HF Spaces dashboard:
+  - QDRANT_URL
+  - QDRANT_API_KEY  
+  - LOCAL_MODEL_BASE=microsoft/Phi-3.5-mini-instruct
+  - LOCAL_MODEL_ADAPTER=Santhoshkumarp/phi35-maintenance-wizard-lora
+```
+
+### Local Development
+
+**Backend:**
 ```bash
 cd backend
 python3.11 -m venv .venv
@@ -729,6 +783,8 @@ npm run dev    # http://localhost:5173
 
 ---
 
-**GitHub**: https://github.com/Santhoshkumarp01/Industrial-Agent-AI
-**HF Model**: https://huggingface.co/Santhoshkumarp/phi35-maintenance-wizard-lora
+**GitHub**: https://github.com/Santhoshkumarp01/Industrial-Agent-AI  
+**HF Model**: https://huggingface.co/Santhoshkumarp/phi35-maintenance-wizard-lora  
+**Live Demo**: https://industrial-agent-ai.vercel.app/  
+**Backend API**: https://Santhoshkumarp-industrial-agent-ai.hf.space  
 **Built for AI Hackathon Round 2 — Agentic AI Challenge**
