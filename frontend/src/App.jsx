@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import Layout from './components/layout/Layout'
 import QuickStartGuide from './components/layout/QuickStartGuide'
+import RoleLanding from './components/auth/RoleLanding'
 import ChatPanel from './components/chat/ChatPanel'
 import MonitoringPanel from './components/monitoring/MonitoringPanel'
 import ReportsPanel from './components/monitoring/ReportsPanel'
@@ -11,6 +12,24 @@ import { useDocuments } from './hooks/useDocuments'
 import useAppStore from './store/appStore'
 
 export default function App() {
+  const userRole = useAppStore((s) => s.userRole)
+  const setUserRole = useAppStore((s) => s.setUserRole)
+  const loadUserRole = useAppStore((s) => s.loadUserRole)
+
+  // Load role from localStorage on mount
+  useEffect(() => {
+    loadUserRole()
+  }, [loadUserRole])
+
+  // Show role landing if no role selected
+  if (!userRole) {
+    return <RoleLanding onSelectRole={setUserRole} />
+  }
+
+  return <MainApp />
+}
+
+function MainApp() {
   const activePanel = useAppStore((s) => s.activePanel)
   const setActivePanel = useAppStore((s) => s.setActivePanel)
 

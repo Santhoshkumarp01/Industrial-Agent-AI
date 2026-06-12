@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { formatTimestamp } from '../../utils/formatters'
+import { getRoleInfo } from '../../utils/permissions'
 import StatusDot from '../shared/StatusDot'
 import useAppStore from '../../store/appStore'
 
 export default function TopBar() {
   const [time, setTime] = useState(new Date())
   const alertCount = useAppStore((s) => s.alertCount)
+  const userRole = useAppStore((s) => s.userRole)
+  const roleInfo = getRoleInfo(userRole)
 
   useEffect(() => {
     const id = setInterval(() => setTime(new Date()), 1000)
@@ -82,6 +85,26 @@ export default function TopBar() {
 
       {/* Right */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        {/* Role badge */}
+        {roleInfo && (
+          <div style={{
+            padding: '4px 10px',
+            borderRadius: 'var(--radius-sm)',
+            border: `1px solid ${roleInfo.color}`,
+            background: `${roleInfo.color}15`,
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 9,
+              color: roleInfo.color,
+              letterSpacing: '0.08em',
+              fontWeight: 600,
+            }}>
+              {roleInfo.badge}
+            </span>
+          </div>
+        )}
+
         {/* System status */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <StatusDot status="ok" size="small" />

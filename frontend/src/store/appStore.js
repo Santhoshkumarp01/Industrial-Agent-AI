@@ -12,6 +12,8 @@ const useAppStore = create((set) => ({
   // Documents state
   documents: [],
   selectedDocumentId: null,
+  // Role-based access
+  userRole: null, // 'engineer' | 'manager' | 'technician' | 'judge'
 
   setActivePanel: (panel) => set({ activePanel: panel }),
   setSelectedTag: (tag) => set({ selectedEquipmentTag: tag }),
@@ -29,6 +31,15 @@ const useAppStore = create((set) => ({
   setDocuments: (documents) => set({ documents }),
   openDocument: (docId) =>
     set({ selectedDocumentId: docId, activePanel: 'documents', isPDFViewerOpen: true }),
+  // Role actions
+  setUserRole: (role) => {
+    localStorage.setItem('userRole', role)
+    set({ userRole: role })
+  },
+  loadUserRole: () => {
+    const role = localStorage.getItem('userRole')
+    set({ userRole: role })
+  },
 }))
 
 export default useAppStore
