@@ -8,7 +8,14 @@ export default function TopBar() {
   const [time, setTime] = useState(new Date())
   const alertCount = useAppStore((s) => s.alertCount)
   const userRole = useAppStore((s) => s.userRole)
+  const setUserRole = useAppStore((s) => s.setUserRole)
   const roleInfo = getRoleInfo(userRole)
+
+  const handleChangeRole = () => {
+    if (confirm('Are you sure you want to change your role? This will reset your session.')) {
+      setUserRole(null)
+    }
+  }
 
   useEffect(() => {
     const id = setInterval(() => setTime(new Date()), 1000)
@@ -85,23 +92,53 @@ export default function TopBar() {
 
       {/* Right */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-        {/* Role badge */}
+        {/* Role badge with change button */}
         {roleInfo && (
-          <div style={{
-            padding: '4px 10px',
-            borderRadius: 'var(--radius-sm)',
-            border: `1px solid ${roleInfo.color}`,
-            background: `${roleInfo.color}15`,
-          }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 9,
-              color: roleInfo.color,
-              letterSpacing: '0.08em',
-              fontWeight: 600,
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-sm)',
+              border: `1px solid ${roleInfo.color}`,
+              background: `${roleInfo.color}15`,
             }}>
-              {roleInfo.badge}
-            </span>
+              <span style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 9,
+                color: roleInfo.color,
+                letterSpacing: '0.08em',
+                fontWeight: 600,
+              }}>
+                {roleInfo.badge}
+              </span>
+            </div>
+            <button
+              onClick={handleChangeRole}
+              title="Change role"
+              style={{
+                padding: '4px 8px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border)',
+                background: 'var(--bg-surface-2)',
+                color: 'var(--text-muted)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 9,
+                letterSpacing: '0.05em',
+                cursor: 'pointer',
+                transition: 'var(--transition)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--bg-surface-3)'
+                e.currentTarget.style.borderColor = 'var(--border-active)'
+                e.currentTarget.style.color = 'var(--text-primary)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--bg-surface-2)'
+                e.currentTarget.style.borderColor = 'var(--border)'
+                e.currentTarget.style.color = 'var(--text-muted)'
+              }}
+            >
+              CHANGE
+            </button>
           </div>
         )}
 

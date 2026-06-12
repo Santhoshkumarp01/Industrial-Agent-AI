@@ -26,9 +26,16 @@ export default function Sidebar({ documents = [] }) {
   const selectedTag    = useAppStore((s) => s.selectedEquipmentTag)
   const setActivePanel = useAppStore((s) => s.setActivePanel)
   const setSelectedTag = useAppStore((s) => s.setSelectedTag)
+  const setUserRole    = useAppStore((s) => s.setUserRole)
 
   const equipmentTags = [...new Set(documents.map((d) => d.equipment_tag).filter(Boolean))]
   const totalChunks   = documents.reduce((acc, d) => acc + (d.chunk_count || 0), 0)
+
+  const handleBackToHome = () => {
+    if (confirm('Return to role selection? This will reset your session.')) {
+      setUserRole(null)
+    }
+  }
 
   return (
     <aside
@@ -42,6 +49,40 @@ export default function Sidebar({ documents = [] }) {
         overflow: 'hidden',
       }}
     >
+      {/* Back to Home button */}
+      <div style={{ padding: '12px 12px 0' }}>
+        <button
+          onClick={handleBackToHome}
+          style={{
+            width: '100%',
+            padding: '8px 12px',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-surface-2)',
+            color: 'var(--text-secondary)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 10,
+            letterSpacing: '0.05em',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            transition: 'var(--transition)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--bg-surface-3)'
+            e.currentTarget.style.borderColor = 'var(--border-active)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--bg-surface-2)'
+            e.currentTarget.style.borderColor = 'var(--border)'
+          }}
+        >
+          <span>🏠</span>
+          <span>BACK TO HOME</span>
+        </button>
+      </div>
+
       {/* Navigation */}
       <nav style={{ marginTop: 8 }}>
         <span style={SECTION_LABEL_STYLE}>Navigation</span>
