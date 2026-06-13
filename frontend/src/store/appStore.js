@@ -12,6 +12,9 @@ const useAppStore = create((set) => ({
   // Documents state
   documents: [],
   selectedDocumentId: null,
+  // Logbook/Report state
+  selectedLogbookEntryId: null,
+  selectedReportId: null,
   // Role-based access
   userRole: null, // 'engineer' | 'manager' | 'technician' | 'judge'
 
@@ -31,6 +34,13 @@ const useAppStore = create((set) => ({
   setDocuments: (documents) => set({ documents }),
   openDocument: (docId) =>
     set({ selectedDocumentId: docId, activePanel: 'documents', isPDFViewerOpen: true }),
+  // Logbook/Report actions
+  openLogbookEntry: (entryId) =>
+    set({ selectedLogbookEntryId: entryId, activePanel: 'logbook' }),
+  openReport: (reportId) =>
+    set({ selectedReportId: reportId, activePanel: 'reports' }),
+  clearLogbookSelection: () => set({ selectedLogbookEntryId: null }),
+  clearReportSelection: () => set({ selectedReportId: null }),
   // Role actions
   setUserRole: (role) => {
     localStorage.setItem('userRole', role)

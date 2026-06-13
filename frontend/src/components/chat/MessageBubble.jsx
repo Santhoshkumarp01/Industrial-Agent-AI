@@ -40,7 +40,8 @@ function ThinkingDots() {
 function AgentAnalysisContent({ analysis, logbookEntryId, onFeedbackSubmit }) {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
-  const setActivePanel = useAppStore((s) => s.setActivePanel)
+  const openLogbookEntry = useAppStore((s) => s.openLogbookEntry)
+  const openReport = useAppStore((s) => s.openReport)
 
   const handleFeedbackSuccess = (verdict) => {
     setFeedbackSubmitted(true)
@@ -49,11 +50,15 @@ function AgentAnalysisContent({ analysis, logbookEntryId, onFeedbackSubmit }) {
   }
 
   const handleViewReport = () => {
-    setActivePanel('reports')
+    if (analysis.incident_id) {
+      openReport(analysis.incident_id)
+    }
   }
 
   const handleViewLogbook = () => {
-    setActivePanel('logbook')
+    if (logbookEntryId) {
+      openLogbookEntry(logbookEntryId)
+    }
   }
 
   return (

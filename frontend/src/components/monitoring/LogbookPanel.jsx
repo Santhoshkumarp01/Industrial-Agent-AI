@@ -3,6 +3,7 @@ import { getLogbook, getLogbookEntry } from '../../services/api'
 import { formatTimestamp } from '../../utils/formatters'
 import RiskBadge from '../shared/RiskBadge'
 import Spinner from '../shared/Spinner'
+import useAppStore from '../../store/appStore'
 
 export default function LogbookPanel() {
   const [entries, setEntries] = useState([])
@@ -11,10 +12,33 @@ export default function LogbookPanel() {
   const [selectedEntry, setSelectedEntry] = useState(null)
   const [equipmentFilter, setEquipmentFilter] = useState('')
   const [uniqueEquipment, setUniqueEquipment] = useState([])
+  
+  // Get selected entry from store
+  const selectedLogbookEntryId = useAppStore((s) => s.selectedLogbookEntryId)
+  const clearLogbookSelection = useAppStore((s) => s.clearLogbookSelection)
 
   useEffect(() => {
     fetchLogbook()
   }, [equipmentFilter])
+  
+  // Auto-open selected entry from store
+  useEffect(() => {
+    if (selectedLogbookEntryId && entries.length > 0) {
+      const entry = entries.find(e => e.id === selectedLogbookEntryId)
+      if (entry) {
+        handleRowClick(entry)
+        // Scroll to the entry
+        setTimeout(() => {
+          const element = document.getElementById(`logbook-entry-${selectedLogbookEntryId}`)
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        }, 100)
+        // Clear selection after 5 seconds
+        setTimeout(() => clearLogbookSelection(), 5000)
+      }
+    }
+  }, [selectedLogbookEntryId, entries])
 
   const fetchLogbook = async () => {
     try {
@@ -182,24 +206,32 @@ export default function LogbookPanel() {
               </tr>
             </thead>
             <tbody>
-              {entries.map((entry) => (
+              {entries.map((entry) => {
+                const isHighlighted = selectedLogbookEntryId === entry.id
+                return (
                 <React.Fragment key={entry.id}>
                   <tr
+                    id={`logbook-entry-${entry.id}`}
                     onClick={() => handleRowClick(entry)}
                     style={{
                       borderBottom: '1px solid var(--border-subtle)',
                       cursor: 'pointer',
-                      background: selectedEntry?.id === entry.id ? 'var(--bg-surface-2)' : 'transparent',
-                      transition: 'background 0.2s'
+                      background: selectedEntry?.id === entry.id 
+                        ? 'var(--bg-surface-2)' 
+                        : isHighlighted 
+                          ? 'rgba(232, 188, 93, 0.1)' 
+                          : 'transparent',
+                      borderLeft: isHighlighted ? '3px solid var(--accent-amber)' : '3px solid transparent',
+                      transition: 'all 0.3s'
                     }}
                     onMouseEnter={(e) => {
-                      if (selectedEntry?.id !== entry.id) {
+                      if (selectedEntry?.id !== entry.id && !isHighlighted) {
                         e.currentTarget.style.background = 'var(--bg-surface-2)'
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (selectedEntry?.id !== entry.id) {
-                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.background = isHighlighted ? 'rgba(232, 188, 93, 0.1)' : 'transparent'
                       }
                     }}
                   >
@@ -372,7 +404,7 @@ export default function LogbookPanel() {
                     </tr>
                   )}
                 </React.Fragment>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>

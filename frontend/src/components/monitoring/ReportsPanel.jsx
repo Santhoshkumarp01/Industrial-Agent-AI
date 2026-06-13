@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { getReports, getReport } from '../../services/api'
 import Spinner from '../shared/Spinner'
+import useAppStore from '../../store/appStore'
 
 export default function ReportsPanel() {
   const [reports, setReports] = useState([])
@@ -8,6 +9,10 @@ export default function ReportsPanel() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filterEquipment, setFilterEquipment] = useState('')
+  
+  // Get selected report from store
+  const selectedReportId = useAppStore((s) => s.selectedReportId)
+  const clearReportSelection = useAppStore((s) => s.clearReportSelection)
 
   useEffect(() => {
     loadReports()
@@ -15,6 +20,22 @@ export default function ReportsPanel() {
     const interval = setInterval(loadReports, 10000)
     return () => clearInterval(interval)
   }, [])
+  
+  // Auto-open selected report from store
+  useEffect(() => {
+    if (selectedReportId && reports.length > 0) {
+      handleReportClick(selectedReportId)
+      // Scroll to the report
+      setTimeout(() => {
+        const element = document.getElementById(`report-${selectedReportId}`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
+      // Clear selection after 5 seconds
+      setTimeout(() => clearReportSelection(), 5000)
+    }
+  }, [selectedReportId, reports])
 
   const loadReports = async () => {
     setIsLoading(true)
@@ -205,11 +226,14 @@ export default function ReportsPanel() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filteredReports.map((report) => {
               const reportId = report.report_id || report.incident_summary?.incident_id
+              const isHighlighted = selectedReportId === reportId
               return (
                 <ReportCard
                   key={reportId}
                   report={report}
+                  reportId={reportId}
                   isSelected={selectedReport?.report_id === reportId}
+                  isHighlighted={isHighlighted}
                   onClick={() => handleReportClick(reportId)}
                   onExport={() => handleExportReport(report)}
                 />
@@ -246,7 +270,7 @@ export default function ReportsPanel() {
   )
 }
 
-function ReportCard({ report, isSelected, onClick, onExport }) {
+function ReportCard({ report, reportId, isSelected, isHighlighted, onClick, onExport }) {
   const timestamp = new Date(report.incident_summary?.timestamp || report.generated_at)
   const formattedDate = timestamp.toLocaleDateString('en-US', { 
     month: 'short', 
@@ -263,20 +287,28 @@ function ReportCard({ report, isSelected, onClick, onExport }) {
 
   return (
     <div
+      id={`report-${reportId}`}
       style={{
-        background: isSelected ? 'var(--bg-surface-2)' : 'var(--bg-surface)',
-        border: `1px solid ${isSelected ? 'var(--accent-amber)' : 'var(--border)'}`,
+        background: isSelected 
+          ? 'var(--bg-surface-2)' 
+          : isHighlighted 
+            ? 'rgba(232, 188, 93, 0.1)' 
+            : 'var(--bg-surface)',
+        border: `1px solid ${isSelected ? 'var(--accent-amber)' : isHighlighted ? 'var(--accent-amber)' : 'var(--border)'}`,
         borderRadius: 'var(--radius-md)',
+        borderLeft: isHighlighted ? '3px solid var(--accent-amber)' : '3px solid transparent',
         padding: '12px 14px',
         cursor: 'pointer',
-        transition: 'var(--transition)',
+        transition: 'all 0.3s',
         position: 'relative'
       }}
       onMouseEnter={(e) => {
-        if (!isSelected) e.currentTarget.style.borderColor = 'var(--border-active)'
+        if (!isSelected && !isHighlighted) e.currentTarget.style.borderColor = 'var(--border-active)'
       }}
       onMouseLeave={(e) => {
-        if (!isSelected) e.currentTarget.style.borderColor = 'var(--border)'
+        if (!isSelected) {
+          e.currentTarget.style.borderColor = isHighlighted ? 'var(--accent-amber)' : 'var(--border)'
+        }
       }}
     >
       <div onClick={onClick}>
