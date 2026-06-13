@@ -84,6 +84,7 @@ async def upload_document(
     cloudinary_success = False
     try:
         pdf_url = upload_pdf(str(pdf_path), doc_id)
+        logger.info(f"✅ PDF uploaded to Cloudinary: doc_id={doc_id}, equipment_tag={equipment_tag}, filename={file.filename}")
         logger.info(f"✅ PDF stored in Cloudinary: {pdf_url}")
         cloudinary_success = True
     except Exception as e:
@@ -94,6 +95,9 @@ async def upload_document(
     # Add warning to result if Cloudinary failed
     if not cloudinary_success:
         result.message += " (Warning: PDF not stored persistently - will be lost on restart)"
+    else:
+        # Log successful upload with full details
+        logger.info(f"📄 FILE UPLOADED: {file.filename} → doc_id: {doc_id}, equipment_tag: {equipment_tag}, chunks: {result.chunk_count}")
 
     return result
 
