@@ -49,7 +49,7 @@ function MainApp() {
     const handleKeyDown = async (e) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'D') {
         e.preventDefault()
-        const machineTag = 'rolling-mill-main-drive-motor'
+        const machineTag = 'general-industrial-motor'
 
         // Trigger frontend simulator anomaly
         sensorHook.triggerAnomaly(machineTag, 'vibration')
@@ -128,10 +128,10 @@ function DocumentsView({ documentsHook }) {
   const [numPages, setNumPages] = useState(null)
 
   const TAG_COLORS = {
-    'rolling-mill-main-drive-motor':        { bg: 'rgba(79,195,247,0.10)', border: 'var(--accent-blue-dim)', text: 'var(--accent-blue)' },
-    'general-plant-motor':                  { bg: 'rgba(76,175,130,0.10)', border: '#2e7d5a',               text: '#4CAF82' },
-    'industrial-induction-compressor-motor':{ bg: 'rgba(245,166,35,0.10)', border: 'var(--accent-amber-dim)', text: 'var(--accent-amber)' },
-    'blower-large-motor-reference':         { bg: 'rgba(179,136,255,0.10)', border: '#7c5fa0',              text: '#b388ff' },
+    'general-industrial-motor':       { bg: 'rgba(76,175,130,0.10)', border: '#2e7d5a',               text: '#4CAF82' },
+    'ac-drive-motor':                 { bg: 'rgba(79,195,247,0.10)', border: 'var(--accent-blue-dim)', text: 'var(--accent-blue)' },
+    'synchronous-motor':              { bg: 'rgba(245,166,35,0.10)', border: 'var(--accent-amber-dim)', text: 'var(--accent-amber)' },
+    'heavy-duty-industrial-motor':    { bg: 'rgba(179,136,255,0.10)', border: '#7c5fa0',              text: '#b388ff' },
   }
 
   const handleSelectDoc = (doc) => {

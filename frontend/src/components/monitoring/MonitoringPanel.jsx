@@ -162,8 +162,8 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button
               onClick={async () => {
-                const machineTag = 'rolling-mill-main-drive-motor'
-                const machineName = 'Rolling Mill Main Drive Motor'
+                const machineTag = 'general-industrial-motor'
+                const machineName = 'General Industrial Motor'
                 
                 // Inject anomaly
                 try {

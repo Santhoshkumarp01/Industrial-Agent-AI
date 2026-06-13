@@ -9,10 +9,10 @@ Each machine has:
 - Fault code assignment based on which sensor triggered
 
 Equipment → PDF mapping:
-  rolling-mill-main-drive-motor    → Steel Plant - Rolling Mill Main Drive Motor Manual.pdf
-  general-plant-motor              → Steel Plant - General Plant Motor Manual.pdf
-  industrial-induction-compressor  → Steel Plant - Industrial Induction Compressor Motor Manual.pdf
-  blower-large-motor-reference     → Steel Plant - Blower Large Motor Reference Manual.pdf
+  general-industrial-motor         → General Industrial Motor Manual.pdf
+  ac-drive-motor                   → AC Drive Motor Manual.pdf
+  synchronous-motor                → Synchronous Motor Manual.pdf
+  heavy-duty-industrial-motor      → Heavy-Duty Industrial Motor Manual.pdf
 """
 
 import random
@@ -26,26 +26,9 @@ logger = logging.getLogger(__name__)
 
 # ── Machine definitions ───────────────────────────────────────────────────────
 MACHINE_CONFIG = {
-    "rolling-mill-main-drive-motor": {
-        "display_name": "Rolling Mill Main Drive Motor",
-        "equipment_tag": "rolling-mill-main-drive-motor",
-        "rpm_nominal": 1480,
-        "thresholds": {
-            "vibration_mm_s":   {"normal": (1.5, 3.0),  "warn": 5.0,  "critical": 7.5},
-            "bearing_temp_c":   {"normal": (65,  78),   "warn": 88.0, "critical": 95.0},
-            "motor_current_a":  {"normal": (38,  46),   "warn": 54.0, "critical": 62.0},
-            "lube_pressure_bar":{"normal": (4.2, 5.1),  "warn": 3.5,  "critical": 2.8},
-        },
-        "fault_codes": {
-            "vibration_mm_s":    "FC-VM-01",
-            "bearing_temp_c":    "FC-TH-01",
-            "motor_current_a":   "FC-CU-01",
-            "lube_pressure_bar": "FC-LP-01",
-        },
-    },
-    "general-plant-motor": {
-        "display_name": "General Plant Motor",
-        "equipment_tag": "general-plant-motor",
+    "general-industrial-motor": {
+        "display_name": "General Industrial Motor",
+        "equipment_tag": "general-industrial-motor",
         "rpm_nominal": 1450,
         "thresholds": {
             "vibration_mm_s":   {"normal": (1.0, 2.5),  "warn": 4.5,  "critical": 6.5},
@@ -54,21 +37,38 @@ MACHINE_CONFIG = {
             "lube_pressure_bar":{"normal": (3.8, 4.8),  "warn": 3.0,  "critical": 2.4},
         },
         "fault_codes": {
+            "vibration_mm_s":    "FC-VM-01",
+            "bearing_temp_c":    "FC-TH-01",
+            "motor_current_a":   "FC-CU-01",
+            "lube_pressure_bar": "FC-LP-01",
+        },
+    },
+    "ac-drive-motor": {
+        "display_name": "AC Drive Motor",
+        "equipment_tag": "ac-drive-motor",
+        "rpm_nominal": 1480,
+        "thresholds": {
+            "vibration_mm_s":   {"normal": (1.5, 3.0),  "warn": 5.0,  "critical": 7.5},
+            "bearing_temp_c":   {"normal": (65,  78),   "warn": 88.0, "critical": 95.0},
+            "motor_current_a":  {"normal": (38,  46),   "warn": 54.0, "critical": 62.0},
+            "lube_pressure_bar":{"normal": (4.2, 5.1),  "warn": 3.5,  "critical": 2.8},
+        },
+        "fault_codes": {
             "vibration_mm_s":    "FC-VM-02",
             "bearing_temp_c":    "FC-TH-02",
             "motor_current_a":   "FC-CU-02",
             "lube_pressure_bar": "FC-LP-02",
         },
     },
-    "industrial-induction-compressor-motor": {
-        "display_name": "Industrial Induction / Compressor Motor",
-        "equipment_tag": "industrial-induction-compressor-motor",
-        "rpm_nominal": 1475,
+    "synchronous-motor": {
+        "display_name": "Synchronous Motor",
+        "equipment_tag": "synchronous-motor",
+        "rpm_nominal": 1500,
         "thresholds": {
             "vibration_mm_s":   {"normal": (1.2, 2.8),  "warn": 5.5,  "critical": 8.0},
-            "bearing_temp_c":   {"normal": (72,  88),   "warn": 100.0,"critical": 110.0},
-            "motor_current_a":  {"normal": (28,  36),   "warn": 44.0, "critical": 52.0},
-            "lube_pressure_bar":{"normal": (8.5, 10.2), "warn": 6.5,  "critical": 5.0},
+            "bearing_temp_c":   {"normal": (70,  85),   "warn": 95.0, "critical": 105.0},
+            "motor_current_a":  {"normal": (25,  35),   "warn": 42.0, "critical": 50.0},
+            "lube_pressure_bar":{"normal": (4.0, 5.0),  "warn": 3.2,  "critical": 2.5},
         },
         "fault_codes": {
             "vibration_mm_s":    "FC-VM-03",
@@ -77,9 +77,9 @@ MACHINE_CONFIG = {
             "lube_pressure_bar": "FC-LP-03",
         },
     },
-    "blower-large-motor-reference": {
-        "display_name": "BF Blower / Large Motor",
-        "equipment_tag": "blower-large-motor-reference",
+    "heavy-duty-industrial-motor": {
+        "display_name": "Heavy-Duty Industrial Motor",
+        "equipment_tag": "heavy-duty-industrial-motor",
         "rpm_nominal": 990,
         "thresholds": {
             "vibration_mm_s":   {"normal": (0.8, 2.0),  "warn": 4.0,  "critical": 6.5},
@@ -98,10 +98,10 @@ MACHINE_CONFIG = {
 
 # Equipment-tag → display doc name (matches what's in Qdrant)
 MACHINE_DOC_MAP = {
-    "rolling-mill-main-drive-motor":        "Steel Plant - Rolling Mill Main Drive Motor Manual.pdf",
-    "general-plant-motor":                  "Steel Plant - General Plant Motor Manual.pdf",
-    "industrial-induction-compressor-motor":"Steel Plant - Industrial Induction Compressor Motor Manual.pdf",
-    "blower-large-motor-reference":         "Steel Plant - Blower Large Motor Reference Manual.pdf",
+    "general-industrial-motor":       "General Industrial Motor Manual.pdf",
+    "ac-drive-motor":                 "AC Drive Motor Manual.pdf",
+    "synchronous-motor":              "Synchronous Motor Manual.pdf",
+    "heavy-duty-industrial-motor":    "Heavy-Duty Industrial Motor Manual.pdf",
 }
 
 # In-memory log buffer — last 50 entries per machine

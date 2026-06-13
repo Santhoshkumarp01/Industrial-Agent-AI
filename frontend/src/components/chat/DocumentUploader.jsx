@@ -122,7 +122,7 @@ export default function DocumentUploader({ onUpload, isExpanded, onToggle }) {
           </label>
           <button
             type="button"
-            title="Valid tags: rolling-mill-main-drive-motor, industrial-induction-compressor-motor, blower-large-motor-reference, general-plant-motor"
+            title="Valid tags: general-industrial-motor, ac-drive-motor, synchronous-motor, heavy-duty-industrial-motor"
             style={{
               width: 14,
               height: 14,
@@ -142,7 +142,7 @@ export default function DocumentUploader({ onUpload, isExpanded, onToggle }) {
           </button>
         </div>
         <input
-          placeholder="e.g. rolling-mill-main-drive-motor"
+          placeholder="e.g. general-industrial-motor"
           value={equipmentTag}
           onChange={(e) => setEquipmentTag(e.target.value)}
           list="equipment-tags"
@@ -156,10 +156,10 @@ export default function DocumentUploader({ onUpload, isExpanded, onToggle }) {
           }}
         />
         <datalist id="equipment-tags">
-          <option value="rolling-mill-main-drive-motor" />
-          <option value="industrial-induction-compressor-motor" />
-          <option value="blower-large-motor-reference" />
-          <option value="general-plant-motor" />
+          <option value="general-industrial-motor" />
+          <option value="ac-drive-motor" />
+          <option value="synchronous-motor" />
+          <option value="heavy-duty-industrial-motor" />
         </datalist>
       </div>
 

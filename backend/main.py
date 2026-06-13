@@ -112,17 +112,17 @@ def _index_incidents_if_needed():
 
         # Map old short IDs to the correct machine tag slugs used in the system
         EQUIPMENT_ID_MAP = {
-            "RM1":    "rolling-mill-main-drive-motor",
-            "RM3":    "rolling-mill-main-drive-motor",
-            "BF1":    "blower-large-motor-reference",
-            "COMP_A": "industrial-induction-compressor-motor",
-            "GM1":    "general-plant-motor",
+            "RM1":    "general-industrial-motor",
+            "RM3":    "ac-drive-motor",
+            "BF1":    "heavy-duty-industrial-motor",
+            "COMP_A": "synchronous-motor",
+            "GM1":    "general-industrial-motor",
         }
 
         count = 0
         for inc in incidents:
             raw_equip_id = inc.get("equipment_id", "General")
-            equip_tag = EQUIPMENT_ID_MAP.get(raw_equip_id, "general-plant-motor")
+            equip_tag = EQUIPMENT_ID_MAP.get(raw_equip_id, "general-industrial-motor")
 
             # Format each incident as a readable text chunk
             text = (

@@ -45,23 +45,23 @@ def _threshold_based_prediction(reading: SensorReading) -> PredictionResult:
     """
     # Define thresholds per equipment type
     THRESHOLDS = {
-        "ROLLING-MILL-MAIN-DRIVE-MOTOR": {
-            "vibration": 7.5, "temperature": 95.0, "current": 62.0, "pressure": 2.8
-        },
-        "GENERAL-PLANT-MOTOR": {
+        "GENERAL-INDUSTRIAL-MOTOR": {
             "vibration": 6.5, "temperature": 92.0, "current": 44.0, "pressure": 2.4
         },
-        "INDUSTRIAL-INDUCTION-COMPRESSOR-MOTOR": {
-            "vibration": 8.0, "temperature": 110.0, "current": 52.0, "pressure": 5.0
+        "AC-DRIVE-MOTOR": {
+            "vibration": 7.5, "temperature": 95.0, "current": 62.0, "pressure": 2.8
         },
-        "BLOWER-LARGE-MOTOR-REFERENCE": {
+        "SYNCHRONOUS-MOTOR": {
+            "vibration": 8.0, "temperature": 105.0, "current": 50.0, "pressure": 2.5
+        },
+        "HEAVY-DUTY-INDUSTRIAL-MOTOR": {
             "vibration": 6.5, "temperature": 90.0, "current": 82.0, "pressure": 3.5
         },
         # Legacy equipment IDs
-        "RM1": {"vibration": 7.5, "temperature": 95.0, "current": 62.0, "pressure": 2.8},
+        "RM1": {"vibration": 6.5, "temperature": 92.0, "current": 44.0, "pressure": 2.4},
         "RM3": {"vibration": 7.5, "temperature": 95.0, "current": 62.0, "pressure": 2.8},
         "BF1": {"vibration": 6.5, "temperature": 90.0, "current": 82.0, "pressure": 3.5},
-        "COMP_A": {"vibration": 8.0, "temperature": 110.0, "current": 52.0, "pressure": 5.0},
+        "COMP_A": {"vibration": 8.0, "temperature": 105.0, "current": 50.0, "pressure": 2.5},
     }
     
     equip_id = reading.equipment_id.upper()
