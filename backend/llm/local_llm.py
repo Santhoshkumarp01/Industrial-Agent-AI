@@ -5,6 +5,7 @@ Phi-3.5 Mini (3.8B) optimized for industrial maintenance and root cause analysis
 Dual-backend architecture:
   • MLX Backend      — Apple Silicon optimized inference
   • Transformers     — Cross-platform with automatic GPU/CPU detection
+  • API Backend      — Cloud inference endpoints
 
 Features:
   - Domain-specific fine-tuning on industrial maintenance scenarios
@@ -21,6 +22,12 @@ logger = logging.getLogger(__name__)
 BASE_MODEL_PATH = os.getenv("LOCAL_MODEL_BASE", "microsoft/Phi-3.5-mini-instruct")
 ADAPTER_PATH    = os.getenv("LOCAL_MODEL_ADAPTER", "Santhoshkumarp/phi35-maintenance-wizard-lora")
 
+USE_LOCAL_MODEL = os.getenv("USE_LOCAL_MODEL", "false").lower() == "true"
+LLM_API_PROVIDER = os.getenv("LLM_API_PROVIDER", "gemini")
+LLM_API_KEY = os.getenv("LLM_API_KEY", None)
+LLM_API_MODEL = os.getenv("LLM_API_MODEL", "gemini-2-flash-lite")
+LLM_API_BASE_URL = os.getenv("LLM_API_BASE_URL", None)
+
 # ── Detect which backend to use ──────────────────────────────────────────────
 def _is_apple_silicon() -> bool:
     """True if running on Apple Silicon Mac."""
@@ -30,8 +37,12 @@ def _is_apple_silicon() -> bool:
     except Exception:
         return False
 
-USE_MLX = _is_apple_silicon() and os.getenv("FORCE_TRANSFORMERS", "").lower() != "true"
-logger.info(f"[LLM] Backend: {'MLX (Apple Silicon)' if USE_MLX else 'Transformers + PEFT (Linux/HF)'}")
+if USE_LOCAL_MODEL:
+    USE_MLX = _is_apple_silicon() and os.getenv("FORCE_TRANSFORMERS", "").lower() != "true"
+    logger.info(f"[LLM] Backend: {'MLX (Apple Silicon)' if USE_MLX else 'Transformers + PEFT (Linux/HF)'}")
+else:
+    USE_MLX = False
+    logger.info(f"[LLM] Backend: API ({LLM_API_PROVIDER})")
 
 # ── Shared singleton state ────────────────────────────────────────────────────
 _model     = None
@@ -168,12 +179,121 @@ def _generate_transformers(system_prompt: str, user_prompt: str, max_tokens: int
     return response.replace("<|end|>", "").replace("<|assistant|>", "").strip()
 
 
+# ── API backend (Groq, HuggingFace, OpenAI, etc.) ────────────────────────────
+def _generate_api(system_prompt: str, user_prompt: str, max_tokens: int) -> str:
+    """Generate using cloud API."""
+    if LLM_API_PROVIDER == "groq":
+        return _generate_groq(system_prompt, user_prompt, max_tokens)
+    elif LLM_API_PROVIDER == "huggingface":
+        return _generate_huggingface(system_prompt, user_prompt, max_tokens)
+    elif LLM_API_PROVIDER == "openai":
+        return _generate_openai(system_prompt, user_prompt, max_tokens)
+    elif LLM_API_PROVIDER == "gemini":
+        return _generate_gemini(system_prompt, user_prompt, max_tokens)
+    else:
+        raise ValueError(f"Unsupported API provider: {LLM_API_PROVIDER}")
+
+
+def _generate_groq(system_prompt: str, user_prompt: str, max_tokens: int) -> str:
+    """Generate using Groq API."""
+    try:
+        from groq import Groq
+        client = Groq(api_key=LLM_API_KEY)
+        
+        response = client.chat.completions.create(
+            model=LLM_API_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=max_tokens,
+            temperature=0.7,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"Groq API error: {e}")
+        raise
+
+
+def _generate_huggingface(system_prompt: str, user_prompt: str, max_tokens: int) -> str:
+    """Generate using Hugging Face Inference API."""
+    try:
+        from huggingface_hub import InferenceClient
+        client = InferenceClient(token=LLM_API_KEY)
+        
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        response = client.chat_completion(
+            model=LLM_API_MODEL,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=0.7,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"HuggingFace API error: {e}")
+        raise
+
+
+def _generate_openai(system_prompt: str, user_prompt: str, max_tokens: int) -> str:
+    """Generate using OpenAI API."""
+    try:
+        from openai import OpenAI
+        client = OpenAI(
+            api_key=LLM_API_KEY,
+            base_url=LLM_API_BASE_URL
+        )
+        
+        response = client.chat.completions.create(
+            model=LLM_API_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=max_tokens,
+            temperature=0.7,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"OpenAI API error: {e}")
+        raise
+
+
+def _generate_gemini(system_prompt: str, user_prompt: str, max_tokens: int) -> str:
+    """Generate using Google Gemini API."""
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=LLM_API_KEY)
+        
+        model = genai.GenerativeModel(
+            model_name=LLM_API_MODEL or "gemini-1.5-flash",
+            system_instruction=system_prompt
+        )
+        
+        generation_config = {
+            "temperature": 0.7,
+            "max_output_tokens": max_tokens,
+        }
+        
+        response = model.generate_content(
+            user_prompt,
+            generation_config=generation_config
+        )
+        return response.text.strip()
+    except Exception as e:
+        logger.error(f"Gemini API error: {e}")
+        raise
+
+
 # ── Public API — unchanged signature ─────────────────────────────────────────
 def generate(system_prompt: str, user_prompt: str, max_tokens: int = 800) -> str:
     """
-    Generate maintenance analysis using fine-tuned Phi-3.5 Mini.
+    Generate maintenance analysis using fine-tuned Phi-3.5 Mini or API fallback.
 
-    Automatically picks MLX (Apple Silicon) or Transformers (Linux/GPU).
+    Automatically picks MLX (Apple Silicon), Transformers (Linux/GPU), or API.
     Called identically from answerer.py regardless of backend.
 
     Args:
@@ -185,11 +305,14 @@ def generate(system_prompt: str, user_prompt: str, max_tokens: int = 800) -> str
         Generated text response string
     """
     try:
-        if USE_MLX:
-            return _generate_mlx(system_prompt, user_prompt, max_tokens)
+        if USE_LOCAL_MODEL:
+            if USE_MLX:
+                return _generate_mlx(system_prompt, user_prompt, max_tokens)
+            else:
+                return _generate_transformers(system_prompt, user_prompt, max_tokens)
         else:
-            return _generate_transformers(system_prompt, user_prompt, max_tokens)
+            return _generate_api(system_prompt, user_prompt, max_tokens)
     except Exception as e:
-        logger.error(f"LLM generation error ({('MLX' if USE_MLX else 'Transformers')}): {e}")
+        logger.error(f"LLM generation error: {e}")
         logger.exception("Generation traceback:")
         raise RuntimeError(f"Model generation failed: {str(e)}")
