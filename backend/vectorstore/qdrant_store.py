@@ -89,13 +89,37 @@ def get_sparse_model():
 # Collection management
 # ---------------------------------------------------------------------------
 
-def ensure_collection() -> None:
+def ensure_collection(force_recreate: bool = False) -> None:
     """Create the Qdrant collection with dense + sparse vectors if it doesn't exist."""
     client = get_client()
-    existing = [c.name for c in client.get_collections().collections]
+    
+    try:
+        existing = [c.name for c in client.get_collections().collections]
+    except Exception as e:
+        logger.error(f"Failed to get collections list: {e}")
+        existing = []
 
     # Child chunks collection (embedded, searchable)
-    if config.QDRANT_COLLECTION not in existing:
+    collection_exists = config.QDRANT_COLLECTION in existing
+    
+    # Verify collection is accessible if it claims to exist
+    if collection_exists and not force_recreate:
+        try:
+            client.get_collection(config.QDRANT_COLLECTION)
+            logger.info(f"✓ Verified collection exists: {config.QDRANT_COLLECTION}")
+        except Exception as e:
+            logger.warning(f"Collection listed but not accessible: {e}. Recreating...")
+            collection_exists = False
+    
+    if not collection_exists or force_recreate:
+        # Delete existing if force recreate
+        if force_recreate and collection_exists:
+            try:
+                client.delete_collection(config.QDRANT_COLLECTION)
+                logger.info(f"Deleted existing collection for recreation: {config.QDRANT_COLLECTION}")
+            except Exception as e:
+                logger.warning(f"Could not delete collection: {e}")
+        
         vectors_config = {
             "dense": VectorParams(
                 size=config.DENSE_DIM,
