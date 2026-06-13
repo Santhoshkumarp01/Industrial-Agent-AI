@@ -1,3 +1,13 @@
+---
+title: Industrial Agent AI
+emoji: 🏭
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+app_port: 7860
+---
+
 # Industrial Agent AI
 
 **AI-powered steel plant maintenance intelligence system** using fine-tuned LLM, RAG pipeline, and multi-agent orchestration.
@@ -17,7 +27,6 @@
 - Watch AI analysis with PDF citations appear automatically
 
 ---
-
 ## 🚀 Local Setup
 
 ### Backend Setup
