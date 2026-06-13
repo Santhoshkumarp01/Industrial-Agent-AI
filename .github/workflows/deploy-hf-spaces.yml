@@ -7,6 +7,8 @@ on:
     paths:
       - 'backend/**'
       - 'Dockerfile'
+      - 'README.md'
+      - 'requirements.txt'
       - '.github/workflows/deploy-hf-spaces.yml'
 
 jobs:
