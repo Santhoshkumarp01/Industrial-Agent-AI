@@ -58,8 +58,9 @@ async def startup():
     ensure_collection()
     print("✓ Qdrant collection ready")
 
-    # 4. Index historical incidents.json if not already indexed
-    _index_incidents_if_needed()
+    # 4. DISABLED: Index historical incidents.json - not needed for demo
+    # Historical knowledge is now in the uploaded PDFs
+    # _index_incidents_if_needed()
     
     # 5. Preload models for fast first request
     print("⏳ Preloading models...")

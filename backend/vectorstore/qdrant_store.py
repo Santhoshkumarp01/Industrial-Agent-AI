@@ -160,6 +160,12 @@ def ensure_collection(force_recreate: bool = False) -> None:
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
         
+        client.create_payload_index(
+            collection_name=config.QDRANT_COLLECTION,
+            field_name="doc_name",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+        
         print(f"✓ Created Qdrant collection: {config.QDRANT_COLLECTION}")
         logger.info(f"Created Qdrant collection: {config.QDRANT_COLLECTION}")
     else:
@@ -183,20 +189,31 @@ def ensure_collection(force_recreate: bool = False) -> None:
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
         
+        client.create_payload_index(
+            collection_name=parent_collection,
+            field_name="equipment_tag",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+        
         print(f"✓ Created parent sections collection: {parent_collection}")
         logger.info(f"Created parent sections collection: {parent_collection}")
     else:
-        # Collection exists - ensure parent_id index exists
+        # Collection exists - ensure indexes exist
         try:
-            # Try to create index if it doesn't exist (idempotent operation)
+            # Try to create indexes if they don't exist (idempotent operation)
             client.create_payload_index(
                 collection_name=parent_collection,
                 field_name="parent_id",
                 field_schema=models.PayloadSchemaType.KEYWORD,
             )
-            logger.info(f"✓ Ensured parent_id index exists on {parent_collection}")
+            client.create_payload_index(
+                collection_name=parent_collection,
+                field_name="equipment_tag",
+                field_schema=models.PayloadSchemaType.KEYWORD,
+            )
+            logger.info(f"✓ Ensured indexes exist on {parent_collection}")
         except Exception as e:
-            # Index might already exist - that's fine
+            # Indexes might already exist - that's fine
             logger.info(f"Parent collection index check: {e}")
 
 
