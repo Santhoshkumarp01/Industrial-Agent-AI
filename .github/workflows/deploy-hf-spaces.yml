@@ -27,5 +27,12 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
+          
+          # Create a temporary branch with only backend files
+          git checkout -b hf-deploy
+          git rm -r --cached frontend/ || true
+          git commit -m "Remove frontend for HF Spaces deployment" || true
+          
+          # Push to HuggingFace
           git remote add hf https://Santhoshkumarp:$HF_TOKEN@huggingface.co/spaces/Santhoshkumarp/industrial-agent-ai || true
-          git push hf main --force
+          git push hf hf-deploy:main --force
