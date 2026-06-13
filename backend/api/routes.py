@@ -1,10 +1,11 @@
 import logging
 import uuid
+import os
 from pathlib import Path
 from collections import defaultdict
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 
 from config import config
 from ingestion.ingestor import ingest_pdf
@@ -18,6 +19,7 @@ from models.schemas import (
     DocumentInfo,
     CitationRef,
 )
+from utils.cloudinary_storage import upload_pdf, delete_pdf, get_pdf_url
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +79,21 @@ async def upload_document(
         # Also clean up PDF on ingestion failure
         pdf_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=result.error_message)
+
+    # Step 4 — Upload PDF to Cloudinary for persistent storage
+    cloudinary_success = False
+    try:
+        pdf_url = upload_pdf(str(pdf_path), doc_id)
+        logger.info(f"✅ PDF stored in Cloudinary: {pdf_url}")
+        cloudinary_success = True
+    except Exception as e:
+        logger.error(f"❌ Cloudinary upload failed: {type(e).__name__}: {str(e)}")
+        logger.error(f"Cloudinary config check - Cloud Name: {os.getenv('CLOUDINARY_CLOUD_NAME', 'NOT_SET')}")
+        # Don't fail the whole request if Cloudinary fails
+
+    # Add warning to result if Cloudinary failed
+    if not cloudinary_success:
+        result.message += " (Warning: PDF not stored persistently - will be lost on restart)"
 
     return result
 
@@ -192,22 +209,30 @@ async def remove_document(doc_id: str) -> dict:
 @router.get("/pdf/{doc_id}")
 async def serve_pdf(doc_id: str):
     """
-    Serve the raw PDF file so the frontend PDF viewer can render it.
+    Serve PDF from Cloudinary storage (persistent across HF Spaces restarts).
+    Falls back to local storage if available.
     """
+    # Try local file first (for immediate uploads)
     pdf_path = Path(config.UPLOAD_DIR) / f"{doc_id}.pdf"
-    if not pdf_path.exists():
+    if pdf_path.exists():
+        return FileResponse(
+            path=str(pdf_path),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"inline; filename={doc_id}.pdf",
+                "Access-Control-Allow-Origin": "*"
+            },
+        )
+    
+    # Redirect to Cloudinary URL
+    try:
+        cloudinary_url = get_pdf_url(doc_id)
+        return RedirectResponse(url=cloudinary_url)
+    except Exception as e:
         raise HTTPException(
             status_code=404,
-            detail=f"PDF file not found for doc_id: {doc_id}"
+            detail=f"PDF not found. Please re-upload the document."
         )
-    return FileResponse(
-        path=str(pdf_path),
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"inline; filename={doc_id}.pdf",
-            "Access-Control-Allow-Origin": "*"
-        },
-    )
 
 
 @router.get("/citation/{session_id}/{ref_id}", response_model=CitationRef)
