@@ -25,7 +25,7 @@ ADAPTER_PATH    = os.getenv("LOCAL_MODEL_ADAPTER", "Santhoshkumarp/phi35-mainten
 USE_LOCAL_MODEL = os.getenv("USE_LOCAL_MODEL", "false").lower() == "true"
 LLM_API_PROVIDER = os.getenv("LLM_API_PROVIDER", "gemini")
 LLM_API_KEY = os.getenv("LLM_API_KEY", None)
-LLM_API_MODEL = os.getenv("LLM_API_MODEL", "gemini-2-flash-lite")
+LLM_API_MODEL = os.getenv("LLM_API_MODEL", "gemini-2.0-flash-lite")
 LLM_API_BASE_URL = os.getenv("LLM_API_BASE_URL", None)
 
 # ── Detect which backend to use ──────────────────────────────────────────────
