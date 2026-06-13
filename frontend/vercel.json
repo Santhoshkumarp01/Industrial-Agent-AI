@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "ignoreCommand": "bash vercel-ignore.sh",
   "rewrites": [
     {
       "source": "/(.*)",
