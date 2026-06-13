@@ -1,0 +1,127 @@
+================================================================================
+HUGGINGFACE SPACES - GITHUB INTEGRATION SETUP
+================================================================================
+
+This setup enables auto-deployment to HF Spaces when backend code changes.
+Frontend changes (Vercel) deploy independently.
+
+================================================================================
+STEP 1: Create HuggingFace Token
+================================================================================
+
+1. Go to: https://huggingface.co/settings/tokens
+2. Click "New token"
+3. Name: "GitHub Actions Deploy"
+4. Type: Write
+5. Copy the token (starts with hf_...)
+
+================================================================================
+STEP 2: Add Token to GitHub Secrets
+================================================================================
+
+1. Go to: https://github.com/Santhoshkumarp01/Industrial-Agent-AI/settings/secrets/actions
+2. Click "New repository secret"
+3. Name: HF_TOKEN
+4. Value: (paste your HF token from Step 1)
+5. Click "Add secret"
+
+================================================================================
+STEP 3: Configure HuggingFace Space
+================================================================================
+
+1. Go to: https://huggingface.co/spaces/Santhoshkumarp/industrial-agent-ai/settings
+2. Under "Repository type", ensure it's set to "Docker"
+3. Dockerfile location: "Dockerfile" (root of repo)
+4. Ensure these secrets are set in HF Space:
+   - QDRANT_URL
+   - QDRANT_API_KEY
+   - LOCAL_MODEL_BASE=microsoft/Phi-3.5-mini-instruct
+   - LOCAL_MODEL_ADAPTER=Santhoshkumarp/phi35-maintenance-wizard-lora
+
+================================================================================
+STEP 4: Fix Model Adapter Files (CRITICAL)
+================================================================================
+
+The adapter on HuggingFace has wrong filenames. Fix before deploying:
+
+Go to: https://huggingface.co/Santhoshkumarp/phi35-maintenance-wizard-lora
+
+DELETE:
+  - adapters.safetensors (wrong name)
+
+UPLOAD these 2 files:
+  - backend/ml/saved_models/phi35_mlx_lora/adapter_model.safetensors
+  - backend/ml/saved_models/phi35_mlx_lora/adapter_config.json
+
+Files must be named EXACTLY:
+  ✅ adapter_model.safetensors (~25.2 MB)
+  ✅ adapter_config.json
+
+================================================================================
+STEP 5: Test Auto-Deployment
+================================================================================
+
+1. Make a small change to backend code:
+   echo "# test" >> backend/README.md
+
+2. Commit and push:
+   git add backend/README.md
+   git commit -m "test: trigger HF Spaces deployment"
+   git push origin main
+
+3. Watch GitHub Actions:
+   https://github.com/Santhoshkumarp01/Industrial-Agent-AI/actions
+
+4. After ~5 minutes, HF Space rebuilds automatically
+
+================================================================================
+HOW IT WORKS
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ Developer                                                           │
+│   ↓                                                                 │
+│ git push origin main                                                │
+│   ↓                                                                 │
+│ GitHub detects changes                                              │
+│   ↓                                                                 │
+│ ┌─────────────────────┐    ┌─────────────────────┐                │
+│ │ Backend changed?    │    │ Frontend changed?   │                │
+│ │ (backend/**)        │    │ (frontend/**)       │                │
+│ └─────────┬───────────┘    └─────────┬───────────┘                │
+│           ↓                           ↓                             │
+│ ┌─────────────────────┐    ┌─────────────────────┐                │
+│ │ GitHub Actions      │    │ Vercel auto-deploy  │                │
+│ │ → Push to HF Spaces │    │ (already configured)│                │
+│ └─────────┬───────────┘    └─────────────────────┘                │
+│           ↓                                                         │
+│ HF Spaces rebuilds Docker container                                │
+│           ↓                                                         │
+│ https://Santhoshkumarp-industrial-agent-ai.hf.space (LIVE)         │
+└─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+TRIGGER CONDITIONS
+================================================================================
+
+HF Spaces redeploys ONLY when these paths change:
+  - backend/**
+  - Dockerfile
+  - .github/workflows/deploy-hf-spaces.yml
+
+Frontend changes deploy to Vercel independently (no HF rebuild).
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Error: "remote: Permission to huggingface.co denied"
+Fix: Check HF_TOKEN is correct in GitHub secrets
+
+Error: "Model generation failed: 'seen_tokens'"
+Fix: Transformers version incompatibility - fixed in requirements_spaces.txt
+
+Error: "Can't find adapter_model.safetensors"
+Fix: Upload correct files to HuggingFace model repo (see Step 4)
+
+================================================================================

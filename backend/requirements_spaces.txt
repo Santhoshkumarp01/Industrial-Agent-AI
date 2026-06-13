@@ -13,12 +13,13 @@ pydantic-settings>=2.14.0
 python-multipart==0.0.20
 
 # Transformers inference (replaces MLX on Linux/HF Spaces)
-transformers>=4.44.0
-peft>=0.12.0
-accelerate>=0.34.0
-bitsandbytes>=0.43.0
-tokenizers>=0.20.0
-torch>=2.3.0
+# Fixed versions for compatibility with Phi-3.5 + PEFT
+transformers==4.46.3
+peft==0.13.2
+accelerate==0.34.2
+bitsandbytes==0.44.1
+tokenizers==0.20.3
+torch==2.5.1
 
 # RAG embeddings
 sentence-transformers>=3.0.0
