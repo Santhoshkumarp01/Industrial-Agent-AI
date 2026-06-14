@@ -24,12 +24,6 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Import PDF-grounded configuration
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent))
-from config.thresholds import MOTOR_BASELINES
-
 # ── Machine definitions — PDF-GROUNDED ────────────────────────────────────────
 MACHINE_CONFIG = {
     "general-industrial-motor": {
