@@ -1,7 +1,7 @@
 ---
 title: Industrial Agent AI - Steel Plant Maintenance Wizard
 emoji: 🔧
-colorFrom: orange
+colorFrom: yellow
 colorTo: red
 sdk: docker
 pinned: false
