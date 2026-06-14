@@ -3,9 +3,10 @@ import EquipmentCard from './EquipmentCard'
 import SensorChart from './SensorChart'
 import AlertBanner from './AlertBanner'
 import MonitorChatPanel from './MonitorChatPanel'
+import AgentStreamingStatus from './AgentStreamingStatus'
 import { formatRelativeTime } from '../../utils/formatters'
 import { EQUIPMENT_LIST } from '../../services/sensorSimulator'
-import { runMachineAnalysis, injectMachineAnomaly, getMachineLogs } from '../../services/api'
+import { runMachineAnalysis, injectMachineAnomaly, getMachineLogs, runAnalysisStreaming } from '../../services/api'
 import useAppStore from '../../store/appStore'
 
 const SENSOR_LABELS = {
@@ -27,6 +28,7 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
   const setActiveCitation = useAppStore((s) => s.setActiveCitation)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [backendMachineLogs, setBackendMachineLogs] = useState({})
+  const [streamingUpdates, setStreamingUpdates] = useState([]) // Agent progress updates
   const analyzingIdRef = useRef(null) // tracks the "analyzing..." message id so we can replace it
 
   const lastUpdated = new Date()
@@ -77,25 +79,68 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
     }
   }
 
-  // ── Run analysis and post result in monitor chat ─────────────────────────
+  // ── Run analysis with streaming progress updates ─────────────────────────
   const runAnalysis = async (machineTag, machineName) => {
     if (isAnalyzing) return
     setIsAnalyzing(true)
+    setStreamingUpdates([]) // Clear previous updates
 
-    // Show immediate "Analyzing..." bubble and keep its id to replace later
-    const analyzingId = chatHook?.addAnalyzingMessage(
-      `🔍 Analyzing ${machineName}...`
+    // Show streaming status component in chat
+    const streamingId = chatHook?.addStreamingMessage(
+      `🤖 Running 3-agent analysis for ${machineName}...`
     )
-    analyzingIdRef.current = analyzingId
+    analyzingIdRef.current = streamingId
 
     try {
-      const result = await runMachineAnalysis(machineTag, { includeLogs: 10 })
-      chatHook?.replaceAnalyzingMessage(analyzingId, result)
+      // Get the latest backend logs to build the analysis request
+      const logsData = await getMachineLogs(machineTag, 10)
+      const latestLog = logsData.logs?.[logsData.logs.length - 1]
+
+      if (!latestLog) {
+        throw new Error('No sensor data available for analysis')
+      }
+
+      const analysisRequest = {
+        equipment_id: machineTag,
+        equipment_name: machineName,
+        alert_description: latestLog.event_summary || 'Anomaly detected',
+        sensor_data: {
+          vibration_mm_s: latestLog.vibration_velocity_mm_s,
+          bearing_temp_c: latestLog.bearing_temp_drive_end_c,
+          motor_current_a: latestLog.stator_phase_current_a,
+          lube_pressure_bar: latestLog.bearing_lube_oil_pressure_bar,
+          rpm: latestLog.shaft_speed_rpm
+        },
+        anomaly_score: latestLog.severity === 'CRITICAL' ? 0.9 : latestLog.severity === 'WARNING' ? 0.7 : 0.3,
+        risk_level: latestLog.severity || 'MEDIUM',
+        rul_hours: null,
+        triggered_by: 'live_monitor',
+        alert_id: null,
+        session_id: null
+      }
+
+      // Stream the analysis with real-time updates
+      const updates = []
+      for await (const update of runAnalysisStreaming(analysisRequest)) {
+        updates.push(update)
+        setStreamingUpdates([...updates])
+
+        // If complete, show final result
+        if (update.type === 'complete') {
+          chatHook?.replaceStreamingMessage(streamingId, {
+            analysis_result: update.data,
+            streaming_updates: updates
+          })
+          break
+        }
+      }
+
     } catch (err) {
       console.error('Analysis failed:', err)
-      chatHook?.replaceAnalyzingWithError(analyzingId, `Analysis failed for ${machineName}: ${err.message}`)
+      chatHook?.replaceAnalyzingWithError(streamingId, `Analysis failed for ${machineName}: ${err.message}`)
     } finally {
       setIsAnalyzing(false)
+      setStreamingUpdates([])
     }
   }
 
@@ -218,6 +263,11 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
 
         {/* Scrollable content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 0' }}>
+
+          {/* Show streaming agent status when analysis is running */}
+          {isAnalyzing && streamingUpdates.length > 0 && (
+            <AgentStreamingStatus updates={streamingUpdates} />
+          )}
 
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.10em', marginBottom: 8, textTransform: 'uppercase' }}>
             Equipment Status — {EQUIPMENT_LIST.length} machines monitored

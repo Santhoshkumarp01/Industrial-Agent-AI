@@ -153,6 +153,57 @@ export const runAnalysis = async (analysisRequest) => {
 }
 
 /**
+ * Run multi-agent analysis with real-time streaming updates.
+ * Returns an async generator that yields progress updates.
+ * 
+ * Usage:
+ *   for await (const update of runAnalysisStreaming(request)) {
+ *     console.log(update.message)
+ *   }
+ */
+export async function* runAnalysisStreaming(analysisRequest) {
+  const response = await fetch(`${BASE}/agents/analyze-stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(analysisRequest),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Analysis failed: ${response.statusText}`)
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    
+    // Split by SSE delimiter
+    const lines = buffer.split('\n\n')
+    buffer = lines.pop() || '' // Keep incomplete line in buffer
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const jsonStr = line.substring(6) // Remove 'data: ' prefix
+        try {
+          const update = JSON.parse(jsonStr)
+          yield update
+        } catch (e) {
+          console.error('Failed to parse SSE data:', jsonStr, e)
+        }
+      }
+    }
+  }
+}
+
+/**
  * Submit engineer feedback on an analysis.
  */
 export const submitFeedback = async (feedback) => {

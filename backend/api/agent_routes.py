@@ -2,6 +2,7 @@
 Agent API routes:
 
   POST /analyze              — Run multi-agent analysis on equipment anomaly
+  POST /analyze-stream       — Run analysis with real-time streaming updates (SSE)
   POST /feedback             — Submit engineer feedback on analysis
   GET  /logbook              — Get maintenance logbook entries
   GET  /logbook/{entry_id}   — Get specific logbook entry
@@ -11,14 +12,17 @@ Agent API routes:
 """
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from models.schemas import (
     AnalyzeRequest, AnalysisResult, FeedbackCreate,
     LogbookEntryCreate
 )
 from agents.orchestrator import run_analysis
+from agents.streaming_orchestrator import run_analysis_streaming
 from database.logbook import get_all_entries, get_entry, mark_resolved
 from database.feedback import store_feedback, get_feedback_for_entry, get_feedback_stats
 from reports.report_generator import generate_report, get_report, get_all_reports
+import json
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -51,6 +55,57 @@ async def analyze_equipment(request: AnalyzeRequest):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.post("/analyze-stream")
+async def analyze_equipment_stream(request: AnalyzeRequest):
+    """
+    Run multi-agent analysis with real-time streaming updates.
+    
+    Returns Server-Sent Events (SSE) stream showing:
+    - Agent 1 starting/complete
+    - Agent 2 starting/complete
+    - Agent 3 starting/complete
+    - Final results
+    
+    Frontend can display these updates in real-time like Kiro's thinking process.
+    """
+    
+    async def event_generator():
+        """Generate SSE events from the streaming orchestrator."""
+        try:
+            for update in run_analysis_streaming(
+                equipment_id=request.equipment_id,
+                equipment_name=request.equipment_name,
+                alert_description=request.alert_description,
+                sensor_data=request.sensor_data,
+                anomaly_score=request.anomaly_score,
+                risk_level_raw=request.risk_level,
+                rul_hours=request.rul_hours,
+                triggered_by=request.triggered_by,
+                alert_id=request.alert_id,
+                session_id=request.session_id
+            ):
+                # Format as SSE: data: {json}\n\n
+                yield f"data: {json.dumps(update)}\n\n"
+        
+        except Exception as e:
+            # Send error event
+            error_event = {
+                "type": "error",
+                "message": f"Analysis failed: {str(e)}"
+            }
+            yield f"data: {json.dumps(error_event)}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
 
 
 @router.post("/feedback")
