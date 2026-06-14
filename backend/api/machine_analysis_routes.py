@@ -23,7 +23,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from sensors.machine_logs import (
-    MACHINE_CONFIG, MACHINE_DOC_MAP,
+    MACHINE_CONFIG, MACHINE_DOC_MAP, MACHINE_TAG_TO_EQUIPMENT_TAG,
     get_latest_logs, generate_log_entry, format_logs_for_llm, get_machine_summary,
 )
 from retrieval.retriever import retrieve
@@ -210,7 +210,9 @@ async def analyze_machine(machine_tag: str, request: AnalyzeRequest = None):
     logger.info(f"[MachineAnalysis] Query: {query[:120]}...")
 
     # Step 3: Retrieve chunks from the mapped equipment PDF
-    equipment_tag = MACHINE_CONFIG[machine_tag]["equipment_tag"]
+    # CRITICAL: Use the correct equipment_tag that matches Qdrant's stored values
+    equipment_tag = MACHINE_TAG_TO_EQUIPMENT_TAG.get(machine_tag, machine_tag)
+    logger.info(f"[MachineAnalysis] Using equipment_tag for Qdrant filter: '{equipment_tag}'")
     try:
         chunks, retrieval_metadata = retrieve(
             query=query,

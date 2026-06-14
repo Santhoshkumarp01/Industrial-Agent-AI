@@ -105,11 +105,20 @@ MACHINE_CONFIG = {
 }
 
 # Equipment-tag → display doc name (matches what's in Qdrant)
+# NOTE: Qdrant uses the PDF filenames as equipment_tag, not the dash-separated machine_tag
 MACHINE_DOC_MAP = {
-    "general-industrial-motor":       "General Industrial Motor Manual.pdf",
-    "ac-drive-motor":                 "AC Drive Motor Manual.pdf",
-    "synchronous-motor":              "Synchronous Motor Manual.pdf",
-    "heavy-duty-industrial-motor":    "Heavy-Duty Industrial Motor Manual.pdf",
+    "general-industrial-motor":       "General Industrial Motor.pdf",
+    "ac-drive-motor":                 "AC Drive Motor.pdf",
+    "synchronous-motor":              "Synchronous Motor.pdf",
+    "heavy-duty-industrial-motor":    "Heavy-Duty Industrial Motor.pdf",
+}
+
+# Map machine_tag to Qdrant equipment_tag (for retrieval filtering)
+MACHINE_TAG_TO_EQUIPMENT_TAG = {
+    "general-industrial-motor":       "General Industrial Motor",
+    "ac-drive-motor":                 "AC Drive Motor",
+    "synchronous-motor":              "Synchronous Motor",
+    "heavy-duty-industrial-motor":    "Heavy-Duty Industrial Motor",
 }
 
 # In-memory log buffer — last 50 entries per machine
