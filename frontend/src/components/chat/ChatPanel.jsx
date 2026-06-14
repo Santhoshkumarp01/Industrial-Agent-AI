@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import MessageBubble from './MessageBubble'
 import DocumentUploader from './DocumentUploader'
 import PDFViewer from './PDFViewer'
+import OnboardingTour from '../onboarding/OnboardingTour'
 import useAppStore from '../../store/appStore'
 
 const DOT_GRID_BG = {
@@ -107,32 +108,68 @@ export default function ChatPanel({ chatHook, documentsHook }) {
           </span>
         </div>
 
-        {/* Equipment filter dropdown */}
-        <select
-          value={selectedTag || ''}
-          onChange={(e) => {
-            const v = e.target.value
-            useAppStore.getState().setSelectedTag(v || null)
-          }}
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: 12,
-            padding: '4px 8px',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--text-secondary)',
-            background: 'var(--bg-surface-2)',
-            border: '1px solid var(--border)',
-            cursor: 'pointer',
-          }}
-        >
-          <option value="">All Equipment</option>
-          {documentsHook.documents
-            .map((d) => d.equipment_tag)
-            .filter((v, i, a) => v && a.indexOf(v) === i)
-            .map((tag) => (
-              <option key={tag} value={tag}>{tag}</option>
-            ))}
-        </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Equipment filter dropdown */}
+          <select
+            data-tour="equipment-dropdown"
+            value={selectedTag || ''}
+            onChange={(e) => {
+              const v = e.target.value
+              useAppStore.getState().setSelectedTag(v || null)
+            }}
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: 12,
+              padding: '4px 8px',
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--text-secondary)',
+              background: 'var(--bg-surface-2)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="">All Equipment</option>
+            {documentsHook.documents
+              .map((d) => d.equipment_tag)
+              .filter((v, i, a) => v && a.indexOf(v) === i)
+              .map((tag) => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+          </select>
+
+          {/* Tour restart button */}
+          <button
+            onClick={() => {
+              localStorage.removeItem('industrial_agent_onboarding_complete')
+              window.location.reload()
+            }}
+            title="Restart onboarding tour"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border)',
+              background: 'var(--bg-surface-2)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              letterSpacing: '0.05em',
+              transition: 'var(--transition)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--bg-surface-3)'
+              e.currentTarget.style.borderColor = 'var(--accent-amber-dim)'
+              e.currentTarget.style.color = 'var(--accent-amber)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'var(--bg-surface-2)'
+              e.currentTarget.style.borderColor = 'var(--border)'
+              e.currentTarget.style.color = 'var(--text-secondary)'
+            }}
+          >
+            TOUR
+          </button>
+        </div>
       </div>
 
       {/* Quick actions bar — shown only when no messages yet */}
@@ -245,6 +282,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
         onUpload={handleUpload}
         isExpanded={uploaderExpanded}
         onToggle={() => setUploaderExpanded((p) => !p)}
+        data-tour="attach-document"
       />
 
       {/* Input bar */}
@@ -316,29 +354,9 @@ export default function ChatPanel({ chatHook, documentsHook }) {
             gap: 8,
           }}
         >
-          <button
-            onClick={() => setUploaderExpanded((p) => !p)}
-            style={{
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: uploaderExpanded ? 'var(--accent-amber)' : 'var(--text-secondary)',
-              fontSize: 15,
-              flexShrink: 0,
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
-              background: 'var(--bg-surface-2)',
-              transition: 'var(--transition)',
-            }}
-            title="Upload document"
-          >
-            📎
-          </button>
-
           <textarea
             ref={textareaRef}
+            data-tour="message-input"
             value={inputValue}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
@@ -385,6 +403,9 @@ export default function ChatPanel({ chatHook, documentsHook }) {
 
       {/* PDF Viewer overlay */}
       <PDFViewer />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour />
     </div>
   )
 }

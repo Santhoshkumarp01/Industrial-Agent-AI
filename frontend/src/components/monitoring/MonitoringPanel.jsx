@@ -4,6 +4,7 @@ import SensorChart from './SensorChart'
 import AlertBanner from './AlertBanner'
 import MonitorChatPanel from './MonitorChatPanel'
 import AgentStreamingStatus from './AgentStreamingStatus'
+import MonitorOnboardingTour from '../onboarding/MonitorOnboardingTour'
 import { formatRelativeTime } from '../../utils/formatters'
 import { EQUIPMENT_LIST } from '../../services/sensorSimulator'
 import { runMachineAnalysis, injectMachineAnomaly, getMachineLogs, runAnalysisStreaming } from '../../services/api'
@@ -209,6 +210,7 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button
+              data-tour="demo-anomaly"
               onClick={async () => {
                 const machineTag = 'general-industrial-motor'
                 const machineName = 'General Industrial Motor'
@@ -249,6 +251,40 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
             >
               DEMO ANOMALY
             </button>
+
+            {/* Tour restart button */}
+            <button
+              onClick={() => {
+                localStorage.removeItem('industrial_agent_monitor_onboarding_complete')
+                window.location.reload()
+              }}
+              title="Restart onboarding tour"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                padding: '5px 10px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border)',
+                background: 'var(--bg-surface-2)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                letterSpacing: '0.05em',
+                transition: 'var(--transition)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--bg-surface-3)'
+                e.currentTarget.style.borderColor = 'var(--accent-amber-dim)'
+                e.currentTarget.style.color = 'var(--accent-amber)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--bg-surface-2)'
+                e.currentTarget.style.borderColor = 'var(--border)'
+                e.currentTarget.style.color = 'var(--text-secondary)'
+              }}
+            >
+              TOUR
+            </button>
+
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>
               UPDATED {formatRelativeTime(lastUpdated).toUpperCase()}
             </span>
@@ -315,20 +351,26 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
       </div>
 
       {/* ── Right: Monitor AI chat (always visible, separate history) ──── */}
-      <div style={{
-        width: 400,
-        flexShrink: 0,
-        borderLeft: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
+      <div
+        data-tour="monitor-chat"
+        style={{
+          width: 400,
+          flexShrink: 0,
+          borderLeft: '1px solid var(--border)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
         <MonitorChatPanel
           chatHook={chatHook}
           isAnalyzing={isAnalyzing}
           onRunAnalysis={runAnalysis}
         />
       </div>
+
+      {/* Onboarding Tour */}
+      <MonitorOnboardingTour />
     </div>
   )
 }

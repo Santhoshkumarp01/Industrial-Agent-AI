@@ -62,6 +62,7 @@ export default function DocumentUploader({ onUpload, isExpanded, onToggle }) {
         }}
       >
         <button
+          data-tour="attach-document"
           onClick={onToggle}
           style={{
             display: 'flex',

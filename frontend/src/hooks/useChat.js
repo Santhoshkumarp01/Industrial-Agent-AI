@@ -6,8 +6,9 @@ const WELCOME_MESSAGE = {
   id: 'welcome',
   role: 'assistant',
   content:
-    'System online. Upload a maintenance document and ask your first question. ' +
-    'I will answer with exact citations from your uploaded manuals.',
+    'Industrial Agent AI ready. Powered by our fine-tuned Phi-3.5 Mini model specialized for industrial maintenance. ' +
+    'Model card: https://huggingface.co/your-org/phi-3.5-industrial-agent\n\n' +
+    'Upload a document or ask about existing equipment to get started.',
   citations: [],
   timestamp: new Date(),
 }
@@ -15,7 +16,7 @@ const WELCOME_MESSAGE = {
 const MONITOR_WELCOME_MESSAGE = {
   id: 'monitor-welcome',
   role: 'assistant',
-  content: 'Live Monitor AI ready. Click a machine card or press Ctrl+Shift+D to run a diagnostic analysis.',
+  content: 'Live Monitor Intelligence ready. Click "DEMO ANOMALY" or select any equipment card to see our 3-agent diagnostic system in action.',
   citations: [],
   timestamp: new Date(),
 }
