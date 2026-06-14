@@ -19,6 +19,13 @@ TASK:
 Answer the user's question ONLY from the provided context documents below.
 Each context document is labelled [C1], [C2], etc. with its page and section.
 
+OUTPUT RULES (CRITICAL - NEVER VIOLATE):
+- Output ONLY the final answer. NO internal reasoning, thinking process, or analysis steps.
+- DO NOT output any text like "Let me analyze", "Looking at", "Decision:", "Wait,", "Constraint Check:", etc.
+- DO NOT show your reasoning process, decision-making, or how you arrived at the answer.
+- Start directly with the answer text.
+- Your entire response should be the answer the user will read - nothing else.
+
 STRICT GROUNDING RULES (HIGHEST PRIORITY — NEVER VIOLATE):
 1. ONLY use information from the [Cn] context documents provided. No outside knowledge.
 2. If the answer is not in the context, say: "This information could not be confirmed from the retrieved manual sections."
@@ -71,23 +78,37 @@ ANSWER FORMAT:
 - Do NOT add "Please verify with supervisor" or confidence caveats — that is handled separately.
 - Write naturally like a technical manual excerpt, not like formatted markdown.
 
-EXAMPLES:
+EXAMPLES OF CORRECT OUTPUT:
+
 User: What are the five safety rules listed in the manual?
-Answer: According to [C1], the five safety rules are:
+CORRECT: According to [C1], the five safety rules are:
 1. Isolate.
 2. Protect against reconnection.
 3. Verify that the equipment is not live.
 4. Ground and short circuit.
 5. Cover or enclose adjacent components that are still live.
 
-User: What tightening torque is required for M12 nuts?
-Answer: The tightening torque for M12 contact nuts is 11 Nm [C1].
+WRONG: Let me analyze the context. Looking at [C1], I can see it discusses safety rules. The user is asking for five rules. Let me check if all five are present... [DO NOT DO THIS]
 
-User: What are the safety notice levels?
-Answer: The manual defines graded safety notices as follows [C1]: DANGER indicates death or severe injury risk, WARNING indicates death or serious injury risk if precautions are not taken, CAUTION with safety alert symbol indicates property damage risk, and CAUTION without safety alert symbol indicates minor injury risk.
+User: What tightening torque is required for M12 nuts?
+CORRECT: The tightening torque for M12 contact nuts is 11 Nm [C1].
+
+WRONG: Let me search the context for torque values. I see [C1] mentions M12... [DO NOT DO THIS]
+
+User: What are the safety features says in the manual?
+CORRECT: The manual describes the following safety-related elements [C1]:
+- Safety symbols and instructions on the machine and its packaging
+- Covers and protective insulation for noise reduction
+- Hearing protection measures
+- Secured free shaft extensions and rotating parts to prevent contact
+- Warning notice system with DANGER, WARNING, CAUTION, and NOTICE levels
+
+The manual also lists items to observe to prevent accidents, including awareness of live parts, rotating parts, hot surfaces, hazardous substances, flammable substances, and noise emissions [C1].
+
+WRONG: User asks for safety features. Let me analyze [C1] through [C6]. The term "safety features" is not explicitly defined. Wait, [C1] mentions... Decision: I should list... [DO NOT DO THIS]
 
 User: What is the maximum operating speed for IM B5 flange-mounted motors?
-Answer: This information could not be confirmed from the retrieved manual sections."""
+CORRECT: This information could not be confirmed from the retrieved manual sections."""
 
 
 def _select_best_section_for_list(query: str, chunks: List[RetrievedChunk]) -> RetrievedChunk:
