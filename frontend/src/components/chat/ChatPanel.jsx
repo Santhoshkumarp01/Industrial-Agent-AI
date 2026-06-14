@@ -137,13 +137,13 @@ export default function ChatPanel({ chatHook, documentsHook }) {
               ))}
           </select>
 
-          {/* Tour restart button */}
+          {/* Tour restart button - Tour 2: Chat Assistant */}
           <button
             onClick={() => {
               localStorage.removeItem('industrial_agent_onboarding_complete')
               window.location.reload()
             }}
-            title="Restart onboarding tour"
+            title="Start Chat Assistant tour (Tour 2)"
             style={{
               fontFamily: 'var(--font-mono)',
               fontSize: 10,
@@ -167,7 +167,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
               e.currentTarget.style.color = 'var(--text-secondary)'
             }}
           >
-            TOUR
+            TOUR 2
           </button>
         </div>
       </div>

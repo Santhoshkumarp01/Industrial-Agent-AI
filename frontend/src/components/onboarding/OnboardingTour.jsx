@@ -11,47 +11,38 @@ const ONBOARDING_KEY = 'industrial_agent_onboarding_complete'
 const ONBOARDING_STEPS = [
   {
     id: 'welcome',
-    title: 'Welcome to Industrial Agent AI! 🏭',
-    message: 'Your intelligent maintenance assistant powered by our fine-tuned Phi-3.5 Mini model specialized for industrial equipment. Let us show you around in just a few simple steps.',
+    title: 'Welcome to Industrial Agent AI',
+    message: 'Intelligent maintenance assistant powered by fine-tuned Phi-3.5 Mini model. Get expert answers with exact manual citations.',
     highlight: null,
     position: 'center',
-    actions: ['Skip Tour', 'Start Tour →']
+    actions: ['Skip Tour', 'Start Tour']
   },
   {
     id: 'upload-document',
-    title: 'Step 1: Upload Equipment Manual',
-    message: 'Click "Attach document" to upload your equipment maintenance manual (PDF format). We support motor manuals, compressor specs, and SOP procedures.',
-    tip: '💡 We already have 4 sample manuals loaded! You can try asking questions immediately or upload your own. Note: Upload processing takes 30-60 seconds to index the document.',
+    title: 'Upload Equipment Manual',
+    message: 'Click "Attach document" to upload PDF manuals. Processing takes 30-60 seconds.',
+    tip: '4 sample manuals already loaded. Try asking questions or upload your own.',
     highlight: '[data-tour="attach-document"]',
     position: 'bottom-left',
-    actions: ['← Back', 'Skip', 'Next →']
-  },
-  {
-    id: 'add-equipment',
-    title: 'Step 2: Add Equipment Tag',
-    message: 'When uploading, you must specify an equipment tag. Use existing tags like "general-industrial-motor" or create new ones for your specific equipment.',
-    tip: '💡 Equipment tags help organize documents and enable equipment-specific searches. You can add as many equipment types as needed!',
-    highlight: '[data-tour="attach-document"]',
-    position: 'bottom-left',
-    actions: ['← Back', 'Skip', 'Next →']
+    actions: ['Back', 'Skip', 'Next']
   },
   {
     id: 'select-equipment',
-    title: 'Step 3: Select Equipment Filter',
-    message: 'Choose equipment from the dropdown to search specific manuals, or use "All Equipment" to search across all uploaded documents.',
-    tip: '💡 Filtering by equipment improves accuracy by limiting the AI search scope to relevant manuals.',
+    title: 'Select Equipment Filter',
+    message: 'Choose equipment type to search specific manuals or "All Equipment" to search everything.',
+    tip: 'Filtering improves accuracy by limiting search scope.',
     highlight: '[data-tour="equipment-dropdown"]',
     position: 'bottom-right',
-    actions: ['← Back', 'Skip', 'Next →']
+    actions: ['Back', 'Skip', 'Next']
   },
   {
     id: 'ask-question',
-    title: 'Step 4: Ask Your First Question',
-    message: 'Type any maintenance question in the box below. Our fine-tuned AI will answer with exact citations from the equipment manual!',
-    tip: '💡 Try these: "What are the safety features?" • "What is the bearing temperature limit?" • "How to troubleshoot high vibration?"',
+    title: 'Ask Questions',
+    message: 'Type maintenance questions. AI answers with exact manual citations.',
+    tip: 'Try: "What are safety features?" or "How to troubleshoot vibration?"',
     highlight: '[data-tour="message-input"]',
     position: 'top-center',
-    actions: ['← Back', 'Skip', 'Finish Tour ✓']
+    actions: ['Back', 'Skip', 'Finish']
   }
 ]
 
@@ -119,7 +110,7 @@ export default function OnboardingTour({ onComplete }) {
           right: 0,
           bottom: 0,
           background: 'rgba(0, 0, 0, 0.7)',
-          zIndex: 9998,
+          zIndex: 9997,
           backdropFilter: 'blur(2px)',
           animation: 'fadeIn 0.3s ease'
         }}
@@ -128,21 +119,25 @@ export default function OnboardingTour({ onComplete }) {
 
       {/* Highlight spotlight */}
       {highlightedElement && (
-        <div
-          style={{
-            position: 'fixed',
-            top: highlightedElement.getBoundingClientRect().top - 8,
-            left: highlightedElement.getBoundingClientRect().left - 8,
-            width: highlightedElement.getBoundingClientRect().width + 16,
-            height: highlightedElement.getBoundingClientRect().height + 16,
-            border: '3px solid var(--accent-amber)',
-            borderRadius: 'var(--radius-md)',
-            zIndex: 9999,
-            boxShadow: '0 0 0 4px rgba(232, 188, 93, 0.3), 0 0 40px rgba(232, 188, 93, 0.5)',
-            pointerEvents: 'none',
-            animation: 'pulse 2s infinite'
-          }}
-        />
+        <>
+          {/* Cut-out clear area for highlighted element */}
+          <div
+            style={{
+              position: 'fixed',
+              top: highlightedElement.getBoundingClientRect().top - 8,
+              left: highlightedElement.getBoundingClientRect().left - 8,
+              width: highlightedElement.getBoundingClientRect().width + 16,
+              height: highlightedElement.getBoundingClientRect().height + 16,
+              background: 'transparent',
+              border: '3px solid var(--accent-amber)',
+              borderRadius: 'var(--radius-md)',
+              zIndex: 9999,
+              boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 0 4px rgba(232, 188, 93, 0.3), 0 0 40px rgba(232, 188, 93, 0.5)',
+              pointerEvents: 'none',
+              animation: 'pulse 2s infinite'
+            }}
+          />
+        </>
       )}
 
       {/* Tour card */}
@@ -187,18 +182,21 @@ function OnboardingCard({ step, currentStep, totalSteps, onNext, onBack, onSkip,
     }
 
     const rect = highlighted.getBoundingClientRect()
-    const position = {}
+    const cardWidth = 380
+    const cardHeight = 250
+    const padding = 20
+    
+    let position = {}
 
     if (step.position === 'bottom-left') {
-      position.top = rect.bottom + 20
-      position.left = rect.left
+      position.top = Math.min(rect.bottom + 20, window.innerHeight - cardHeight - padding)
+      position.left = Math.max(padding, Math.min(rect.left, window.innerWidth - cardWidth - padding))
     } else if (step.position === 'bottom-right') {
-      position.top = rect.bottom + 20
-      position.right = window.innerWidth - rect.right
+      position.top = Math.min(rect.bottom + 20, window.innerHeight - cardHeight - padding)
+      position.left = Math.max(padding, Math.min(rect.right - cardWidth, window.innerWidth - cardWidth - padding))
     } else if (step.position === 'top-center') {
-      position.bottom = window.innerHeight - rect.top + 20
-      position.left = rect.left + rect.width / 2
-      position.transform = 'translateX(-50%)'
+      position.bottom = Math.max(padding, window.innerHeight - rect.top + 20)
+      position.left = Math.max(padding, Math.min(rect.left + rect.width / 2 - cardWidth / 2, window.innerWidth - cardWidth - padding))
     }
 
     return position
@@ -209,14 +207,15 @@ function OnboardingCard({ step, currentStep, totalSteps, onNext, onBack, onSkip,
       style={{
         position: 'fixed',
         ...getPosition(),
-        width: isWelcome ? 500 : 420,
-        maxWidth: '90vw',
+        width: Math.min(isWelcome ? 480 : 380, window.innerWidth - 40),
         background: 'var(--bg-surface)',
         border: '2px solid var(--accent-amber)',
         borderRadius: 'var(--radius-lg)',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
         zIndex: 10000,
-        animation: 'slideIn 0.4s ease'
+        animation: 'slideIn 0.4s ease',
+        maxHeight: 'calc(100vh - 40px)',
+        overflow: 'auto'
       }}
     >
       {/* Header */}

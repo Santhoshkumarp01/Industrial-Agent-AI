@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 const useAppStore = create((set) => ({
   // 'chat' | 'monitor' | 'documents' | 'reports' | 'logbook' | 'equipment'
-  activePanel: 'chat',
+  activePanel: 'monitor',  // Changed from 'chat' to 'monitor' - Live Monitor Intelligence is now the first impression
   selectedEquipmentTag: null,
   alertCount: 0,
   activeCitation: null,
@@ -18,7 +18,13 @@ const useAppStore = create((set) => ({
   // Role-based access
   userRole: null, // 'engineer' | 'manager' | 'technician' | 'judge'
 
-  setActivePanel: (panel) => set({ activePanel: panel }),
+  setActivePanel: (panel) => set((s) => {
+    // Close PDF viewer when leaving Chat Assistant
+    if (s.activePanel === 'chat' && panel !== 'chat') {
+      return { activePanel: panel, isPDFViewerOpen: false, activeCitation: null }
+    }
+    return { activePanel: panel }
+  }),
   setSelectedTag: (tag) => set({ selectedEquipmentTag: tag }),
   setActiveCitation: (citation) =>
     set({ activeCitation: citation, isPDFViewerOpen: true }),

@@ -271,12 +271,37 @@ def run_analysis_streaming(
     # ============================================================
     # COMPLETE
     # ============================================================
+    
+    # Format response to match expected frontend structure
+    final_response = {
+        "machine_tag": equipment_id,
+        "equipment_id": equipment_id,
+        "equipment_name": equipment_name,
+        "display_name": equipment_name,
+        "current_severity": severity or risk_level_raw,
+        "fault_code": fault_code,
+        "event_summary": f"{root_cause_result['fault_description']}",
+        "mapped_document": None,  # Would need to query from machine_logs
+        "latest_readings": sensor_data,
+        "logbook_entry_id": logbook_entry_id,
+        "analysis": {
+            "answer": f"**Root Cause:** {root_cause_result['root_cause']}\n\n" +
+                     f"**Risk Level:** {risk_result['risk_level']} - {risk_result['urgency_hours']}h urgency\n\n" +
+                     f"**Immediate Actions:**\n{maintenance_result['immediate_actions']}\n\n" +
+                     f"**Repair Steps:**\n{maintenance_result['repair_steps']}",
+            "citations": root_cause_result.get("evidence", [])[:3],  # Top 3 evidence sources as citations
+            "grounded_in_doc": len(root_cause_result.get("evidence", [])) > 0
+        },
+        # Include all original data
+        **analysis_result
+    }
+    
     yield {
         "type": "complete",
         "agent": None,
         "status": "complete",
         "message": "Analysis complete. Logbook entry and report generated.",
-        "data": analysis_result
+        "data": final_response
     }
     
     logger.info(f"[StreamingOrchestrator] Analysis complete for {equipment_id}")

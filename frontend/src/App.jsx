@@ -90,6 +90,13 @@ function DocumentsView({ documentsHook }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [numPages, setNumPages] = useState(null)
 
+  // Auto-select first document when documents load
+  useEffect(() => {
+    if (documents.length > 0 && !selectedDoc) {
+      setSelectedDoc(documents[0])
+    }
+  }, [documents, selectedDoc])
+
   const TAG_COLORS = {
     'general-industrial-motor':       { bg: 'rgba(76,175,130,0.10)', border: '#2e7d5a',               text: '#4CAF82' },
     'ac-drive-motor':                 { bg: 'rgba(79,195,247,0.10)', border: 'var(--accent-blue-dim)', text: 'var(--accent-blue)' },

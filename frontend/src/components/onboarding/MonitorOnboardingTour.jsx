@@ -10,47 +10,29 @@ const ONBOARDING_KEY = 'industrial_agent_monitor_onboarding_complete'
 const MONITOR_STEPS = [
   {
     id: 'welcome',
-    title: 'Welcome to Live Monitor Intelligence! 📡',
-    message: 'Real-time equipment monitoring with AI-powered diagnostics. Our 3-agent system analyzes sensor data, predicts failures, and provides maintenance recommendations.',
+    title: 'Live Monitor Intelligence',
+    message: 'Real-time equipment monitoring with AI-powered 3-agent diagnostics. Analyze sensor data, predict failures, get maintenance plans.',
     highlight: null,
     position: 'center',
-    actions: ['Skip Tour', 'Start Tour →']
-  },
-  {
-    id: 'equipment-cards',
-    title: 'Step 1: Monitor Equipment Status',
-    message: 'Each card shows real-time sensor readings (vibration, temperature, current, pressure) and current fault status. Click any card to view detailed sensor trends.',
-    tip: '💡 Color-coded status: 🟢 Normal • 🟡 Warning • 🔴 Critical. Backend logs update every 5 seconds.',
-    highlight: null,
-    position: 'center',
-    actions: ['← Back', 'Skip', 'Next →']
+    actions: ['Skip Tour', 'Start Tour']
   },
   {
     id: 'demo-anomaly',
-    title: 'Step 2: Try Demo Anomaly',
-    message: 'Click "DEMO ANOMALY" to inject a test vibration fault on the General Industrial Motor. This triggers our 3-agent system for full diagnostic analysis.',
-    tip: '💡 The system will run: Agent 1 (Root Cause) → Agent 2 (Risk + RUL) → Agent 3 (Maintenance Plan). Results appear in the right panel.',
+    title: 'Try Demo Anomaly',
+    message: 'Click "DEMO ANOMALY" to inject test vibration fault. Triggers full 3-agent analysis.',
+    tip: 'Agent 1: Root Cause → Agent 2: Risk + RUL → Agent 3: Maintenance Plan',
     highlight: '[data-tour="demo-anomaly"]',
     position: 'bottom-right',
-    actions: ['← Back', 'Skip', 'Next →']
-  },
-  {
-    id: 'agent-analysis',
-    title: 'Step 3: Real-Time Agent Streaming',
-    message: 'Watch the 3-agent system work: Root Cause Analysis → Risk Assessment with RUL prediction → Maintenance recommendations with spare parts lookup.',
-    tip: '💡 All analysis is saved to the Operations Logbook and can be exported as PDF reports. Citations link back to equipment manuals.',
-    highlight: null,
-    position: 'center',
-    actions: ['← Back', 'Skip', 'Next →']
+    actions: ['Back', 'Skip', 'Next']
   },
   {
     id: 'monitor-chat',
-    title: 'Step 4: Monitor AI Chat',
-    message: 'The right panel shows analysis results and maintains a separate chat history for monitoring. Ask follow-up questions about detected faults or equipment status.',
-    tip: '💡 This chat is separate from Chat Assistant — it focuses on real-time monitoring and diagnostic results.',
+    title: 'Monitor AI Chat',
+    message: 'Right panel shows analysis results. Ask follow-up questions about faults or equipment status.',
+    tip: 'Separate chat history from Chat Assistant - focused on monitoring.',
     highlight: '[data-tour="monitor-chat"]',
     position: 'top-left',
-    actions: ['← Back', 'Skip', 'Finish Tour ✓']
+    actions: ['Back', 'Skip', 'Finish']
   }
 ]
 
@@ -118,7 +100,7 @@ export default function MonitorOnboardingTour({ onComplete }) {
           right: 0,
           bottom: 0,
           background: 'rgba(0, 0, 0, 0.7)',
-          zIndex: 9998,
+          zIndex: 9997,
           backdropFilter: 'blur(2px)',
           animation: 'fadeIn 0.3s ease'
         }}
@@ -134,10 +116,11 @@ export default function MonitorOnboardingTour({ onComplete }) {
             left: highlightedElement.getBoundingClientRect().left - 8,
             width: highlightedElement.getBoundingClientRect().width + 16,
             height: highlightedElement.getBoundingClientRect().height + 16,
+            background: 'transparent',
             border: '3px solid var(--accent-amber)',
             borderRadius: 'var(--radius-md)',
             zIndex: 9999,
-            boxShadow: '0 0 0 4px rgba(232, 188, 93, 0.3), 0 0 40px rgba(232, 188, 93, 0.5)',
+            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 0 4px rgba(232, 188, 93, 0.3), 0 0 40px rgba(232, 188, 93, 0.5)',
             pointerEvents: 'none',
             animation: 'pulse 2s infinite'
           }}
@@ -186,14 +169,18 @@ function OnboardingCard({ step, currentStep, totalSteps, onNext, onBack, onSkip,
     }
 
     const rect = highlighted.getBoundingClientRect()
-    const position = {}
+    const cardWidth = 380
+    const cardHeight = 250
+    const padding = 20
+    
+    let position = {}
 
     if (step.position === 'bottom-right') {
-      position.top = rect.bottom + 20
-      position.right = window.innerWidth - rect.right
+      position.top = Math.min(rect.bottom + 20, window.innerHeight - cardHeight - padding)
+      position.left = Math.max(padding, Math.min(rect.right - cardWidth, window.innerWidth - cardWidth - padding))
     } else if (step.position === 'top-left') {
-      position.bottom = window.innerHeight - rect.top + 20
-      position.left = rect.left
+      position.bottom = Math.max(padding, window.innerHeight - rect.top + 20)
+      position.left = Math.max(padding, rect.left)
     }
 
     return position
@@ -204,14 +191,15 @@ function OnboardingCard({ step, currentStep, totalSteps, onNext, onBack, onSkip,
       style={{
         position: 'fixed',
         ...getPosition(),
-        width: isWelcome ? 500 : 420,
-        maxWidth: '90vw',
+        width: Math.min(isWelcome ? 480 : 380, window.innerWidth - 40),
         background: 'var(--bg-surface)',
         border: '2px solid var(--accent-amber)',
         borderRadius: 'var(--radius-lg)',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
         zIndex: 10000,
-        animation: 'slideIn 0.4s ease'
+        animation: 'slideIn 0.4s ease',
+        maxHeight: 'calc(100vh - 40px)',
+        overflow: 'auto'
       }}
     >
       {/* Header */}

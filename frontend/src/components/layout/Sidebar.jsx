@@ -2,8 +2,8 @@ import React from 'react'
 import useAppStore from '../../store/appStore'
 
 const NAV_ITEMS = [
-  { id: 'chat',      icon: '💬', label: 'Chat Assistant' },
   { id: 'monitor',   icon: '📡', label: 'Live Monitor Intelligence' },
+  { id: 'chat',      icon: '💬', label: 'Chat Assistant' },
   { id: 'documents', icon: '📁', label: 'Documents' },
   { id: 'reports',   icon: '🗂️',  label: 'Analysis Reports' },
   { id: 'logbook',   icon: '📋', label: 'Operations Logbook' },
