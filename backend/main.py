@@ -1,7 +1,7 @@
 import nltk
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import router
@@ -11,10 +11,22 @@ from api.machine_analysis_routes import router as machine_analysis_router
 from vectorstore.qdrant_store import ensure_collection
 from database.db import init_db
 
+# Custom logging to suppress high-frequency sensor endpoint logs
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
+
+# Suppress uvicorn access logs for sensor endpoints
+class EndpointFilter(logging.Filter):
+    """Filter out /sensors/reading endpoint from access logs to prevent HF Spaces log spam."""
+    def filter(self, record: logging.LogRecord) -> bool:
+        # Suppress logs for high-frequency sensor endpoints
+        return record.getMessage().find("/sensors/reading") == -1 and \
+               record.getMessage().find("/sensors/status") == -1
+
+# Apply filter to uvicorn access logger
+logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 app = FastAPI(
     title="Industrial Agent AI — RAG API",
@@ -25,6 +37,9 @@ app = FastAPI(
         "a fine-tuned LLM grounded in equipment documentation."
     ),
     version="2.0.0",
+    # Disable docs on production to reduce log spam
+    docs_url="/docs" if __import__("os").getenv("ENV") != "production" else None,
+    redoc_url="/redoc" if __import__("os").getenv("ENV") != "production" else None,
 )
 
 app.add_middleware(

@@ -21,8 +21,8 @@ def create_entry(entry: LogbookEntryCreate) -> str:
                 fault_description, root_cause, risk_level, urgency_hours,
                 immediate_actions, repair_steps, long_term_recommendations,
                 parts_required, parts_available, rul_hours, confidence_score,
-                evidence_sources, report_id, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                evidence_sources, report_id, created_at, fault_code
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             entry_id,
             entry.incident_id,
@@ -41,7 +41,8 @@ def create_entry(entry: LogbookEntryCreate) -> str:
             entry.confidence_score,
             json.dumps(entry.evidence_sources),
             entry.report_id,
-            now
+            now,
+            getattr(entry, 'fault_code', None)
         ))
 
     return entry_id

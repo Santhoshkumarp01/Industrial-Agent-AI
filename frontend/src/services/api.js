@@ -302,6 +302,18 @@ export const injectMachineAnomaly = async (machineTag) => {
 }
 
 /**
+ * Reset machine sensors to normal operating baseline.
+ */
+export const resetMachine = async (machineTag) => {
+  try {
+    const res = await client.post(`/machine-analysis/reset/${machineTag}`)
+    return res.data
+  } catch (err) {
+    throw new Error(err.response?.data?.detail || 'Failed to reset machine.')
+  }
+}
+
+/**
  * List all configured machines with their document mappings.
  */
 export const listMachines = async () => {

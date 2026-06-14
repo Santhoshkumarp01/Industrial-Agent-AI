@@ -136,11 +136,36 @@ async def get_summary(machine_tag: str):
 
 @router.post("/inject-anomaly/{machine_tag}")
 async def inject_anomaly(machine_tag: str):
-    """Demo: spike a random sensor on this machine into the critical range."""
+    """Demo: spike a random sensor on this machine into the critical range using PDF-grounded fault scenario."""
     if machine_tag not in MACHINE_CONFIG:
         raise HTTPException(status_code=404, detail=f"Unknown machine tag: {machine_tag}")
-    entry = generate_log_entry(machine_tag, inject_anomaly=True)
-    return {"injected": True, "entry": entry}
+    
+    from sensors.machine_logs import inject_demo_anomaly
+    scenario = inject_demo_anomaly(machine_tag)
+    
+    if not scenario:
+        # Fallback to old method
+        entry = generate_log_entry(machine_tag, inject_anomaly=True)
+        return {"injected": True, "entry": entry}
+    
+    return {
+        "injected": True,
+        "fault_code": scenario["fault_code"],
+        "fault_name": scenario["fault_name"],
+        "entry": scenario["log_entry"]
+    }
+
+
+@router.post("/reset/{machine_tag}")
+async def reset_machine(machine_tag: str):
+    """Reset machine sensors to normal operating baseline."""
+    if machine_tag not in MACHINE_CONFIG:
+        raise HTTPException(status_code=404, detail=f"Unknown machine tag: {machine_tag}")
+    
+    from sensors.machine_logs import reset_to_normal
+    result = reset_to_normal(machine_tag)
+    
+    return result
 
 
 class AnalyzeRequest(BaseModel):
@@ -289,7 +314,8 @@ async def analyze_machine(machine_tag: str, request: AnalyzeRequest = None):
                     f"Machine logs: {machine_tag}",
                     f"Manual: {MACHINE_DOC_MAP.get(machine_tag, 'N/A')}",
                 ] + [f"[{c.ref}] {c.section_heading}" for c in answer_response.citations[:3]],
-                report_id=None
+                report_id=None,
+                fault_code=latest_log.get("fault_code", "—")  # PDF-grounded fault code
             )
 
             logbook_entry_id = create_entry(logbook_entry)

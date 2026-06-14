@@ -24,74 +24,88 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# ── Machine definitions ───────────────────────────────────────────────────────
+# Import PDF-grounded configuration
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+from config.thresholds import MOTOR_BASELINES
+
+# ── Machine definitions — PDF-GROUNDED ────────────────────────────────────────
 MACHINE_CONFIG = {
     "general-industrial-motor": {
-        "display_name": "General Industrial Motor",
+        "display_name": "General Industrial Motor (Siemens SIMOTICS TN 1LA8)",
         "equipment_tag": "general-industrial-motor",
-        "rpm_nominal": 1450,
+        "rpm_nominal": 1465,  # 4-pole 50Hz with 2.3% slip
         "thresholds": {
-            "vibration_mm_s":   {"normal": (1.0, 2.5),  "warn": 4.5,  "critical": 6.5},
-            "bearing_temp_c":   {"normal": (60,  75),   "warn": 85.0, "critical": 92.0},
-            "motor_current_a":  {"normal": (20,  30),   "warn": 38.0, "critical": 44.0},
-            "lube_pressure_bar":{"normal": (3.8, 4.8),  "warn": 3.0,  "critical": 2.4},
+            "vibration_velocity_mm_s":   {"normal": (1.2, 2.8),  "warn": 4.5,  "critical": 7.1},
+            "bearing_temp_drive_end_c":   {"normal": (55,  75),   "warn": 110.0, "critical": 120.0},
+            "stator_winding_temp_c":  {"normal": (80,  110),   "warn": 145.0, "critical": 155.0},
+            "stator_phase_current_a":  {"normal": (18,  26),   "warn": 30.0, "critical": 33.0},
+            "bearing_lube_oil_pressure_bar":{"normal": (3.5, 5.0),  "warn": 1.5,  "critical": 1.0},
         },
         "fault_codes": {
-            "vibration_mm_s":    "FC-VM-01",
-            "bearing_temp_c":    "FC-TH-01",
-            "motor_current_a":   "FC-CU-01",
-            "lube_pressure_bar": "FC-LP-01",
+            "vibration_velocity_mm_s":    "FC-VB-01",
+            "bearing_temp_drive_end_c":    "FC-TH-01",
+            "stator_winding_temp_c":    "FC-TH-02",
+            "stator_phase_current_a":   "FC-CR-01",
+            "bearing_lube_oil_pressure_bar": "FC-LP-01",
         },
     },
     "ac-drive-motor": {
-        "display_name": "AC Drive Motor",
+        "display_name": "AC Drive Motor (Siemens 1PH7 series)",
         "equipment_tag": "ac-drive-motor",
-        "rpm_nominal": 1480,
+        "rpm_nominal": 1800,  # Variable speed, shown at 1800
         "thresholds": {
-            "vibration_mm_s":   {"normal": (1.5, 3.0),  "warn": 5.0,  "critical": 7.5},
-            "bearing_temp_c":   {"normal": (65,  78),   "warn": 88.0, "critical": 95.0},
-            "motor_current_a":  {"normal": (38,  46),   "warn": 54.0, "critical": 62.0},
-            "lube_pressure_bar":{"normal": (4.2, 5.1),  "warn": 3.5,  "critical": 2.8},
+            "vibration_velocity_mm_s":   {"normal": (0.8, 2.2),  "warn": 4.5,  "critical": 7.1},
+            "bearing_temp_drive_end_c":   {"normal": (50,  70),   "warn": 110.0, "critical": 120.0},
+            "stator_winding_temp_c":  {"normal": (70,  100),   "warn": 130.0, "critical": 145.0},
+            "stator_phase_current_a":  {"normal": (15,  22),   "warn": 25.0, "critical": 28.0},
+            "bearing_lube_oil_pressure_bar":{"normal": (3.0, 4.5),  "warn": 1.5,  "critical": 1.0},
         },
         "fault_codes": {
-            "vibration_mm_s":    "FC-VM-02",
-            "bearing_temp_c":    "FC-TH-02",
-            "motor_current_a":   "FC-CU-02",
-            "lube_pressure_bar": "FC-LP-02",
+            "vibration_velocity_mm_s":    "FC-VB-01",
+            "bearing_temp_drive_end_c":    "FC-TH-01",
+            "stator_winding_temp_c":    "FC-TH-02",
+            "stator_phase_current_a":   "FC-CR-01",
+            "bearing_lube_oil_pressure_bar": "FC-LP-01",
         },
     },
     "synchronous-motor": {
-        "display_name": "Synchronous Motor",
+        "display_name": "Synchronous Motor (WEG S Line with Brushes)",
         "equipment_tag": "synchronous-motor",
-        "rpm_nominal": 1500,
+        "rpm_nominal": 1000,  # 6-pole 50Hz synchronous
         "thresholds": {
-            "vibration_mm_s":   {"normal": (1.2, 2.8),  "warn": 5.5,  "critical": 8.0},
-            "bearing_temp_c":   {"normal": (70,  85),   "warn": 95.0, "critical": 105.0},
-            "motor_current_a":  {"normal": (25,  35),   "warn": 42.0, "critical": 50.0},
-            "lube_pressure_bar":{"normal": (4.0, 5.0),  "warn": 3.2,  "critical": 2.5},
+            "vibration_velocity_mm_s":   {"normal": (1.0, 2.5),  "warn": 4.5,  "critical": 7.1},
+            "bearing_temp_drive_end_c":   {"normal": (55,  80),   "warn": 100.0, "critical": 110.0},
+            "stator_winding_temp_c":  {"normal": (85,  115),   "warn": 145.0, "critical": 155.0},
+            "stator_phase_current_a":  {"normal": (22,  35),   "warn": 40.0, "critical": 44.0},
+            "bearing_lube_oil_pressure_bar":{"normal": (2.5, 4.0),  "warn": 1.5,  "critical": 1.0},
         },
         "fault_codes": {
-            "vibration_mm_s":    "FC-VM-03",
-            "bearing_temp_c":    "FC-TH-03",
-            "motor_current_a":   "FC-CU-03",
-            "lube_pressure_bar": "FC-LP-03",
+            "vibration_velocity_mm_s":    "FC-VB-01",
+            "bearing_temp_drive_end_c":    "FC-TH-01",
+            "stator_winding_temp_c":    "FC-TH-02",
+            "stator_phase_current_a":   "FC-SY-01",
+            "bearing_lube_oil_pressure_bar": "FC-LP-01",
         },
     },
     "heavy-duty-industrial-motor": {
-        "display_name": "Heavy-Duty Industrial Motor",
+        "display_name": "Heavy-Duty Industrial Motor (WEG W60 Line)",
         "equipment_tag": "heavy-duty-industrial-motor",
-        "rpm_nominal": 990,
+        "rpm_nominal": 750,  # 8-pole 50Hz with slip
         "thresholds": {
-            "vibration_mm_s":   {"normal": (0.8, 2.0),  "warn": 4.0,  "critical": 6.5},
-            "bearing_temp_c":   {"normal": (55,  70),   "warn": 82.0, "critical": 90.0},
-            "motor_current_a":  {"normal": (52,  62),   "warn": 72.0, "critical": 82.0},
-            "lube_pressure_bar":{"normal": (6.1, 7.4),  "warn": 4.8,  "critical": 3.5},
+            "vibration_velocity_mm_s":   {"normal": (1.5, 3.2),  "warn": 4.5,  "critical": 7.1},
+            "bearing_temp_drive_end_c":   {"normal": (60,  85),   "warn": 110.0, "critical": 120.0},
+            "stator_winding_temp_c":  {"normal": (90,  120),   "warn": 145.0, "critical": 155.0},
+            "stator_phase_current_a":  {"normal": (28,  42),   "warn": 48.0, "critical": 53.0},
+            "bearing_lube_oil_pressure_bar":{"normal": (3.0, 5.0),  "warn": 1.5,  "critical": 1.0},
         },
         "fault_codes": {
-            "vibration_mm_s":    "FC-VM-04",
-            "bearing_temp_c":    "FC-TH-04",
-            "motor_current_a":   "FC-CU-04",
-            "lube_pressure_bar": "FC-LP-04",
+            "vibration_velocity_mm_s":    "FC-VB-01",
+            "bearing_temp_drive_end_c":    "FC-TH-01",
+            "stator_winding_temp_c":    "FC-TH-02",
+            "stator_phase_current_a":   "FC-CR-01",
+            "bearing_lube_oil_pressure_bar": "FC-LP-01",
         },
     },
 }
@@ -157,14 +171,24 @@ def _classify_severity(value: float, thresholds: dict, sensor: str) -> tuple:
 
 
 def _event_summary(machine_tag: str, anomalies: list) -> str:
-    """Build a human-readable one-line event summary."""
+    """Build a human-readable one-line event summary with PDF-grounded sensor names."""
     name = MACHINE_CONFIG[machine_tag]["display_name"]
     if not anomalies:
         return f"{name}: all sensors within normal operating range."
+    
+    # Use proper sensor display names
+    DISPLAY_NAMES = {
+        "vibration_velocity_mm_s": "Vibration Velocity",
+        "bearing_temp_drive_end_c": "Bearing Temperature (Drive End)",
+        "stator_winding_temp_c": "Stator Winding Temperature",
+        "stator_phase_current_a": "Stator Phase Current",
+        "bearing_lube_oil_pressure_bar": "Bearing Lube Oil Pressure"
+    }
+    
     parts = []
     for a in anomalies:
         sensor, value, severity = a
-        label = sensor.replace("_", " ").title()
+        label = DISPLAY_NAMES.get(sensor, sensor.replace("_", " ").title())
         parts.append(f"{label}={value} ({severity})")
     return f"{name}: anomaly detected — {', '.join(parts)}."
 
@@ -246,11 +270,12 @@ def generate_log_entry(machine_tag: str, inject_anomaly: bool = False) -> dict:
         "machine_tag":       machine_tag,
         "display_name":      cfg["display_name"],
         "timestamp":         datetime.now().isoformat(),
-        "vibration_mm_s":    readings.get("vibration_mm_s"),
-        "bearing_temp_c":    readings.get("bearing_temp_c"),
-        "motor_current_a":   readings.get("motor_current_a"),
-        "lube_pressure_bar": readings.get("lube_pressure_bar"),
-        "rpm":               rpm,
+        "vibration_velocity_mm_s":    readings.get("vibration_velocity_mm_s"),
+        "bearing_temp_drive_end_c":    readings.get("bearing_temp_drive_end_c"),
+        "stator_winding_temp_c":   readings.get("stator_winding_temp_c"),
+        "stator_phase_current_a":   readings.get("stator_phase_current_a"),
+        "bearing_lube_oil_pressure_bar": readings.get("bearing_lube_oil_pressure_bar"),
+        "shaft_speed_rpm":               rpm,
         "alert_type":        alert_type,
         "severity":          overall_severity,
         "fault_code":        fault_code,
@@ -300,11 +325,20 @@ def get_machine_summary(machine_tag: str) -> dict:
 def format_logs_for_llm(machine_tag: str, logs: list) -> str:
     """
     Format machine logs into a structured text block for the LLM prompt.
-    This becomes part of the user_message sent to the answerer.
+    Uses PDF-grounded sensor names and threshold citations.
     """
     cfg = MACHINE_CONFIG.get(machine_tag, {})
     display = cfg.get("display_name", machine_tag)
     thresholds = cfg.get("thresholds", {})
+
+    # Sensor display names
+    DISPLAY_NAMES = {
+        "vibration_velocity_mm_s": "Vibration Velocity",
+        "bearing_temp_drive_end_c": "Bearing Temperature (Drive End)",
+        "stator_winding_temp_c": "Stator Winding Temperature",
+        "stator_phase_current_a": "Stator Phase Current",
+        "bearing_lube_oil_pressure_bar": "Bearing Lube Oil Pressure"
+    }
 
     lines = [
         f"MACHINE DIAGNOSTIC REPORT",
@@ -312,29 +346,32 @@ def format_logs_for_llm(machine_tag: str, logs: list) -> str:
         f"Equipment Tag: {machine_tag}",
         f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         "",
-        "=== THRESHOLD REFERENCE ===",
+        "=== THRESHOLD REFERENCE (from motor manual) ===",
     ]
 
     for sensor, th in thresholds.items():
-        label = sensor.replace("_", " ").title()
+        label = DISPLAY_NAMES.get(sensor, sensor.replace("_", " ").title())
         lo, hi = th["normal"]
-        lines.append(
-            f"  {label}: Normal {lo}–{hi}  |  Warn >{th['warn']}  |  Critical >{th['critical']}"
-            if "pressure" not in sensor
-            else f"  {label}: Normal {lo}–{hi}  |  Warn <{th['warn']}  |  Critical <{th['critical']}"
-        )
+        if "pressure" in sensor:
+            lines.append(f"  {label}: Normal {lo}–{hi} bar  |  Alarm <{th['warn']}  |  Trip <{th['critical']}")
+        else:
+            lines.append(f"  {label}: Normal {lo}–{hi}  |  Alarm >{th['warn']}  |  Trip >{th['critical']}")
 
     lines += ["", "=== LATEST SENSOR READINGS (most recent first) ==="]
 
     for i, log in enumerate(reversed(logs[-10:]), 1):
         ts = log.get("timestamp", "")[:19]
+        # Build one-line summary format for latest log
+        latest_log = logs[-1] if logs else {}
+        
         lines.append(
             f"[{i}] {ts}  "
-            f"Vib={log.get('vibration_mm_s')} mm/s  "
-            f"Temp={log.get('bearing_temp_c')}°C  "
-            f"Current={log.get('motor_current_a')} A  "
-            f"Pressure={log.get('lube_pressure_bar')} bar  "
-            f"RPM={log.get('rpm')}  "
+            f"Vib={log.get('vibration_velocity_mm_s')} mm/s  "
+            f"BearTemp={log.get('bearing_temp_drive_end_c')}°C  "
+            f"WindTemp={log.get('stator_winding_temp_c')}°C  "
+            f"Current={log.get('stator_phase_current_a')} A  "
+            f"Pressure={log.get('bearing_lube_oil_pressure_bar')} bar  "
+            f"RPM={log.get('shaft_speed_rpm')}  "
             f"Severity={log.get('severity')}  "
             f"FaultCode={log.get('fault_code')}"
         )
@@ -358,7 +395,64 @@ def format_logs_for_llm(machine_tag: str, logs: list) -> str:
         "2. Why did it happen (based on the sensor trend)?",
         "3. What does the manual recommend for this condition?",
         "4. What is the recommended immediate action?",
-        "Cite the manual sections that support your diagnosis.",
+        "Cite the exact manual sections (Section X.X) that support your diagnosis.",
     ]
 
     return "\n".join(lines)
+
+
+
+def inject_demo_anomaly(machine_tag: str) -> dict:
+    """
+    Inject a PDF-grounded fault scenario for demo purposes.
+    
+    Returns:
+        Fault scenario metadata with sensor spikes and recommended actions.
+    """
+    from config.fault_scenarios import FAULT_SCENARIOS
+    
+    if machine_tag not in MACHINE_CONFIG:
+        raise ValueError(f"Unknown machine tag: {machine_tag}")
+    
+    scenarios = FAULT_SCENARIOS.get(machine_tag, [])
+    if not scenarios:
+        return None
+    
+    # Use first scenario (temperature fault) for consistent demo
+    scenario = scenarios[0]
+    
+    # Spike the sensor state
+    if machine_tag not in _sensor_state:
+        _sensor_state[machine_tag] = _init_state(machine_tag)
+    
+    _sensor_state[machine_tag].update(scenario["sensor_spike"])
+    
+    # Generate log entry with the spiked values
+    entry = generate_log_entry(machine_tag, inject_anomaly=False)
+    
+    # Return scenario metadata for agent pipeline
+    return {
+        "fault_code": scenario["fault_code"],
+        "fault_name": scenario["fault_name"],
+        "description": scenario["description"],
+        "thresholds": scenario["thresholds"],
+        "risk_level": scenario["risk_level"],
+        "probable_root_causes": scenario["probable_root_causes"],
+        "recommended_actions": scenario["recommended_actions"],
+        "log_entry": entry
+    }
+
+
+def reset_to_normal(machine_tag: str) -> dict:
+    """Reset machine sensors to normal operating baseline."""
+    if machine_tag not in MACHINE_CONFIG:
+        raise ValueError(f"Unknown machine tag: {machine_tag}")
+    
+    _sensor_state[machine_tag] = _init_state(machine_tag)
+    entry = generate_log_entry(machine_tag)
+    
+    return {
+        "reset": True,
+        "machine_tag": machine_tag,
+        "log_entry": entry
+    }

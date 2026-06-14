@@ -25,7 +25,8 @@ def init_db():
                 session_id TEXT,
                 sensor_readings TEXT,           -- JSON string of sensor values at time of incident
                 timestamp TEXT NOT NULL,
-                status TEXT DEFAULT 'open'      -- 'open' | 'resolved' | 'escalated'
+                status TEXT DEFAULT 'open',     -- 'open' | 'resolved' | 'escalated'
+                fault_code TEXT                 -- PDF-grounded fault code (FC-TH-01, etc.)
             );
 
             CREATE TABLE IF NOT EXISTS logbook_entries (
@@ -49,6 +50,7 @@ def init_db():
                 created_at TEXT NOT NULL,
                 resolved_at TEXT,
                 technician TEXT,
+                fault_code TEXT,                -- PDF-grounded fault code
                 FOREIGN KEY (incident_id) REFERENCES incidents(id)
             );
 

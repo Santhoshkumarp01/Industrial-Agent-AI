@@ -239,6 +239,7 @@ class LogbookEntryCreate(BaseModel):
     confidence_score: float
     evidence_sources: list[str]
     report_id: str
+    fault_code: Optional[str] = None  # PDF-grounded fault code
 
 
 class IncidentCreate(BaseModel):
