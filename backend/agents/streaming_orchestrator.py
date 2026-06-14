@@ -34,7 +34,9 @@ def run_analysis_streaming(
     rul_hours: float = None,
     triggered_by: str = "alert",
     alert_id: str = None,
-    session_id: str = None
+    session_id: str = None,
+    severity: str = None,
+    fault_code: str = None
 ) -> Generator[Dict[str, Any], None, None]:
     """
     Orchestrates all three agents with real-time streaming updates.
@@ -59,7 +61,7 @@ def run_analysis_streaming(
         "type": "progress",
         "agent": None,
         "status": "starting",
-        "message": f"🚀 Starting 3-agent analysis for {equipment_name}...",
+        "message": f"Starting 3-agent analysis for {equipment_name}",
         "data": {"incident_id": incident_id}
     }
     
@@ -82,7 +84,7 @@ def run_analysis_streaming(
         "type": "progress",
         "agent": "root_cause",
         "status": "starting",
-        "message": "🔍 Agent 1: Analyzing root cause from sensor data and historical incidents...",
+        "message": "Analyzing root cause from sensor data and historical incidents",
         "data": None
     }
     
@@ -100,7 +102,7 @@ def run_analysis_streaming(
         "type": "agent_complete",
         "agent": "root_cause",
         "status": "complete",
-        "message": f"✅ Agent 1: Root cause identified — {root_cause_result['root_cause'][:80]}...",
+        "message": f"Root cause identified: {root_cause_result['root_cause'][:100]}{'...' if len(root_cause_result['root_cause']) > 100 else ''}",
         "data": {
             "root_cause": root_cause_result["root_cause"],
             "fault_description": root_cause_result["fault_description"],
@@ -117,7 +119,7 @@ def run_analysis_streaming(
         "type": "progress",
         "agent": "risk",
         "status": "starting",
-        "message": "⚠️ Agent 2: Assessing risk level, urgency, and spare parts availability...",
+        "message": "Assessing risk level, urgency, and spare parts availability",
         "data": None
     }
     
@@ -129,24 +131,27 @@ def run_analysis_streaming(
         root_cause=root_cause_result["root_cause"],
         anomaly_score=anomaly_score,
         rul_hours=rul_hours,
-        sensor_data=sensor_data
+        sensor_data=sensor_data,
+        severity=severity or risk_level_raw,  # Use severity or fall back to risk_level_raw
+        fault_code=fault_code
     )
     
     risk_badge = {
-        "CRITICAL": "🔴",
-        "HIGH": "🟠",
-        "MEDIUM": "🟡",
-        "LOW": "🟢"
-    }.get(risk_result["risk_level"], "⚪")
+        "CRITICAL": "Critical",
+        "HIGH": "High",
+        "MEDIUM": "Medium",
+        "LOW": "Low"
+    }.get(risk_result["risk_level"], "Unknown")
     
     yield {
         "type": "agent_complete",
         "agent": "risk",
         "status": "complete",
-        "message": f"✅ Agent 2: Risk assessed — {risk_badge} {risk_result['risk_level']} (Urgency: {risk_result['urgency_hours']}h)",
+        "message": f"Risk assessed as {risk_badge} with {risk_result['urgency_hours']}h urgency",
         "data": {
             "risk_level": risk_result["risk_level"],
             "urgency_hours": risk_result["urgency_hours"],
+            "rul_hours": risk_result.get("rul_hours"),
             "parts_required": risk_result["parts_required"],
             "parts_available": risk_result["parts_available"],
             "parts_stock": risk_result.get("parts_stock", {})
@@ -160,7 +165,7 @@ def run_analysis_streaming(
         "type": "progress",
         "agent": "maintenance",
         "status": "starting",
-        "message": "🔧 Agent 3: Generating maintenance plan and repair steps...",
+        "message": "Generating maintenance plan and repair steps",
         "data": None
     }
     
@@ -178,7 +183,7 @@ def run_analysis_streaming(
         "type": "agent_complete",
         "agent": "maintenance",
         "status": "complete",
-        "message": f"✅ Agent 3: Maintenance plan generated — {len(maintenance_result['immediate_actions'])} immediate actions, {len(maintenance_result['repair_steps'])} repair steps",
+        "message": f"Maintenance plan generated with {len(maintenance_result['immediate_actions'])} immediate actions and {len(maintenance_result['repair_steps'])} repair steps",
         "data": {
             "immediate_actions": maintenance_result["immediate_actions"],
             "repair_steps": maintenance_result["repair_steps"],
@@ -193,7 +198,7 @@ def run_analysis_streaming(
         "type": "progress",
         "agent": None,
         "status": "running",
-        "message": "💾 Saving analysis to logbook and generating report...",
+        "message": "Saving analysis to logbook and generating report",
         "data": None
     }
     
@@ -215,9 +220,10 @@ def run_analysis_streaming(
         # Risk assessment
         "risk_level": risk_result["risk_level"],
         "urgency_hours": risk_result["urgency_hours"],
+        "rul_hours": risk_result.get("rul_hours"),
         "parts_required": risk_result["parts_required"],
         "parts_available": risk_result["parts_available"],
-        "parts_stock": risk_result["parts_stock"],
+        "parts_stock": risk_result.get("parts_stock", {}),
         
         # Maintenance plan
         "immediate_actions": maintenance_result["immediate_actions"],
@@ -269,7 +275,7 @@ def run_analysis_streaming(
         "type": "complete",
         "agent": None,
         "status": "complete",
-        "message": "✨ Analysis complete! Logbook entry and report generated.",
+        "message": "Analysis complete. Logbook entry and report generated.",
         "data": analysis_result
     }
     

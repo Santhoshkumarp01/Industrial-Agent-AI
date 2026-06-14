@@ -86,8 +86,8 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
     setStreamingUpdates([]) // Clear previous updates
 
     // Show streaming status component in chat
-    const streamingId = chatHook?.addStreamingMessage(
-      `🤖 Running 3-agent analysis for ${machineName}...`
+    const streamingId = chatHook?.addAnalyzingMessage(
+      `Running 3-agent analysis for ${machineName}`
     )
     analyzingIdRef.current = streamingId
 
@@ -116,7 +116,9 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
         rul_hours: null,
         triggered_by: 'live_monitor',
         alert_id: null,
-        session_id: null
+        session_id: null,
+        severity: latestLog.severity || 'WARNING',  // Pass severity for RUL calculation
+        fault_code: latestLog.fault_code !== '—' ? latestLog.fault_code : null  // Pass fault code
       }
 
       // Stream the analysis with real-time updates
@@ -127,8 +129,9 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
 
         // If complete, show final result
         if (update.type === 'complete') {
-          chatHook?.replaceStreamingMessage(streamingId, {
-            analysis_result: update.data,
+          chatHook?.replaceAnalyzingMessage(streamingId, {
+            ...update.data,
+            logbook_entry_id: update.data.logbook_entry_id,
             streaming_updates: updates
           })
           break

@@ -210,6 +210,8 @@ class AnalyzeRequest(BaseModel):
     triggered_by: str = "alert"
     alert_id: Optional[str] = None
     session_id: Optional[str] = None
+    severity: Optional[str] = None  # "NORMAL" | "WARNING" | "CRITICAL"
+    fault_code: Optional[str] = None  # FC-TH-01, FC-VB-01, etc.
 
 
 class FeedbackCreate(BaseModel):

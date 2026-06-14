@@ -84,7 +84,9 @@ async def analyze_equipment_stream(request: AnalyzeRequest):
                 rul_hours=request.rul_hours,
                 triggered_by=request.triggered_by,
                 alert_id=request.alert_id,
-                session_id=request.session_id
+                session_id=request.session_id,
+                severity=request.severity,
+                fault_code=request.fault_code
             ):
                 # Format as SSE: data: {json}\n\n
                 yield f"data: {json.dumps(update)}\n\n"

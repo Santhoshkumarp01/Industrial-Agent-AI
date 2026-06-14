@@ -13,6 +13,7 @@ Returns risk level (LOW/MEDIUM/HIGH/CRITICAL) and urgency window.
 import logging
 import pandas as pd
 from pathlib import Path
+from utils.rul_calculator import calculate_rul
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,9 @@ def analyze_risk(
     root_cause: str,
     anomaly_score: float,
     rul_hours: float = None,
-    sensor_data: dict = None
+    sensor_data: dict = None,
+    severity: str = None,
+    fault_code: str = None
 ) -> dict:
     """
     Scores risk level and urgency.
@@ -44,19 +47,35 @@ def analyze_risk(
         equipment_name: Human-readable name
         root_cause: Diagnosis from root cause agent
         anomaly_score: 0.0-1.0 anomaly score from ML
-        rul_hours: Estimated hours to failure
+        rul_hours: Estimated hours to failure (will be calculated if None)
         sensor_data: Current sensor readings
+        severity: "NORMAL" | "WARNING" | "CRITICAL"
+        fault_code: Optional fault code (FC-TH-01, etc.)
 
     Returns:
         {
             "risk_level": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
             "urgency_hours": float,  # hours until action required
+            "rul_hours": float | None,  # estimated remaining useful life
             "parts_required": list[str],
             "parts_available": bool,
             "parts_stock": dict  # {part_name: quantity}
         }
     """
     logger.info(f"[Risk Agent] Assessing risk for {equipment_id}...")
+    
+    # Calculate RUL if not provided
+    if rul_hours is None and sensor_data and severity:
+        rul_hours = calculate_rul(
+            sensor_data=sensor_data,
+            severity=severity,
+            fault_code=fault_code,
+            equipment_type="motor"  # Can be made dynamic based on equipment_id
+        )
+        if rul_hours:
+            logger.info(f"[Risk Agent] Calculated RUL: {rul_hours:.1f} hours")
+        else:
+            logger.info(f"[Risk Agent] No RUL calculated (severity: {severity})")
 
     # Criticality mapping (production impact)
     criticality = {
@@ -120,15 +139,16 @@ def analyze_risk(
     parts_required = _identify_required_parts(root_cause)
     parts_available, parts_stock = _check_parts_availability(parts_required)
 
-    logger.info(
-        f"[Risk Agent] Risk: {risk_level}, "
-        f"Urgency: {urgency_hours:.1f}h, "
-        f"Parts available: {parts_available}"
-    )
+    log_msg = f"[Risk Agent] Risk: {risk_level}, Urgency: {urgency_hours:.1f}h"
+    if rul_hours:
+        log_msg += f", RUL: {rul_hours:.1f}h"
+    log_msg += f", Parts available: {parts_available}"
+    logger.info(log_msg)
 
     return {
         "risk_level": risk_level,
         "urgency_hours": urgency_hours,
+        "rul_hours": rul_hours,  # Include RUL in output
         "parts_required": parts_required,
         "parts_available": parts_available,
         "parts_stock": parts_stock
