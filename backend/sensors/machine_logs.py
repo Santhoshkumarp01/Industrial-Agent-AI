@@ -403,7 +403,7 @@ def inject_demo_anomaly(machine_tag: str) -> dict:
     Returns:
         Fault scenario metadata with sensor spikes and recommended actions.
     """
-    from config.fault_scenarios import FAULT_SCENARIOS
+    from motor_config.fault_scenarios import FAULT_SCENARIOS
     
     if machine_tag not in MACHINE_CONFIG:
         raise ValueError(f"Unknown machine tag: {machine_tag}")
