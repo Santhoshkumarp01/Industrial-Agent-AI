@@ -240,7 +240,7 @@ class LogbookEntryCreate(BaseModel):
     rul_hours: Optional[float]
     confidence_score: float
     evidence_sources: list[str]
-    report_id: str
+    report_id: Optional[str] = None  # Made optional since report is generated after logbook entry
     fault_code: Optional[str] = None  # PDF-grounded fault code
 
 

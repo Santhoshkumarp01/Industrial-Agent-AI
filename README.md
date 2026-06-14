@@ -23,8 +23,9 @@ app_port: 7860
 **Quick Test:**
 - Visit the live frontend
 - Navigate to **Live Monitor Intelligence**
-- Press `Ctrl+Shift+D` to trigger demo anomaly
-- Watch AI analysis with PDF citations appear automatically
+- Click **"DEMO ANOMALY"** button (top right)
+- Watch 3-agent AI analysis with RUL prediction and spare parts checking
+- See PDF citations and expandable agent details
 
 ---
 ## 🚀 Local Setup
@@ -107,11 +108,17 @@ Training data includes:
 ## 🎮 Demo Flow
 
 1. Open **Live Monitor Intelligence** panel
-2. Press `Ctrl+Shift+D` to simulate vibration anomaly on Rolling Mill
-3. Watch automatic AI analysis with PDF citations
-4. Navigate to **Operations Logbook** to see auto-generated entry
-5. Click **Analysis Reports** for structured incident report
-6. Provide feedback to improve future predictions
+2. Click **"DEMO ANOMALY"** button to simulate vibration anomaly on Rolling Mill
+3. Watch automatic 3-agent streaming analysis:
+   - Agent 1: Root Cause Analysis with PDF citations
+   - Agent 2: Risk Assessment with RUL calculation and spare parts checking
+   - Agent 3: Maintenance Planning with immediate actions
+4. Expand Agent 2 details to see:
+   - RUL: 84h (3.5 days) prediction
+   - Spare parts: ✓ Bearing (Stock: 2), ✓ Grease (Stock: 15)
+5. Navigate to **Operations Logbook** to see auto-generated entry
+6. Click **Analysis Reports** for structured incident report
+7. Provide feedback to improve future predictions
 
 ---
 

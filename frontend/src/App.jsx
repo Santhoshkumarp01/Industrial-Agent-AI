@@ -44,44 +44,7 @@ function MainApp() {
   const handleAlertDetected = useCallback(() => {}, [])
   const sensorHook = useSensorStream(handleAlertDetected)
 
-  // Ctrl+Shift+D — inject anomaly + auto-run analysis in Monitor chat
-  useEffect(() => {
-    const handleKeyDown = async (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-        e.preventDefault()
-        const machineTag = 'general-industrial-motor'
-
-        // Trigger frontend simulator anomaly
-        sensorHook.triggerAnomaly(machineTag, 'vibration')
-
-        try {
-          const { injectMachineAnomaly, runMachineAnalysis } = await import('./services/api')
-          await injectMachineAnomaly(machineTag)
-
-          // Auto-analyze after 3 seconds with notification in monitor chat
-          setTimeout(async () => {
-            if (monitorChatHook?.addAnalyzingMessage) {
-              monitorChatHook.addAnalyzingMessage('⚡ Anomaly detected — Analyzing Rolling Mill Main Drive Motor...')
-            }
-            // Switch to monitor panel
-            setActivePanel('monitor')
-            try {
-              const result = await runMachineAnalysis(machineTag, { includeLogs: 10 })
-              if (monitorChatHook?.addAnalysisMessage) {
-                monitorChatHook.addAnalysisMessage(result)
-              }
-            } catch (err) {
-              console.error('Auto-analysis failed:', err)
-            }
-          }, 3000)
-        } catch (err) {
-          console.error('Failed to inject backend anomaly:', err)
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [sensorHook, monitorChatHook, setActivePanel])
+  // Keyboard shortcut removed - use "DEMO ANOMALY" button in Live Monitor instead
 
   return (
     <>
