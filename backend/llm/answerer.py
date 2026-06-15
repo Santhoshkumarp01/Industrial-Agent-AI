@@ -373,6 +373,10 @@ def generate_answer(
     logger.info(f"📋 PROMPT CHUNK TABLE:")
     for chunk in chunks_in_prompt:
         logger.info(f"   {chunk.citation_ref} → Page {chunk.page_number}, Section '{chunk.section_heading}'")
+    
+    # Log prompt size for debugging
+    prompt_size = len(_SYSTEM_PROMPT) + len(user_message)
+    logger.info(f"📊 Total prompt size: {prompt_size} chars (system: {len(_SYSTEM_PROMPT)}, user: {len(user_message)})")
 
     logger.info(f"Calling fine-tuned model with {confidence_level} confidence...")
 

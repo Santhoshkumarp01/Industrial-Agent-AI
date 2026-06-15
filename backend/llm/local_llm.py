@@ -263,7 +263,9 @@ def _generate_openai(system_prompt: str, user_prompt: str, max_tokens: int) -> s
 
 
 def _generate_gemini(system_prompt: str, user_prompt: str, max_tokens: int) -> str:
-    """Generate using Google Gemini API."""
+    """Generate using Google Gemini API with retry logic."""
+    import time
+    
     try:
         import google.generativeai as genai
         genai.configure(api_key=LLM_API_KEY)
@@ -278,13 +280,24 @@ def _generate_gemini(system_prompt: str, user_prompt: str, max_tokens: int) -> s
             "max_output_tokens": max_tokens,
         }
         
-        response = model.generate_content(
-            user_prompt,
-            generation_config=generation_config
-        )
-        return response.text.strip()
+        # Retry logic for transient API failures
+        max_retries = 2
+        for attempt in range(max_retries):
+            try:
+                response = model.generate_content(
+                    user_prompt,
+                    generation_config=generation_config
+                )
+                return response.text.strip()
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"API attempt {attempt + 1} failed, retrying after 1s: {e}")
+                    time.sleep(1)
+                else:
+                    raise
+                    
     except Exception as e:
-        logger.error(f"Gemini API error: {e}")
+        logger.error(f"API error: {e}")
         raise
 
 
