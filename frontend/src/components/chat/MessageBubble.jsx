@@ -335,6 +335,7 @@ function AgentAnalysisContent({ analysis, logbookEntryId, onFeedbackSubmit }) {
 // ── Machine Analysis Content ──────────────────────────────────────────────────
 function MachineAnalysisContent({ data }) {
   const setActivePanel = useAppStore((s) => s.setActivePanel)
+  const setActiveCitation = useAppStore((s) => s.setActiveCitation)
 
   if (!data) return null
 
@@ -345,8 +346,19 @@ function MachineAnalysisContent({ data }) {
   const eventSummary   = data.event_summary || ''
   const mappedDoc      = data.mapped_document || ''
   const answerText     = analysis.answer || ''
-  const citations      = analysis.citations || []
+  const rawCitations   = analysis.citations || []
   const isGrounded     = analysis.grounded_in_doc
+
+  // Map citations to CitationTag format
+  const citations = rawCitations.map((cit) => ({
+    ref: cit.ref || `[C${cit.chunk_id || '?'}]`,
+    doc_id: cit.doc_id || data.doc_id,
+    doc_name: cit.doc_name || mappedDoc,
+    page_number: cit.page || cit.page_number || 1,
+    section_heading: cit.section || cit.section_heading || '',
+    snippet: cit.snippet || cit.text?.substring(0, 100) || '',
+    bbox: null  // Remove bbox - not working correctly
+  }))
 
   const SEV_COLOR = {
     CRITICAL: 'var(--status-critical)',
@@ -443,16 +455,9 @@ function MachineAnalysisContent({ data }) {
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-amber)', letterSpacing: '0.08em', marginBottom: 6 }}>
             MANUAL REFERENCES
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {citations.map((cit, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', border: '1px solid var(--accent-amber-dim)', padding: '1px 6px', borderRadius: 'var(--radius-sm)', flexShrink: 0 }}>
-                  {cit.ref}
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)' }}>
-                  p.{cit.page} · {cit.section?.trim()}
-                </span>
-              </div>
+              <CitationTag key={i} citation={cit} />
             ))}
           </div>
         </div>

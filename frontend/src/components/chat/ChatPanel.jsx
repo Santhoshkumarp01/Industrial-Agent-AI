@@ -25,6 +25,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
 
   const selectedTag = useAppStore((s) => s.selectedEquipmentTag)
   const isPDFViewerOpen = useAppStore((s) => s.isPDFViewerOpen)
+  const activePanel = useAppStore((s) => s.activePanel)
 
   const [inputValue, setInputValue] = useState('')
   const [uploaderExpanded, setUploaderExpanded] = useState(false)
@@ -140,6 +141,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
           {/* Tour button - Chat Assistant guide */}
           <button
             onClick={() => {
+              localStorage.setItem('activePanel', 'chat')
               localStorage.removeItem('industrial_agent_onboarding_complete')
               window.location.reload()
             }}
@@ -149,22 +151,23 @@ export default function ChatPanel({ chatHook, documentsHook }) {
               fontSize: 10,
               padding: '4px 10px',
               borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
-              background: 'var(--bg-surface-2)',
-              color: 'var(--text-secondary)',
+              border: '1px solid var(--accent-amber)',
+              background: 'rgba(245, 166, 35, 0.1)',
+              color: 'var(--accent-amber)',
               cursor: 'pointer',
               letterSpacing: '0.05em',
-              transition: 'var(--transition)',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 0 15px rgba(245, 166, 35, 0.3), 0 0 30px rgba(245, 166, 35, 0.15)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--bg-surface-3)'
-              e.currentTarget.style.borderColor = 'var(--accent-amber-dim)'
-              e.currentTarget.style.color = 'var(--accent-amber)'
+              e.currentTarget.style.background = 'rgba(245, 166, 35, 0.18)'
+              e.currentTarget.style.boxShadow = '0 0 25px rgba(245, 166, 35, 0.5), 0 0 50px rgba(245, 166, 35, 0.3)'
+              e.currentTarget.style.transform = 'translateY(-2px)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--bg-surface-2)'
-              e.currentTarget.style.borderColor = 'var(--border)'
-              e.currentTarget.style.color = 'var(--text-secondary)'
+              e.currentTarget.style.background = 'rgba(245, 166, 35, 0.1)'
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(245, 166, 35, 0.3), 0 0 30px rgba(245, 166, 35, 0.15)'
+              e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
             TOUR
@@ -404,8 +407,8 @@ export default function ChatPanel({ chatHook, documentsHook }) {
       {/* PDF Viewer overlay */}
       <PDFViewer />
 
-      {/* Onboarding Tour */}
-      <OnboardingTour />
+      {/* Onboarding Tour - only for Chat panel */}
+      {activePanel === 'chat' && <OnboardingTour />}
     </div>
   )
 }

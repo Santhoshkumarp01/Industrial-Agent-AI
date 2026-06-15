@@ -19,8 +19,7 @@ const MONITOR_STEPS = [
   {
     id: 'demo-anomaly',
     title: 'Try Demo Anomaly',
-    message: 'Click "DEMO ANOMALY" to inject test vibration fault. Triggers full 3-agent analysis.',
-    tip: 'Agent 1: Root Cause → Agent 2: Risk + RUL → Agent 3: Maintenance Plan',
+    message: 'Click "DEMO ANOMALY" to inject test vibration fault. Triggers full 3-agent analysis: Root Cause → Risk + RUL → Maintenance Plan.',
     highlight: '[data-tour="demo-anomaly"]',
     position: 'bottom-right',
     actions: ['Back', 'Skip', 'Next']
@@ -28,8 +27,7 @@ const MONITOR_STEPS = [
   {
     id: 'monitor-chat',
     title: 'Monitor AI Chat',
-    message: 'Right panel shows analysis results. Ask follow-up questions about faults or equipment status.',
-    tip: 'Separate chat history from Chat Assistant - focused on monitoring.',
+    message: 'Right panel shows analysis results. Ask follow-up questions about faults or equipment status. Separate chat history from Chat Assistant.',
     highlight: '[data-tour="monitor-chat"]',
     position: 'top-left',
     actions: ['Back', 'Skip', 'Finish']
@@ -91,7 +89,7 @@ export default function MonitorOnboardingTour({ onComplete }) {
 
   return (
     <>
-      {/* Overlay backdrop */}
+      {/* Overlay backdrop - full screen dark layer */}
       <div
         style={{
           position: 'fixed',
@@ -99,32 +97,43 @@ export default function MonitorOnboardingTour({ onComplete }) {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.7)',
+          background: 'rgba(0, 0, 0, 0.75)',
           zIndex: 9997,
           backdropFilter: 'blur(2px)',
-          animation: 'fadeIn 0.3s ease'
+          animation: 'fadeIn 0.3s ease',
+          pointerEvents: isWelcomeStep ? 'auto' : 'none'
         }}
         onClick={isWelcomeStep ? undefined : handleSkip}
       />
 
-      {/* Highlight spotlight */}
+      {/* Highlight spotlight - bright glowing frame */}
       {highlightedElement && (
-        <div
-          style={{
-            position: 'fixed',
-            top: highlightedElement.getBoundingClientRect().top - 8,
-            left: highlightedElement.getBoundingClientRect().left - 8,
-            width: highlightedElement.getBoundingClientRect().width + 16,
-            height: highlightedElement.getBoundingClientRect().height + 16,
-            background: 'transparent',
-            border: '3px solid var(--accent-amber)',
-            borderRadius: 'var(--radius-md)',
-            zIndex: 9999,
-            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 0 4px rgba(232, 188, 93, 0.3), 0 0 40px rgba(232, 188, 93, 0.5)',
-            pointerEvents: 'none',
-            animation: 'pulse 2s infinite'
-          }}
-        />
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: highlightedElement.getBoundingClientRect().top - 8,
+              left: highlightedElement.getBoundingClientRect().left - 8,
+              width: highlightedElement.getBoundingClientRect().width + 16,
+              height: highlightedElement.getBoundingClientRect().height + 16,
+              background: 'transparent',
+              border: '4px solid #F5A623',
+              borderRadius: 'var(--radius-md)',
+              zIndex: 9998,
+              boxShadow: '0 0 0 8px rgba(245, 166, 35, 0.3), 0 0 40px rgba(245, 166, 35, 0.9), 0 0 80px rgba(245, 166, 35, 0.6)',
+              pointerEvents: 'none',
+              animation: 'tourPulse 2s infinite'
+            }}
+          />
+          {/* Boost z-index of highlighted element - must be above backdrop */}
+          <style>{`
+            ${step.highlight} {
+              position: relative !important;
+              z-index: 9999 !important;
+              box-shadow: 0 0 60px rgba(245, 166, 35, 0.4) !important;
+            }
+          `}</style>
+        </>
       )}
 
       {/* Tour card */}
@@ -143,9 +152,17 @@ export default function MonitorOnboardingTour({ onComplete }) {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.02); opacity: 0.8; }
+        @keyframes tourPulse {
+          0%, 100% { 
+            transform: scale(1); 
+            border-color: #F5A623;
+            box-shadow: 0 0 0 8px rgba(245, 166, 35, 0.3), 0 0 40px rgba(245, 166, 35, 0.9), 0 0 80px rgba(245, 166, 35, 0.6);
+          }
+          50% { 
+            transform: scale(1.03); 
+            border-color: #FFC107;
+            box-shadow: 0 0 0 8px rgba(245, 166, 35, 0.5), 0 0 60px rgba(245, 166, 35, 1), 0 0 100px rgba(245, 166, 35, 0.8);
+          }
         }
       `}</style>
     </>
@@ -169,18 +186,41 @@ function OnboardingCard({ step, currentStep, totalSteps, onNext, onBack, onSkip,
     }
 
     const rect = highlighted.getBoundingClientRect()
-    const cardWidth = 380
-    const cardHeight = 250
+    const cardWidth = 320
+    const cardHeight = 220 // Estimated modal height
     const padding = 20
+    const gap = 20 // Gap between highlighted element and modal
     
     let position = {}
 
     if (step.position === 'bottom-right') {
-      position.top = Math.min(rect.bottom + 20, window.innerHeight - cardHeight - padding)
+      position.top = rect.bottom + gap
       position.left = Math.max(padding, Math.min(rect.right - cardWidth, window.innerWidth - cardWidth - padding))
     } else if (step.position === 'top-left') {
-      position.bottom = Math.max(padding, window.innerHeight - rect.top + 20)
+      // Position above the element
+      position.top = rect.top - cardHeight - gap
       position.left = Math.max(padding, rect.left)
+      
+      // If modal would go above screen, position it below instead
+      if (position.top < padding) {
+        position.top = rect.bottom + gap
+      }
+    }
+
+    // CRITICAL: Ensure modal never goes off-screen bottom
+    if (position.top + cardHeight > window.innerHeight - padding) {
+      // Move modal up so it fits
+      position.top = window.innerHeight - cardHeight - padding
+      
+      // If still not enough space, position above the highlighted element
+      if (position.top < padding) {
+        position.top = Math.max(padding, rect.top - cardHeight - gap)
+      }
+    }
+
+    // Ensure modal never goes off-screen top
+    if (position.top < padding) {
+      position.top = padding
     }
 
     return position
@@ -191,27 +231,27 @@ function OnboardingCard({ step, currentStep, totalSteps, onNext, onBack, onSkip,
       style={{
         position: 'fixed',
         ...getPosition(),
-        width: Math.min(isWelcome ? 480 : 380, window.innerWidth - 40),
+        width: Math.min(isWelcome ? 420 : 320, window.innerWidth - 40),
         background: 'var(--bg-surface)',
         border: '2px solid var(--accent-amber)',
         borderRadius: 'var(--radius-lg)',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
         zIndex: 10000,
         animation: 'slideIn 0.4s ease',
-        maxHeight: 'calc(100vh - 40px)',
+        maxHeight: 'calc(100vh - 100px)',
         overflow: 'auto'
       }}
     >
       {/* Header */}
       <div style={{
-        padding: '20px 24px',
+        padding: '16px 20px',
         borderBottom: '1px solid var(--border)',
         background: 'linear-gradient(135deg, rgba(232, 188, 93, 0.1) 0%, rgba(232, 188, 93, 0.05) 100%)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <h3 style={{
             fontFamily: 'var(--font-sans)',
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: 600,
             color: 'var(--text-primary)',
             margin: 0
@@ -221,10 +261,10 @@ function OnboardingCard({ step, currentStep, totalSteps, onNext, onBack, onSkip,
           {!isWelcome && (
             <div style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: 11,
+              fontSize: 10,
               color: 'var(--accent-amber)',
               background: 'rgba(232, 188, 93, 0.15)',
-              padding: '4px 10px',
+              padding: '3px 8px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--accent-amber-dim)'
             }}>
@@ -235,37 +275,20 @@ function OnboardingCard({ step, currentStep, totalSteps, onNext, onBack, onSkip,
       </div>
 
       {/* Content */}
-      <div style={{ padding: '24px' }}>
+      <div style={{ padding: '16px 20px' }}>
         <p style={{
           fontFamily: 'var(--font-sans)',
-          fontSize: 14,
-          lineHeight: 1.6,
+          fontSize: 13,
+          lineHeight: 1.5,
           color: 'var(--text-secondary)',
-          margin: '0 0 16px 0'
+          margin: 0
         }}>
           {step.message}
         </p>
+      </div>
 
-        {step.tip && (
-          <div style={{
-            padding: '12px 14px',
-            background: 'rgba(59, 130, 246, 0.08)',
-            border: '1px solid rgba(59, 130, 246, 0.2)',
-            borderRadius: 'var(--radius-md)',
-            marginBottom: 16
-          }}>
-            <p style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: 13,
-              lineHeight: 1.5,
-              color: 'var(--text-primary)',
-              margin: 0
-            }}>
-              {step.tip}
-            </p>
-          </div>
-        )}
-
+      {/* Actions at bottom */}
+      <div style={{ padding: '0 20px 16px 20px' }}>
         {/* Action buttons */}
         <div style={{
           display: 'flex',

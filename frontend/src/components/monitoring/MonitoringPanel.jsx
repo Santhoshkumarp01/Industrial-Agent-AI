@@ -27,6 +27,7 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
   } = sensorHook
 
   const setActiveCitation = useAppStore((s) => s.setActiveCitation)
+  const activePanel = useAppStore((s) => s.activePanel)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [backendMachineLogs, setBackendMachineLogs] = useState({})
   const [streamingUpdates, setStreamingUpdates] = useState([]) // Agent progress updates
@@ -255,6 +256,7 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
             {/* Tour button - Live Monitor guide */}
             <button
               onClick={() => {
+                localStorage.setItem('activePanel', 'monitor')
                 localStorage.removeItem('industrial_agent_monitor_onboarding_complete')
                 window.location.reload()
               }}
@@ -264,22 +266,23 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
                 fontSize: 10,
                 padding: '5px 10px',
                 borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border)',
-                background: 'var(--bg-surface-2)',
-                color: 'var(--text-secondary)',
+                border: '1px solid var(--accent-amber)',
+                background: 'rgba(245, 166, 35, 0.1)',
+                color: 'var(--accent-amber)',
                 cursor: 'pointer',
                 letterSpacing: '0.05em',
-                transition: 'var(--transition)',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 0 15px rgba(245, 166, 35, 0.3), 0 0 30px rgba(245, 166, 35, 0.15)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-surface-3)'
-                e.currentTarget.style.borderColor = 'var(--accent-amber-dim)'
-                e.currentTarget.style.color = 'var(--accent-amber)'
+                e.currentTarget.style.background = 'rgba(245, 166, 35, 0.18)'
+                e.currentTarget.style.boxShadow = '0 0 25px rgba(245, 166, 35, 0.5), 0 0 50px rgba(245, 166, 35, 0.3)'
+                e.currentTarget.style.transform = 'translateY(-2px)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--bg-surface-2)'
-                e.currentTarget.style.borderColor = 'var(--border)'
-                e.currentTarget.style.color = 'var(--text-secondary)'
+                e.currentTarget.style.background = 'rgba(245, 166, 35, 0.1)'
+                e.currentTarget.style.boxShadow = '0 0 15px rgba(245, 166, 35, 0.3), 0 0 30px rgba(245, 166, 35, 0.15)'
+                e.currentTarget.style.transform = 'translateY(0)'
               }}
             >
               TOUR
@@ -369,8 +372,8 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
         />
       </div>
 
-      {/* Onboarding Tour */}
-      <MonitorOnboardingTour />
+      {/* Onboarding Tour - only for Monitor panel */}
+      {activePanel === 'monitor' && <MonitorOnboardingTour />}
     </div>
   )
 }
