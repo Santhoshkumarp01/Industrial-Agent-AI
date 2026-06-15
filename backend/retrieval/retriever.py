@@ -178,9 +178,12 @@ def retrieve(
     # CRITICAL: For list questions, parent sections are MANDATORY (not optional)
     query_lower = query.lower()
     is_list_question = bool(
-        re.search(r'\b(five|three|four|six|seven|eight|ten)\s+(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        # Match list questions regardless of specific count
+        re.search(r'\b(five|three|four|six|seven|eight|ten|all|any)\s+(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
         re.search(r'\bwhat are the\s+\d*\s*(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
-        re.search(r'\b(list|enumerate)\b', query_lower)
+        re.search(r'\b(list|enumerate)\b', query_lower) or
+        # NEW: Match questions asking for items without specific count
+        re.search(r'\bwhat.*\b(safety|maintenance|operational)\b.*(rules?|levels?|features?|steps?|procedures?|instructions?)\b', query_lower)
     )
     
     parent_fetch_succeeded = False

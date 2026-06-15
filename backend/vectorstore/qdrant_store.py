@@ -515,16 +515,47 @@ def query(
             values=sparse_result.values.tolist(),
         )
 
-    # Build optional equipment_tag filter
-    qdrant_filter = None
+    # Build optional equipment_tag filter and exclude structural pages
+    filter_conditions = []
+    
+    # Equipment tag filter (if specified)
     if equipment_tag:
+        filter_conditions.append(
+            FieldCondition(
+                key="equipment_tag",
+                match=MatchValue(value=equipment_tag),
+            )
+        )
+    
+    # Exclude structural/meta pages that cause retrieval noise
+    # These pages contain boilerplate text instead of actual content
+    must_not_conditions = []
+    structural_keywords = [
+        "index",
+        "índice", 
+        "table of contents",
+        "contents",
+        "copyright",
+        "about these instructions",
+        "about this manual",
+        "legal information",
+        "warranty"
+    ]
+    
+    for keyword in structural_keywords:
+        must_not_conditions.append(
+            FieldCondition(
+                key="section_heading",
+                match=MatchValue(value=keyword),
+            )
+        )
+    
+    # Build final filter
+    qdrant_filter = None
+    if filter_conditions or must_not_conditions:
         qdrant_filter = Filter(
-            must=[
-                FieldCondition(
-                    key="equipment_tag",
-                    match=MatchValue(value=equipment_tag),
-                )
-            ]
+            must=filter_conditions if filter_conditions else None,
+            must_not=must_not_conditions if must_not_conditions else None,
         )
 
     # Dynamic weight: boost sparse for exact-term queries (part numbers, fault codes)

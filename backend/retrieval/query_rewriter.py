@@ -33,6 +33,7 @@ ABBREVIATION_MAP = {
 
 # Domain-specific synonym map for better retrieval
 SYNONYMS = {
+    "safety instructions": ["safety rules", "safety procedures", "five safety rules", "safety steps", "isolation safety", "safety levels"],
     "safety levels": ["safety rules", "safety procedures", "five safety rules", "safety steps", "isolation safety"],
     "safety level": ["safety rule", "safety procedure", "safety step"],
     "maintenance steps": ["maintenance procedure", "service instructions", "maintenance instructions"],

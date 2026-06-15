@@ -39,11 +39,14 @@ HANDLING VAGUE OR INCOMPLETE QUESTIONS:
 8. If the context is completely unrelated to the question, ONLY THEN say: "This information could not be confirmed from the retrieved manual sections."
 
 CRITICAL LIST RULES (NEVER VIOLATE):
-8. If the user asks for a numbered list ("what are the X rules/steps/requirements"), return the COMPLETE list exactly as stated in the manual.
-9. NEVER truncate, shorten, or summarize lists.
-10. NEVER paraphrase list items. Use the exact wording from the context.
-11. NEVER add generic advice unless the manual explicitly includes it.
-12. Preserve the exact numbering, order, and formatting from the source.
+9. If the user asks for a numbered list (e.g., "what are the safety rules/steps/requirements"), return the COMPLETE list exactly as stated in the manual.
+10. **IGNORE THE SPECIFIC NUMBER** mentioned in the question (five, three, four, etc.). Return ALL items found in the manual section.
+11. If user asks "What are the five safety rules?" but manual has 4 rules, return all 4 rules and note: "The manual lists 4 safety rules:"
+12. If user asks "What are the three steps?" but manual has 6 steps, return all 6 steps and note: "The manual provides 6 steps:"
+13. NEVER truncate, shorten, or summarize lists.
+14. NEVER paraphrase list items. Use the exact wording from the context.
+15. NEVER add generic advice unless the manual explicitly includes it.
+16. Preserve the exact numbering, order, and formatting from the source.
 
 CRITICAL SECTION LOCK RULES (NEVER VIOLATE):
 13. If you see "CRITICAL SECTION LOCK" in the context, use ONLY the specified section.
@@ -84,29 +87,24 @@ ANSWER FORMAT:
 EXAMPLES OF CORRECT OUTPUT:
 
 User: What are the five safety rules listed in the manual?
-CORRECT: According to [C1], the five safety rules are:
+CORRECT: According to [C1], the manual lists 5 safety rules:
 1. Isolate.
 2. Protect against reconnection.
 3. Verify that the equipment is not live.
 4. Ground and short circuit.
 5. Cover or enclose adjacent components that are still live.
 
-WRONG: Let me analyze the context. Looking at [C1], I can see it discusses safety rules. The user is asking for five rules. Let me check if all five are present... [DO NOT DO THIS]
+User: What are the three safety steps?
+CORRECT (if manual has 4 steps): According to [C1], the manual provides 4 safety steps:
+1. Switch off the power supply.
+2. Secure against reconnection.
+3. Verify voltage-free state.
+4. Apply grounding equipment.
 
-User: What tightening torque is required for M12 nuts?
-CORRECT: The tightening torque for M12 contact nuts is 11 Nm [C1].
+Note: The user asked for three steps, but the manual contains four. Always return the complete list from the manual.
 
-WRONG: Let me search the context for torque values. I see [C1] mentions M12... [DO NOT DO THIS]
-
-User: What does the manual say about?
-CORRECT: The retrieved manual sections cover the following topics [C1][C2]:
-- Safety warning notice system with DANGER, WARNING, CAUTION, and NOTICE levels
-- General safety guidelines for preventing accidents
-- Proper handling and installation procedures
-- Technical specifications for the motor
-
-User: What are the safety features says in the manual?
-CORRECT: The manual describes the following safety-related elements [C1]:
+User: What safety instructions are mentioned in the manual?
+CORRECT: According to [C1], the manual describes the following safety-related elements:
 - Safety symbols and instructions on the machine and its packaging
 - Covers and protective insulation for noise reduction
 - Hearing protection measures
@@ -114,8 +112,6 @@ CORRECT: The manual describes the following safety-related elements [C1]:
 - Warning notice system with DANGER, WARNING, CAUTION, and NOTICE levels
 
 The manual also lists items to observe to prevent accidents, including awareness of live parts, rotating parts, hot surfaces, hazardous substances, flammable substances, and noise emissions [C1].
-
-WRONG: User asks for safety features. Let me analyze [C1] through [C6]. The term "safety features" is not explicitly defined. Wait, [C1] mentions... Decision: I should list... [DO NOT DO THIS]
 
 User: What is the maximum operating speed for IM B5 flange-mounted motors?
 CORRECT: This information could not be confirmed from the retrieved manual sections."""
@@ -244,9 +240,12 @@ def _build_context_message(query: str, chunks: List[RetrievedChunk]) -> Tuple[st
     
     query_lower = query.lower()
     is_list_question = bool(
-        re.search(r'\b(five|three|four|six|seven|eight|ten|two|one)\b.*\b(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        # Match list questions regardless of specific count
+        re.search(r'\b(five|three|four|six|seven|eight|ten|two|one|all|any)\b.*\b(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
         re.search(r'\bwhat are (the\s+)?\d*\s*(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
-        re.search(r'\b(list|enumerate)\b', query_lower)
+        re.search(r'\b(list|enumerate)\b', query_lower) or
+        # NEW: Match questions asking for safety/maintenance items without specific count
+        re.search(r'\bwhat.*\b(safety|maintenance|operational)\b.*(rules?|levels?|features?|steps?|procedures?|instructions?|requirements?)\b', query_lower)
     )
     
     logger.info(f"🔍 List question detection: is_list_question={is_list_question} for query: '{query[:80]}'")
