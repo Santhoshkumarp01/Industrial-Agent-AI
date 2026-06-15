@@ -185,6 +185,37 @@ def _select_best_section_for_list(query: str, chunks: List[RetrievedChunk]) -> R
     return best_chunk
 
 
+def _sanitize_text(text: str) -> str:
+    """
+    Sanitize text to prevent Gemini API crashes from malformed characters.
+    
+    - Remove control characters and non-printable characters
+    - Replace problematic unicode with safe alternatives
+    - Truncate extremely long chunks
+    """
+    if not text:
+        return ""
+    
+    # Remove control characters except newlines and tabs
+    sanitized = ''.join(char for char in text if char.isprintable() or char in '\n\t')
+    
+    # Remove null bytes and replacement characters
+    sanitized = sanitized.replace('\x00', '')
+    sanitized = sanitized.replace('\ufffd', '')
+    
+    # Normalize excessive whitespace
+    import re
+    sanitized = re.sub(r'\n{3,}', '\n\n', sanitized)  # Max 2 consecutive newlines
+    sanitized = re.sub(r' {2,}', ' ', sanitized)  # Max 1 space
+    
+    # Truncate to prevent massive chunks that break API
+    MAX_CHUNK_CHARS = 3500
+    if len(sanitized) > MAX_CHUNK_CHARS:
+        sanitized = sanitized[:MAX_CHUNK_CHARS] + "\n[... content truncated for length ...]"
+    
+    return sanitized.strip()
+
+
 def _build_context_message(query: str, chunks: List[RetrievedChunk]) -> Tuple[str, List[RetrievedChunk]]:
     """
     Format retrieved chunks as context for the LLM.
@@ -231,9 +262,10 @@ def _build_context_message(query: str, chunks: List[RetrievedChunk]) -> Tuple[st
             
             context_parts = []
             for chunk in locked_chunks:
+                sanitized_text = _sanitize_text(chunk.text)
                 context_parts.append(
                     f"{chunk.citation_ref} (Page {chunk.page_number}, {chunk.doc_name}, "
-                    f"Section: {chunk.section_heading})\n{chunk.text}"
+                    f"Section: {chunk.section_heading})\n{sanitized_text}"
                 )
             
             context_block = "\n\n".join(context_parts)
@@ -260,9 +292,10 @@ This is a LIST QUESTION. You have been given EXACTLY ONE section that contains t
     
     context_parts = []
     for chunk in relabeled_chunks:
+        sanitized_text = _sanitize_text(chunk.text)
         context_parts.append(
             f"{chunk.citation_ref} (Page {chunk.page_number}, {chunk.doc_name}, "
-            f"Section: {chunk.section_heading})\n{chunk.text}"
+            f"Section: {chunk.section_heading})\n{sanitized_text}"
         )
 
     context_block = "\n\n".join(context_parts)

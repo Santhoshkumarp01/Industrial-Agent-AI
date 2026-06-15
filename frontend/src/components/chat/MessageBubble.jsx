@@ -443,9 +443,101 @@ function MachineAnalysisContent({ data }) {
               <span style={{ marginLeft: 8, color: 'var(--status-ok)', fontSize: 10 }}>● GROUNDED IN MANUAL</span>
             )}
           </div>
-          <p style={{ color: 'var(--text-primary)', fontSize: 13, lineHeight: 1.75, whiteSpace: 'pre-wrap', margin: 0 }}>
-            {answerText}
-          </p>
+          
+          {/* Parse and format the structured response */}
+          {(() => {
+            const sections = []
+            let currentText = answerText
+            
+            // Extract sections with bold headers and lists
+            const sectionRegex = /\*\*([^*]+)\*\*\s*([^*]*?)(?=\*\*|$)/g
+            let match
+            
+            while ((match = sectionRegex.exec(answerText)) !== null) {
+              const [, header, content] = match
+              sections.push({ header: header.trim(), content: content.trim() })
+            }
+            
+            if (sections.length === 0) {
+              // No structured format, display as-is
+              return (
+                <p style={{ color: 'var(--text-primary)', fontSize: 13, lineHeight: 1.75, whiteSpace: 'pre-wrap', margin: 0 }}>
+                  {answerText}
+                </p>
+              )
+            }
+            
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {sections.map((section, idx) => {
+                  const { header, content } = section
+                  
+                  // Parse array lists like ['item1', 'item2']
+                  const listMatch = content.match(/\[(.*?)\]/)
+                  
+                  if (listMatch && content.includes("'")) {
+                    try {
+                      const items = listMatch[1]
+                        .split(/,\s*/)
+                        .map(item => item.replace(/^['"]|['"]$/g, '').trim())
+                        .filter(item => item.length > 0)
+                      
+                      return (
+                        <div key={idx}>
+                          <div style={{ 
+                            fontWeight: 600, 
+                            color: 'var(--accent-amber)', 
+                            marginBottom: 6,
+                            fontSize: 13
+                          }}>
+                            {header}:
+                          </div>
+                          <ol style={{ 
+                            margin: 0, 
+                            paddingLeft: 24, 
+                            color: 'var(--text-primary)',
+                            fontSize: 13,
+                            lineHeight: 1.7
+                          }}>
+                            {items.slice(0, 6).map((item, i) => (
+                              <li key={i} style={{ marginBottom: 4 }}>{item}</li>
+                            ))}
+                          </ol>
+                          {items.length > 6 && (
+                            <div style={{ 
+                              fontFamily: 'var(--font-mono)', 
+                              fontSize: 11, 
+                              color: 'var(--text-muted)',
+                              marginTop: 4,
+                              paddingLeft: 24
+                            }}>
+                              + {items.length - 6} more items
+                            </div>
+                          )}
+                        </div>
+                      )
+                    } catch (e) {
+                      // Parsing failed, show as text
+                      return (
+                        <div key={idx}>
+                          <strong style={{ color: 'var(--accent-amber)' }}>{header}:</strong>{' '}
+                          <span style={{ color: 'var(--text-primary)' }}>{content}</span>
+                        </div>
+                      )
+                    }
+                  }
+                  
+                  // Regular text section
+                  return (
+                    <div key={idx} style={{ color: 'var(--text-primary)', fontSize: 13, lineHeight: 1.7 }}>
+                      <strong style={{ color: 'var(--accent-amber)' }}>{header}:</strong>{' '}
+                      {content}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
         </div>
       )}
 
