@@ -53,8 +53,14 @@ def generate_maintenance_plan(
 
     # Search RAG for relevant SOPs
     try:
-        sop_results = retrieve(query, equipment_tag=equipment_id, top_k=6)
-        sop_text = "\n\n".join([chunk.text for chunk in sop_results])
+        sop_results, _ = retrieve(query, equipment_tag=equipment_id, top_k=6)
+        
+        # Handle empty results gracefully
+        if not sop_results or len(sop_results) == 0:
+            logger.warning(f"SOP retrieval returned empty results for equipment {equipment_id}")
+            sop_text = ""
+        else:
+            sop_text = "\n\n".join([chunk.text for chunk in sop_results])
     except Exception as e:
         logger.error(f"SOP retrieval failed: {e}")
         sop_text = ""

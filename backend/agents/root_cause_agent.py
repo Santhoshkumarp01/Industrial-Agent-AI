@@ -60,9 +60,16 @@ def analyze_root_cause(
 
     # Search RAG system
     try:
-        rag_results = retrieve(query, equipment_tag=equipment_id, top_k=8)
-        evidence_citations = [chunk.citation_ref for chunk in rag_results]
-        evidence_text = "\n\n".join([chunk.text for chunk in rag_results])
+        rag_results, _ = retrieve(query, equipment_tag=equipment_id, top_k=8)
+        
+        # Handle empty results gracefully
+        if not rag_results or len(rag_results) == 0:
+            logger.warning(f"RAG retrieval returned empty results for equipment {equipment_id}")
+            evidence_citations = []
+            evidence_text = "No knowledge base results available."
+        else:
+            evidence_citations = [chunk.citation_ref for chunk in rag_results]
+            evidence_text = "\n\n".join([chunk.text for chunk in rag_results])
     except Exception as e:
         logger.error(f"RAG retrieval failed: {e}")
         evidence_citations = []

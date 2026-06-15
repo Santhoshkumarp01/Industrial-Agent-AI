@@ -280,8 +280,11 @@ def _generate_gemini(system_prompt: str, user_prompt: str, max_tokens: int) -> s
             "max_output_tokens": max_tokens,
         }
         
-        # Retry logic for transient API failures
-        max_retries = 2
+        # Enhanced retry logic for rate limits and transient failures
+        # Critical for demo/judging when multiple questions asked rapidly
+        max_retries = 3  # Increased from 2 to 3
+        base_delay = 2   # Increased from 1s to 2s
+        
         for attempt in range(max_retries):
             try:
                 response = model.generate_content(
@@ -290,10 +293,24 @@ def _generate_gemini(system_prompt: str, user_prompt: str, max_tokens: int) -> s
                 )
                 return response.text.strip()
             except Exception as e:
+                error_str = str(e).lower()
+                
+                # Check if it's a rate limit error
+                is_rate_limit = any(phrase in error_str for phrase in [
+                    'rate limit', '429', 'quota', 'resource exhausted'
+                ])
+                
                 if attempt < max_retries - 1:
-                    logger.warning(f"API attempt {attempt + 1} failed, retrying after 1s: {e}")
-                    time.sleep(1)
+                    # Exponential backoff for rate limits
+                    delay = base_delay * (2 ** attempt) if is_rate_limit else base_delay
+                    logger.warning(
+                        f"API attempt {attempt + 1}/{max_retries} failed " +
+                        f"({'RATE LIMIT' if is_rate_limit else 'ERROR'}), " +
+                        f"retrying after {delay}s: {e}"
+                    )
+                    time.sleep(delay)
                 else:
+                    logger.error(f"All {max_retries} API attempts failed")
                     raise
                     
     except Exception as e:

@@ -332,7 +332,7 @@ function AgentAnalysisContent({ analysis, logbookEntryId, onFeedbackSubmit }) {
   )
 }
 
-// ── Machine Analysis Content ──────────────────────────────────────────────────
+// ── Machine Analysis Content (No Feedback Form) ──────────────────────────────
 function MachineAnalysisContent({ data }) {
   const setActivePanel = useAppStore((s) => s.setActivePanel)
   const setActiveCitation = useAppStore((s) => s.setActiveCitation)
@@ -564,19 +564,19 @@ function MachineAnalysisContent({ data }) {
         </div>
       )}
 
-      {/* Footer actions */}
+      {/* Footer actions - No feedback form in Monitor chat */}
       <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button
           onClick={() => setActivePanel('logbook')}
           style={{ fontFamily: 'var(--font-mono)', fontSize: 11, padding: '5px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-active)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', letterSpacing: '0.05em' }}
         >
-          📋 LOGBOOK
+          📋 VIEW IN LOGBOOK
         </button>
         <button
           onClick={() => setActivePanel('reports')}
           style={{ fontFamily: 'var(--font-mono)', fontSize: 11, padding: '5px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-active)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', letterSpacing: '0.05em' }}
         >
-          📊 REPORTS
+          📊 VIEW REPORTS
         </button>
       </div>
     </div>

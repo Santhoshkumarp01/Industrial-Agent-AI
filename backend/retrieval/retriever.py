@@ -178,8 +178,8 @@ def retrieve(
     # CRITICAL: For list questions, parent sections are MANDATORY (not optional)
     query_lower = query.lower()
     is_list_question = bool(
-        re.search(r'\b(five|three|four|six|seven|eight|ten)\s+(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
-        re.search(r'\bwhat are the\s+\d*\s*(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        re.search(r'\b(five|three|four|six|seven|eight|ten)\s+(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        re.search(r'\bwhat are the\s+\d*\s*(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
         re.search(r'\b(list|enumerate)\b', query_lower)
     )
     

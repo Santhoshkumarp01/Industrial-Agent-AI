@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 ANSWERER_VERSION = "PHASE3_CITATION_GROUNDING_v6"
 logger.info(f"🔧 ANSWERER MODULE LOADED: {ANSWERER_VERSION}")
 
-_SYSTEM_PROMPT = """You are a strict maintenance QA assistant for industrial motor manuals.
+_SYSTEM_PROMPT = """You are a helpful maintenance QA assistant for industrial motor manuals.
 
 TASK:
-Answer the user's question ONLY from the provided context documents below.
+Answer the user's question using the provided context documents below.
 Each context document is labelled [C1], [C2], etc. with its page and section.
 
 OUTPUT RULES (CRITICAL - NEVER VIOLATE):
@@ -28,12 +28,15 @@ OUTPUT RULES (CRITICAL - NEVER VIOLATE):
 
 STRICT GROUNDING RULES (HIGHEST PRIORITY — NEVER VIOLATE):
 1. ONLY use information from the [Cn] context documents provided. No outside knowledge.
-2. If the answer is not in the context, say: "This information could not be confirmed from the retrieved manual sections."
-3. NEVER invent, guess, or assume values (temperatures, torques, speeds, weights, part numbers).
-4. NEVER write a section number (e.g. "Section 3.3.2") unless that exact section number appears in the [Cn] context provided to you. If the context shows [C1] is "Section 7.1.3", do NOT say "Section 3.3.2".
-5. If context is weak or unrelated to the question, say: "I could not confirm this from the retrieved manual sections."
-6. For safety questions, use exact manual wording. Do not paraphrase safety instructions.
-7. Never answer with assumptions or general engineering knowledge.
+2. NEVER invent, guess, or assume values (temperatures, torques, speeds, weights, part numbers).
+3. NEVER write a section number (e.g. "Section 3.3.2") unless that exact section number appears in the [Cn] context provided to you. If the context shows [C1] is "Section 7.1.3", do NOT say "Section 3.3.2".
+4. For safety questions, use exact manual wording. Do not paraphrase safety instructions.
+5. Never answer with assumptions or general engineering knowledge.
+
+HANDLING VAGUE OR INCOMPLETE QUESTIONS:
+6. If the question is vague or incomplete (e.g., "What does the manual say about"), provide a helpful summary of the key topics found in the retrieved context.
+7. Structure the response as: "The manual sections retrieved cover the following topics: [summarize main topics from context]"
+8. If the context is completely unrelated to the question, ONLY THEN say: "This information could not be confirmed from the retrieved manual sections."
 
 CRITICAL LIST RULES (NEVER VIOLATE):
 8. If the user asks for a numbered list ("what are the X rules/steps/requirements"), return the COMPLETE list exactly as stated in the manual.
@@ -95,6 +98,13 @@ CORRECT: The tightening torque for M12 contact nuts is 11 Nm [C1].
 
 WRONG: Let me search the context for torque values. I see [C1] mentions M12... [DO NOT DO THIS]
 
+User: What does the manual say about?
+CORRECT: The retrieved manual sections cover the following topics [C1][C2]:
+- Safety warning notice system with DANGER, WARNING, CAUTION, and NOTICE levels
+- General safety guidelines for preventing accidents
+- Proper handling and installation procedures
+- Technical specifications for the motor
+
 User: What are the safety features says in the manual?
 CORRECT: The manual describes the following safety-related elements [C1]:
 - Safety symbols and instructions on the machine and its packaging
@@ -135,8 +145,8 @@ def _select_best_section_for_list(query: str, chunks: List[RetrievedChunk]) -> R
     if number_match:
         key_terms.append(number_match.group(1))
     
-    # Extract list type (rules, steps, etc.)
-    type_match = re.search(r'\b(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower)
+    # Extract list type (rules, steps, levels, features, etc.)
+    type_match = re.search(r'\b(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower)
     if type_match:
         key_terms.append(type_match.group(1).rstrip('s'))  # Normalize to singular
     
@@ -234,8 +244,8 @@ def _build_context_message(query: str, chunks: List[RetrievedChunk]) -> Tuple[st
     
     query_lower = query.lower()
     is_list_question = bool(
-        re.search(r'\b(five|three|four|six|seven|eight|ten|two|one)\b.*\b(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
-        re.search(r'\bwhat are (the\s+)?\d*\s*(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        re.search(r'\b(five|three|four|six|seven|eight|ten|two|one)\b.*\b(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+        re.search(r'\bwhat are (the\s+)?\d*\s*(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
         re.search(r'\b(list|enumerate)\b', query_lower)
     )
     
@@ -388,6 +398,32 @@ def generate_answer(
             max_tokens=800
         )
         
+        # SAFETY CHECK: If model refuses with generic message but we have context, provide summary
+        refusal_phrases = [
+            "could not be confirmed",
+            "not available in the uploaded documents",
+            "I could not confirm this"
+        ]
+        
+        if any(phrase in answer_text.lower() for phrase in refusal_phrases):
+            # Check if we actually have valid context
+            if chunks_in_prompt and len(chunks_in_prompt) > 0:
+                total_context_chars = sum(len(c.text) for c in chunks_in_prompt)
+                if total_context_chars > 200:  # We have substantial context
+                    logger.warning(f"Model refused to answer despite having {total_context_chars} chars of context. Generating summary...")
+                    
+                    # Generate a helpful summary instead
+                    summary_parts = []
+                    for chunk in chunks_in_prompt[:3]:  # Top 3 chunks
+                        summary_parts.append(f"- {chunk.section_heading} (Page {chunk.page_number}) {chunk.citation_ref}")
+                    
+                    answer_text = (
+                        f"The retrieved manual sections cover the following topics:\n" +
+                        "\n".join(summary_parts) +
+                        f"\n\nPlease ask a more specific question about any of these topics for detailed information."
+                    )
+                    logger.info("Generated fallback summary response")
+        
         # Prepend confidence message to answer (only for LOW/MEDIUM)
         if metadata["confidence_message"] and confidence_level != "HIGH":
             answer_text = f"{metadata['confidence_message']}\n\n{answer_text}"
@@ -417,8 +453,8 @@ def generate_answer(
         # POST-GENERATION VALIDATION for list questions
         query_lower = query.lower()
         is_list_question = bool(
-            re.search(r'\b(five|three|four|six|seven|eight|ten)\s+(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
-            re.search(r'\bwhat are the\s+\d*\s*(rules?|steps?|requirements?|procedures?|instructions?)\b', query_lower)
+            re.search(r'\b(five|three|four|six|seven|eight|ten)\s+(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower) or
+            re.search(r'\bwhat are the\s+\d*\s*(rules?|levels?|features?|steps?|requirements?|procedures?|instructions?)\b', query_lower)
         )
         
         if is_list_question:
