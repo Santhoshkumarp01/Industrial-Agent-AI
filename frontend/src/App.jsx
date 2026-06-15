@@ -1,7 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import Layout from './components/layout/Layout'
-import QuickStartGuide from './components/layout/QuickStartGuide'
-import RoleLanding from './components/auth/RoleLanding'
 import ChatPanel from './components/chat/ChatPanel'
 import MonitoringPanel from './components/monitoring/MonitoringPanel'
 import ReportsPanel from './components/monitoring/ReportsPanel'
@@ -15,15 +13,24 @@ export default function App() {
   const userRole = useAppStore((s) => s.userRole)
   const setUserRole = useAppStore((s) => s.setUserRole)
   const loadUserRole = useAppStore((s) => s.loadUserRole)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Load role from localStorage on mount
   useEffect(() => {
     loadUserRole()
+    setIsLoading(false)
   }, [loadUserRole])
 
-  // Show role landing if no role selected
-  if (!userRole) {
-    return <RoleLanding onSelectRole={setUserRole} />
+  // Redirect to new landing page if no role selected (only once after loading)
+  useEffect(() => {
+    if (!isLoading && !userRole) {
+      window.location.href = '/landing.html'
+    }
+  }, [userRole, isLoading])
+
+  // Show loading or nothing while checking/redirecting
+  if (isLoading || !userRole) {
+    return null
   }
 
   return <MainApp />
@@ -48,7 +55,6 @@ function MainApp() {
 
   return (
     <>
-      <QuickStartGuide />
       <Layout documents={documentsHook.documents}>
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden', height: '100%' }}>
 

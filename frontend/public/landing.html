@@ -1,0 +1,2512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Agent AI - Intelligent Maintenance. Zero Downtime.</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: #0D0F12;
+            color: #E8EAF0;
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 32px;
+        }
+
+        /* Multi-layer parallax dot grid with depth */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        /* Layer 1 - Small dots (furthest) */
+        body::before {
+            background-image: radial-gradient(circle, rgba(245,166,35,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+            animation: gridMove 30s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+
+        /* Scanline overlay - industrial CRT feel */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(245, 166, 35, 0.02) 0px,
+                transparent 1px,
+                transparent 2px
+            );
+            z-index: 9998;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(2px); }
+        }
+
+        /* Soft color blobs */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+            animation: blobFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes blobFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-50px, 50px) scale(0.9); }
+        }
+
+        .blob-amber {
+            width: 600px;
+            height: 600px;
+            background: rgba(245, 166, 35, 0.08);
+            top: -200px;
+            left: -200px;
+        }
+
+        .blob-blue {
+            width: 500px;
+            height: 500px;
+            background: rgba(79, 195, 247, 0.06);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -10s;
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(245, 166, 35, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 15s linear infinite;
+        }
+
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s; }
+        .particle:nth-child(2) { left: 20%; animation-delay: 2s; animation-duration: 14s; }
+        .particle:nth-child(3) { left: 30%; animation-delay: 4s; animation-duration: 16s; }
+        .particle:nth-child(4) { left: 40%; animation-delay: 6s; animation-duration: 13s; }
+        .particle:nth-child(5) { left: 50%; animation-delay: 8s; animation-duration: 15s; }
+        .particle:nth-child(6) { left: 60%; animation-delay: 10s; animation-duration: 17s; }
+        .particle:nth-child(7) { left: 70%; animation-delay: 12s; animation-duration: 14s; }
+        .particle:nth-child(8) { left: 80%; animation-delay: 14s; animation-duration: 16s; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 16s; animation-duration: 13s; }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 0 80px;
+        }
+
+        /* Announcement pill */
+        .announcement {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.5px;
+            margin-bottom: 32px;
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 1;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Hero title with typewriter effect */
+        h1 {
+            font-size: 64px;
+            font-weight: 600;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(to bottom, #ffffff 60%, rgba(255,255,255,0.6));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.6s ease 0.2s forwards;
+            opacity: 1;
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        /* Glitch effect on hover */
+        h1:hover {
+            animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); text-shadow: 2px 0 #F5A623, -2px 0 #4FC3F7; }
+            40% { transform: translate(-2px, -2px); text-shadow: -2px 0 #F5A623, 2px 0 #4FC3F7; }
+            60% { transform: translate(2px, 2px); text-shadow: 2px 2px #F5A623, -2px -2px #4FC3F7; }
+            80% { transform: translate(2px, -2px); text-shadow: -2px 2px #F5A623, 2px -2px #4FC3F7; }
+        }
+
+        /* Blinking cursor after typewriter */
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #F5A623;
+            margin-left: 4px;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Subtext */
+        .subtext {
+            font-size: 20px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 720px;
+            margin: 0 auto 40px;
+            animation: fadeInUp 0.6s ease 0.4s forwards;
+            opacity: 0;
+        }
+
+        /* CTAs */
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 48px;
+            animation: fadeInUp 0.6s ease 0.6s forwards;
+            opacity: 0;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #F5A623 0%, #C47D10 100%);
+            color: white;
+            border: none;
+            box-shadow: 
+                0 4px 16px rgba(245, 166, 35, 0.3),
+                0 0 40px rgba(245, 166, 35, 0.2),
+                inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #C47D10 0%, #F5A623 100%);
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 24px rgba(245, 166, 35, 0.4),
+                0 0 60px rgba(245, 166, 35, 0.3),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-ghost:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Trust stats with scramble effect */
+        .trust-stats {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            animation: fadeInUp 0.6s ease 0.8s forwards;
+            opacity: 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .trust-stats span {
+            color: #F5A623;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .scramble {
+            display: inline-block;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Floating animations */
+        @keyframes float1 {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-18px); }
+        }
+
+        @keyframes float4 {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-22px); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Role Cards Section */
+        .roles-section {
+            padding: 80px 0 120px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 48px;
+        }
+
+        /* Live sensor data ticker */
+        .sensor-ticker {
+            background: rgba(10, 10, 15, 0.9);
+            border-top: 1px solid rgba(245, 166, 35, 0.2);
+            border-bottom: 1px solid rgba(245, 166, 35, 0.2);
+            padding: 12px 0;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 60px;
+        }
+
+        .ticker-content {
+            display: flex;
+            gap: 48px;
+            animation: tickerScroll 30s linear infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .ticker-item {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ticker-label {
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .ticker-value {
+            color: #F5A623;
+            font-weight: 600;
+        }
+
+        .ticker-status-ok {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* System status bar at bottom */
+        .system-status {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 32px;
+            background: rgba(10, 10, 15, 0.95);
+            border-top: 1px solid rgba(245, 166, 35, 0.3);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 999;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #10b981;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-center {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .status-right {
+            display: flex;
+            gap: 16px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .status-metric {
+            display: flex;
+            gap: 4px;
+        }
+
+        .status-metric-value {
+            color: #F5A623;
+        }
+
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .role-card {
+            background: rgba(26, 31, 46, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 32px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            animation: fadeInUp 0.6s ease forwards, powerOn 0.08s ease forwards;
+            opacity: 0;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        /* Power-on flash animation */
+        @keyframes powerOn {
+            0% { box-shadow: inset 0 0 0 2px rgba(245, 166, 35, 0); }
+            50% { box-shadow: inset 0 0 0 2px rgba(245, 166, 35, 1); }
+            100% { box-shadow: inset 0 0 0 2px rgba(245, 166, 35, 0); }
+        }
+
+        /* Rotating conic gradient border - FIXED VERSION */
+        @keyframes rotateGradient {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .role-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 24px;
+            padding: 2px;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg 340deg,
+                rgba(245, 166, 35, 0.8) 350deg 360deg
+            );
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            animation: rotateGradient 3s linear infinite paused;
+        }
+
+        .role-card:hover::before {
+            opacity: 1;
+            animation-play-state: running;
+        }
+
+        /* Holographic shimmer on hover */
+        .role-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                105deg,
+                transparent 40%,
+                rgba(255, 255, 255, 0.08) 50%,
+                transparent 60%
+            );
+            transition: left 0.6s ease;
+            pointer-events: none;
+        }
+
+        .role-card:hover::after {
+            left: 100%;
+        }
+
+        .role-card:nth-child(1) {
+            animation-delay: 0.1s;
+            animation-name: fadeInUp, float1, powerOn;
+            animation-duration: 0.6s, 3s, 0.08s;
+            animation-timing-function: ease, ease-in-out, ease;
+            animation-fill-mode: forwards, none, forwards;
+            animation-iteration-count: 1, infinite, 1;
+            animation-direction: normal, alternate, normal;
+        }
+
+        .role-card:nth-child(2) {
+            animation-delay: 0.25s;
+            animation-name: fadeInUp, float2, powerOn;
+            animation-duration: 0.6s, 4s, 0.08s;
+            animation-timing-function: ease, ease-in-out, ease;
+            animation-fill-mode: forwards, none, forwards;
+            animation-iteration-count: 1, infinite, 1;
+            animation-direction: normal, alternate, normal;
+        }
+
+        .role-card:nth-child(3) {
+            animation-delay: 0.4s;
+            animation-name: fadeInUp, float3, powerOn;
+            animation-duration: 0.6s, 3.5s, 0.08s;
+            animation-timing-function: ease, ease-in-out, ease;
+            animation-fill-mode: forwards, none, forwards;
+            animation-iteration-count: 1, infinite, 1;
+            animation-direction: normal, alternate, normal;
+        }
+
+        .role-card:nth-child(4) {
+            animation-delay: 0.55s;
+            animation-name: fadeInUp, float4, powerOn;
+            animation-duration: 0.6s, 4.5s, 0.08s;
+            animation-timing-function: ease, ease-in-out, ease;
+            animation-fill-mode: forwards, none, forwards;
+            animation-iteration-count: 1, infinite, 1;
+            animation-direction: normal, alternate, normal;
+        }
+
+        /* Per-card cursor glow with matching colors */
+        .cursor-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .role-card:hover .cursor-glow {
+            opacity: 1;
+        }
+
+        .cursor-glow.teal-glow {
+            background: radial-gradient(circle, rgba(245, 166, 35, 0.4) 0%, transparent 70%);
+        }
+
+        .cursor-glow.blue-glow {
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%);
+        }
+
+        .cursor-glow.amber-glow {
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%);
+        }
+
+        .cursor-glow.purple-glow {
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
+        }
+
+        /* Access level progress bar */
+        .access-level-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            width: 100%;
+            border-radius: 0 0 24px 24px;
+            overflow: hidden;
+        }
+
+        .access-level-fill {
+            height: 100%;
+            width: 0;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1) 0.8s;
+        }
+
+        .role-card:nth-child(1) .access-level-fill { 
+            background: linear-gradient(90deg, #F5A623, #FFC107);
+            width: 100%;
+        }
+        .role-card:nth-child(2) .access-level-fill { 
+            background: linear-gradient(90deg, #3B82F6, #60A5FA);
+            width: 60%;
+        }
+        .role-card:nth-child(3) .access-level-fill { 
+            background: linear-gradient(90deg, #F59E0B, #FBBF24);
+            width: 30%;
+        }
+        .role-card:nth-child(4) .access-level-fill { 
+            background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+            width: 100%;
+        }
+
+        .role-card.primary {
+            grid-column: span 1;
+            transform: scale(1.05);
+        }
+
+        .role-card:hover {
+            background: rgba(26, 31, 46, 0.8);
+            border-image: linear-gradient(135deg, rgba(245, 166, 35, 0.6) 0%, rgba(79, 195, 247, 0.3) 100%) 1;
+            border-image-slice: 1;
+            box-shadow: 
+                0 0 0 1px rgba(245, 166, 35, 0.3),
+                0 12px 48px rgba(0, 0, 0, 0.4),
+                0 0 80px rgba(245, 166, 35, 0.15),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            transform: translateY(-6px) scale(1.02);
+        }
+
+        .role-card:hover .role-cta-text {
+            gap: 10px;
+        }
+
+        .role-card:active {
+            transform: translateY(-4px) scale(0.98);
+            transition: all 0.1s ease;
+        }
+
+        .role-card.primary:hover {
+            transform: translateY(-4px) scale(1.07);
+        }
+
+        .role-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .role-icon.teal {
+            background: rgba(245, 166, 35, 0.15);
+            color: #F5A623;
+        }
+
+        .role-icon.blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3B82F6;
+        }
+
+        .role-icon.amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: #F59E0B;
+        }
+
+        .role-icon.purple {
+            background: rgba(139, 92, 246, 0.15);
+            color: #8B5CF6;
+        }
+
+        .role-badge {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .badge-full {
+            background: rgba(245, 166, 35, 0.15);
+            color: #F5A623;
+            border: 1px solid rgba(245, 166, 35, 0.3);
+        }
+
+        .badge-view {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3B82F6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .badge-limited {
+            background: rgba(245, 158, 11, 0.15);
+            color: #F59E0B;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-demo {
+            background: rgba(139, 92, 246, 0.15);
+            color: #8B5CF6;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .role-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        .role-desc {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .role-features {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+
+        .role-features li {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .role-features li::before {
+            content: '✓';
+            color: #F5A623;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .role-cta-text {
+            color: #F5A623;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.3s ease;
+            pointer-events: none;
+        }
+
+        /* Pipeline Section - Terminal Style */
+        .pipeline-section {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .pipeline-title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 64px;
+        }
+
+        .terminal-window {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(10, 10, 15, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #FF5F56; }
+        .terminal-dot.yellow { background: #FFBD2E; }
+        .terminal-dot.green { background: #27C93F; }
+
+        .terminal-title {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: auto;
+            font-family: 'Courier New', monospace;
+        }
+
+        .terminal-body {
+            padding: 24px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #4FC3F7;
+            min-height: 200px;
+        }
+
+        .terminal-line {
+            display: block;
+            opacity: 0;
+            animation: terminalType 0.5s ease forwards;
+        }
+
+        .terminal-line:nth-child(1) { animation-delay: 0.3s; }
+        .terminal-line:nth-child(2) { animation-delay: 1.2s; }
+        .terminal-line:nth-child(3) { animation-delay: 2.1s; }
+        .terminal-line:nth-child(4) { animation-delay: 3.0s; }
+        .terminal-line:nth-child(5) { animation-delay: 3.9s; }
+
+        @keyframes terminalType {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .terminal-prompt {
+            color: #10b981;
+        }
+
+        .terminal-command {
+            color: #F5A623;
+        }
+
+        .terminal-output {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: #F5A623;
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+        }
+
+        /* Circuit trace SVG */
+        .circuit-trace {
+            max-width: 900px;
+            margin: 32px auto 0;
+            height: 120px;
+        }
+
+        .circuit-path {
+            fill: none;
+            stroke: rgba(245, 166, 35, 0.3);
+            stroke-width: 2;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawPath 3s ease-in-out forwards;
+        }
+
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .circuit-dot {
+            fill: #F5A623;
+            animation: travelCircuit 4s ease-in-out infinite;
+        }
+
+        @keyframes travelCircuit {
+            0%, 100% { offset-distance: 0%; opacity: 1; }
+            50% { offset-distance: 100%; opacity: 0.8; }
+        }
+
+        .circuit-node {
+            fill: rgba(255, 255, 255, 0.1);
+            stroke: rgba(245, 166, 35, 0.5);
+            stroke-width: 2;
+        }
+
+        /* Status indicators */
+        .status-ring {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid;
+            display: inline-block;
+            margin-right: 8px;
+            position: relative;
+        }
+
+        .status-ring.pending {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: transparent;
+        }
+
+        .status-ring.processing {
+            border-color: #F5A623;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-ring.complete {
+            border-color: #10b981;
+            background: #10b981;
+        }
+
+        .status-ring.complete::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0A0A0F;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* 3D Tilt Effect */
+        .tilt-card {
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Scroll reveal animations */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Tech Pills Footer */
+        .tech-footer {
+            padding: 60px 0 40px;
+            text-align: center;
+        }
+
+        .tech-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .tech-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            padding: 8px 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 42px;
+            }
+
+            .subtext {
+                font-size: 18px;
+            }
+
+            .roles-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .role-card.primary {
+                transform: scale(1);
+            }
+
+            .pipeline-flow {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .pipeline-connector {
+                width: 2px;
+                height: 40px;
+            }
+
+            .pipeline-connector::after {
+                animation: travelDotVertical 3s linear infinite;
+            }
+
+            @keyframes travelDotVertical {
+                0% { top: 0%; }
+                100% { top: 100%; }
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .trust-stats {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .use-cases-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .why-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .why-visual {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 100px 0;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-tag {
+            display: inline-block;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #F5A623;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .section-heading {
+            font-size: 40px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .section-subtext {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .feature-card {
+            background: rgba(26, 31, 46, 0.4);
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 32px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 24px rgba(0, 0, 0, 0.2),
+                inset 0 1px 1px rgba(255, 255, 255, 0.03);
+        }
+
+        .feature-card:hover {
+            background: rgba(26, 31, 46, 0.6);
+            border-image: linear-gradient(135deg, rgba(245, 166, 35, 0.4) 0%, rgba(79, 195, 247, 0.2) 100%) 1;
+            border-image-slice: 1;
+            transform: translateY(-6px);
+            box-shadow: 
+                0 0 0 1px rgba(245, 166, 35, 0.2),
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 0 60px rgba(245, 166, 35, 0.1),
+                inset 0 1px 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .feature-card:active {
+            transform: translateY(-4px) scale(0.98);
+            transition: all 0.1s ease;
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .feature-desc {
+            font-size: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Stats Section with Radial Progress Rings */
+        .stats-section {
+            padding: 80px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .stat-ring-container {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .stat-ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.05);
+            stroke-width: 8;
+        }
+
+        .stat-ring-progress {
+            fill: none;
+            stroke: #F5A623;
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 282.6;
+            stroke-dashoffset: 282.6;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-ring-container.revealed .stat-ring-progress {
+            stroke-dashoffset: 0;
+        }
+
+        .stat-ring-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            font-weight: 700;
+            color: #F5A623;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #F5A623;
+            margin-bottom: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .stat-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.4;
+        }
+
+        /* Comparison ghost bars */
+        .stat-comparison {
+            margin-top: 16px;
+            position: relative;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .stat-bar-industry {
+            position: absolute;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .stat-bar-model {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, #F5A623, #FFC107);
+            border-radius: 4px;
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 12px rgba(245, 166, 35, 0.4);
+        }
+
+        .stat-comparison-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Use Cases Section */
+        .use-cases-section {
+            padding: 100px 0;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .use-case {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .use-case:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(245, 166, 35, 0.3);
+        }
+
+        .use-case-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: #F5A623;
+            margin-bottom: 16px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .use-case-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .use-case-desc {
+            font-size: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
+        }
+
+        .use-case-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 11px;
+            padding: 4px 12px;
+            background: rgba(245, 166, 35, 0.1);
+            border: 1px solid rgba(245, 166, 35, 0.2);
+            border-radius: 100px;
+            color: #F5A623;
+        }
+
+        /* Why Section */
+        .why-section {
+            padding: 100px 0;
+        }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .why-text {
+            font-size: 16px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 24px 0 32px;
+        }
+
+        .why-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .why-list li {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .why-list i {
+            font-size: 20px;
+            color: #F5A623;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .why-list strong {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .why-list span {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.5;
+        }
+
+        .why-visual {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #F5A623;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Final CTA */
+        .final-cta {
+            padding: 100px 0 120px;
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .cta-heading {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .cta-subtext {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 40px;
+        }
+
+        .btn-large {
+            padding: 16px 40px;
+            font-size: 18px;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Aurora glow effects */
+        .glow-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .aurora-glow {
+            position: absolute;
+            width: 100%;
+            height: 400px;
+            background: radial-gradient(ellipse at center, rgba(245, 166, 35, 0.08) 0%, transparent 60%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: auroraMove 15s ease-in-out infinite;
+        }
+
+        @keyframes auroraMove {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+            50% { transform: translateY(50px) scale(1.2); opacity: 0.8; }
+        }
+
+        /* Floating Navbar */
+        .floating-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 16px 0;
+            background: rgba(13, 15, 18, 0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            transform: translateY(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .floating-nav.visible {
+            transform: translateY(0);
+        }
+
+        .nav-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-logo-icon {
+            background: #F5A623;
+            color: #0D0F12;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #F5A623;
+        }
+
+        .nav-cta {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #F5A623 0%, #C47D10 100%);
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 166, 35, 0.4);
+        }
+
+        /* Brand at top of hero */
+        .hero-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 48px;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .hero-brand-icon {
+            background: #F5A623;
+            color: #0D0F12;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <!-- Noise texture overlay -->
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-image: url('data:image/svg+xml,%3Csvg viewBox=%270 0 400 400%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noiseFilter%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noiseFilter)%27/%3E%3C/svg%3E'); opacity: 0.03; pointer-events: none; z-index: 9999;"></div>
+
+    <!-- Floating Navigation -->
+    <nav class="floating-nav" id="floatingNav">
+        <div class="nav-content">
+            <a href="#" class="nav-logo">
+                <span class="nav-logo-icon">IA</span>
+                Industrial Agent AI
+            </a>
+            <div class="nav-links">
+                <a href="#roles">Roles</a>
+                <a href="#features">Features</a>
+                <a href="#pipeline">Pipeline</a>
+                <a href="#roles" class="nav-cta">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Background blobs -->
+    <div class="blob blob-amber"></div>
+    <div class="blob blob-blue"></div>
+
+    <!-- Floating particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-brand">
+                <span class="hero-brand-icon">IA</span>
+                Industrial Agent AI
+            </div>
+
+            <div class="announcement">
+                <div class="pulse-dot"></div>
+                <span>LIVE · Fine-tuned Phi-3.5 now in production</span>
+            </div>
+
+            <h1 id="hero-title"></h1>
+
+            <p class="subtext">
+                AI-powered steel plant intelligence with role-based access, hybrid RAG, 
+                and a domain fine-tuned LLM trained on real maintenance data.
+            </p>
+
+            <div class="cta-buttons">
+                <a href="#roles" class="btn btn-primary">
+                    Choose Your Role
+                    <i class="ti ti-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="trust-stats">
+                <div><span class="scramble" data-value="87%">@#$</span> domain accuracy</div>
+                <div>·</div>
+                <div><span class="scramble" data-value="62%">!%*</span> fewer hallucinations</div>
+                <div>·</div>
+                <div><span class="scramble" data-value="<3hr">&^#</span> fine-tune</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Role Cards Section -->
+    <section class="roles-section glow-container" id="roles">
+        <div class="aurora-glow" style="top: 0;"></div>
+        <div class="container">
+            <!-- Live Sensor Data Ticker -->
+            <div class="sensor-ticker">
+                <div class="ticker-content">
+                    <div class="ticker-item">
+                        <span class="ticker-label">TEMP:</span>
+                        <span class="ticker-value">847°C</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">VIB:</span>
+                        <span class="ticker-value">2.3 mm/s</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">CURR:</span>
+                        <span class="ticker-value">412 A</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">PRESSURE:</span>
+                        <span class="ticker-value">6.2 bar</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">STATUS:</span>
+                        <span class="ticker-status-ok">NOMINAL</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">RPM:</span>
+                        <span class="ticker-value">1,450</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">LOAD:</span>
+                        <span class="ticker-value">78%</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">POWER:</span>
+                        <span class="ticker-value">2.4 MW</span>
+                    </div>
+                    <!-- Duplicate for seamless loop -->
+                    <div class="ticker-item">
+                        <span class="ticker-label">TEMP:</span>
+                        <span class="ticker-value">847°C</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">VIB:</span>
+                        <span class="ticker-value">2.3 mm/s</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">CURR:</span>
+                        <span class="ticker-value">412 A</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">PRESSURE:</span>
+                        <span class="ticker-value">6.2 bar</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">STATUS:</span>
+                        <span class="ticker-status-ok">NOMINAL</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">RPM:</span>
+                        <span class="ticker-value">1,450</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">LOAD:</span>
+                        <span class="ticker-value">78%</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-label">POWER:</span>
+                        <span class="ticker-value">2.4 MW</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">Choose Your Role</div>
+
+            <div class="roles-grid">
+                <!-- Card 1: Maintenance Engineer (Primary) -->
+                <div class="role-card primary" data-magnetic onclick="selectRole(event, 'engineer')" style="cursor: pointer;">
+                    <div class="cursor-glow teal-glow"></div>
+                    <div class="role-icon teal">
+                        <i class="ti ti-tools"></i>
+                    </div>
+                    <span class="role-badge badge-full">Full Access</span>
+                    <h3 class="role-title">Maintenance Engineer</h3>
+                    <p class="role-desc">Complete system control for diagnostics and repairs</p>
+                    <ul class="role-features">
+                        <li>3-agent diagnostic analysis</li>
+                        <li>Live sensor monitoring</li>
+                        <li>RUL prediction & spare parts</li>
+                        <li>Logbook & report generation</li>
+                    </ul>
+                    <div class="role-cta-text">
+                        Select role
+                        <i class="ti ti-arrow-right"></i>
+                    </div>
+                    <div class="access-level-bar">
+                        <div class="access-level-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Plant Manager -->
+                <div class="role-card" data-magnetic onclick="selectRole(event, 'manager')" style="cursor: pointer;">
+                    <div class="cursor-glow blue-glow"></div>
+                    <div class="role-icon blue">
+                        <i class="ti ti-chart-line"></i>
+                    </div>
+                    <span class="role-badge badge-view">View Only</span>
+                    <h3 class="role-title">Plant Manager</h3>
+                    <p class="role-desc">Strategic oversight with analytics dashboard</p>
+                    <ul class="role-features">
+                        <li>Analysis reports access</li>
+                        <li>Operations logbook view</li>
+                        <li>Equipment status monitoring</li>
+                        <li>Performance metrics</li>
+                    </ul>
+                    <div class="role-cta-text">
+                        Select role
+                        <i class="ti ti-arrow-right"></i>
+                    </div>
+                    <div class="access-level-bar">
+                        <div class="access-level-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Field Technician -->
+                <div class="role-card" data-magnetic onclick="selectRole(event, 'technician')" style="cursor: pointer;">
+                    <div class="cursor-glow amber-glow"></div>
+                    <div class="role-icon amber">
+                        <i class="ti ti-device-mobile"></i>
+                    </div>
+                    <span class="role-badge badge-limited">Limited</span>
+                    <h3 class="role-title">Field Technician</h3>
+                    <p class="role-desc">Hands-on maintenance with mobile access</p>
+                    <ul class="role-features">
+                        <li>Equipment troubleshooting</li>
+                        <li>Logbook entry updates</li>
+                        <li>Document search</li>
+                        <li>Task assignment view</li>
+                    </ul>
+                    <div class="role-cta-text">
+                        Select role
+                        <i class="ti ti-arrow-right"></i>
+                    </div>
+                    <div class="access-level-bar">
+                        <div class="access-level-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Judge / Demo -->
+                <div class="role-card" data-magnetic onclick="selectRole(event, 'judge')" style="cursor: pointer;">
+                    <div class="cursor-glow purple-glow"></div>
+                    <div class="role-icon purple">
+                        <i class="ti ti-shield-check"></i>
+                    </div>
+                    <span class="role-badge badge-demo">All Features</span>
+                    <h3 class="role-title">Judge / Demo</h3>
+                    <p class="role-desc">Full system access for evaluation</p>
+                    <ul class="role-features">
+                        <li>All roles unlocked</li>
+                        <li>Complete feature access</li>
+                        <li>Demo anomaly injection</li>
+                        <li>Sample data preloaded</li>
+                    </ul>
+                    <div class="role-cta-text">
+                        Select role
+                        <i class="ti ti-arrow-right"></i>
+                    </div>
+                    <div class="access-level-bar">
+                        <div class="access-level-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pipeline Section -->
+    <section class="pipeline-section" id="pipeline">
+        <div class="container">
+            <h2 class="pipeline-title">Domain fine-tuned on real steel plant data</h2>
+
+            <div class="terminal-window">
+                <div class="terminal-header">
+                    <div class="terminal-dot red"></div>
+                    <div class="terminal-dot yellow"></div>
+                    <div class="terminal-dot green"></div>
+                    <div class="terminal-title">training_pipeline.sh</div>
+                </div>
+                <div class="terminal-body">
+                    <span class="terminal-line">
+                        <span class="terminal-prompt">$</span> 
+                        <span class="terminal-command">python collect_data.py --samples 2100 --domain steel_plant</span>
+                    </span>
+                    <span class="terminal-line terminal-output">
+                        <span class="status-ring complete"></span>Data Collection Complete: 2,100 maintenance scenarios
+                    </span>
+                    <span class="terminal-line">
+                        <span class="terminal-prompt">$</span> 
+                        <span class="terminal-command">python train_qlora.py --model phi-3.5-mini --precision 4bit</span>
+                    </span>
+                    <span class="terminal-line terminal-output">
+                        <span class="status-ring processing"></span>QLoRA Training in Progress... ETA: 2.8 hours
+                    </span>
+                    <span class="terminal-line">
+                        <span class="terminal-prompt">$</span> 
+                        <span class="terminal-command">python evaluate.py --metric domain_accuracy</span>
+                    </span>
+                    <span class="terminal-line terminal-output">
+                        <span class="status-ring complete"></span>Human Eval Complete: 87% domain accuracy achieved
+                    </span>
+                    <span class="terminal-line">
+                        <span class="terminal-prompt">$</span> 
+                        <span class="terminal-command">deploy_rag.sh --engine vllm --optimize</span>
+                    </span>
+                    <span class="terminal-line terminal-output">
+                        <span class="status-ring complete"></span>RAG Deploy: Model optimized and serving at 45 tok/s
+                    </span>
+                    <span class="terminal-line">
+                        <span class="terminal-prompt">$</span> <span class="terminal-cursor"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Footer -->
+    <section class="tech-footer">
+        <div class="container">
+            <div class="tech-pills">
+                <span class="tech-pill">Phi-3.5 Mini 3.8B</span>
+                <span class="tech-pill">QLoRA 4-bit</span>
+                <span class="tech-pill">Hybrid RAG</span>
+                <span class="tech-pill">vLLM</span>
+                <span class="tech-pill">RLHF aligned</span>
+                <span class="tech-pill">React + JWT</span>
+                <span class="tech-pill">Qdrant Vector DB</span>
+                <span class="tech-pill">FastAPI</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section glow-container" id="features">
+        <div class="aurora-glow" style="top: -150px;"></div>
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Platform Features</span>
+                <h2 class="section-heading">Built for Industrial Excellence</h2>
+                <p class="section-subtext">
+                    Comprehensive AI-powered maintenance platform designed specifically for steel plant operations
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ti ti-robot" style="color: #F5A623;"></i></div>
+                    <h3 class="feature-title">3-Agent Intelligence</h3>
+                    <p class="feature-desc">
+                        Multi-agent orchestration: Root Cause Analysis → Risk Assessment → Maintenance Planning. 
+                        Each agent specialized for precision diagnostics.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ti ti-books" style="color: #F5A623;"></i></div>
+                    <h3 class="feature-title">Hybrid RAG Pipeline</h3>
+                    <p class="feature-desc">
+                        Document-grounded responses with exact citations. Retrieval-augmented generation ensures 
+                        accuracy from your equipment manuals and SOPs.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ti ti-clock-bolt" style="color: #F5A623;"></i></div>
+                    <h3 class="feature-title">RUL Prediction</h3>
+                    <p class="feature-desc">
+                        Remaining Useful Life prediction with sensor-based models. Know exactly when maintenance 
+                        is needed before failure occurs.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ti ti-chart-dots" style="color: #F5A623;"></i></div>
+                    <h3 class="feature-title">Live Sensor Monitoring</h3>
+                    <p class="feature-desc">
+                        Real-time tracking of vibration, temperature, current, and pressure. Automated anomaly 
+                        detection with intelligent alerting.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ti ti-tool" style="color: #F5A623;"></i></div>
+                    <h3 class="feature-title">Spare Parts Intelligence</h3>
+                    <p class="feature-desc">
+                        Automatic spare parts lookup with stock verification. Get repair recommendations with 
+                        availability status in real-time.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ti ti-clipboard-check" style="color: #F5A623;"></i></div>
+                    <h3 class="feature-title">Operations Logbook</h3>
+                    <p class="feature-desc">
+                        Comprehensive maintenance history tracking. Every analysis, fault, and repair documented 
+                        with full traceability.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-ring-container">
+                        <svg width="120" height="120" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="45" class="stat-ring-bg"/>
+                            <circle cx="60" cy="60" r="45" class="stat-ring-progress" 
+                                    data-progress="0.87"/>
+                        </svg>
+                        <div class="stat-ring-text">87%</div>
+                    </div>
+                    <div class="stat-label">Domain Accuracy</div>
+                    <div class="stat-desc">Trained on 2.1K steel plant maintenance samples</div>
+                    <div class="stat-comparison">
+                        <div class="stat-bar-industry" style="width: 45%;"></div>
+                        <div class="stat-bar-model" data-width="87%" style="width: 0%;"></div>
+                    </div>
+                    <div class="stat-comparison-label">
+                        <span>Industry: 45%</span>
+                        <span>Ours: 87%</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-ring-container">
+                        <svg width="120" height="120" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="45" class="stat-ring-bg"/>
+                            <circle cx="60" cy="60" r="45" class="stat-ring-progress" 
+                                    data-progress="0.62"/>
+                        </svg>
+                        <div class="stat-ring-text">62%</div>
+                    </div>
+                    <div class="stat-label">Fewer Hallucinations</div>
+                    <div class="stat-desc">Document-grounded RAG reduces false positives</div>
+                    <div class="stat-comparison">
+                        <div class="stat-bar-industry" style="width: 85%;"></div>
+                        <div class="stat-bar-model" data-width="38%" style="width: 0%;"></div>
+                    </div>
+                    <div class="stat-comparison-label">
+                        <span>Generic LLM: 85%</span>
+                        <span>Ours: 38%</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-ring-container">
+                        <svg width="120" height="120" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="45" class="stat-ring-bg"/>
+                            <circle cx="60" cy="60" r="45" class="stat-ring-progress" 
+                                    data-progress="0.95"/>
+                        </svg>
+                        <div class="stat-ring-text">&lt;3hr</div>
+                    </div>
+                    <div class="stat-label">Fine-Tune Time</div>
+                    <div class="stat-desc">QLoRA 4-bit quantization for fast adaptation</div>
+                    <div class="stat-comparison">
+                        <div class="stat-bar-industry" style="width: 100%;"></div>
+                        <div class="stat-bar-model" data-width="12%" style="width: 0%;"></div>
+                    </div>
+                    <div class="stat-comparison-label">
+                        <span>Full Training: 24hr</span>
+                        <span>QLoRA: &lt;3hr</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-ring-container">
+                        <svg width="120" height="120" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="45" class="stat-ring-bg"/>
+                            <circle cx="60" cy="60" r="45" class="stat-ring-progress" 
+                                    data-progress="0.70"/>
+                        </svg>
+                        <div class="stat-ring-text">3.8B</div>
+                    </div>
+                    <div class="stat-label">Parameters</div>
+                    <div class="stat-desc">Phi-3.5 Mini optimized for edge deployment</div>
+                    <div class="stat-comparison">
+                        <div class="stat-bar-industry" style="width: 100%;"></div>
+                        <div class="stat-bar-model" data-width="5%" style="width: 0%;"></div>
+                    </div>
+                    <div class="stat-comparison-label">
+                        <span>GPT-4: 1.7T</span>
+                        <span>Phi-3.5: 3.8B</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <section class="use-cases-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Real-World Applications</span>
+                <h2 class="section-heading">Solving Critical Industrial Challenges</h2>
+            </div>
+
+            <div class="use-cases-grid">
+                <div class="use-case">
+                    <div class="use-case-number">01</div>
+                    <h3 class="use-case-title">Predictive Maintenance</h3>
+                    <p class="use-case-desc">
+                        Identify equipment failures before they happen. RUL prediction helps schedule maintenance 
+                        during planned downtime, reducing unplanned outages by up to 70%.
+                    </p>
+                    <div class="use-case-tags">
+                        <span class="tag">RUL Prediction</span>
+                        <span class="tag">Sensor Analytics</span>
+                        <span class="tag">Alert Management</span>
+                    </div>
+                </div>
+
+                <div class="use-case">
+                    <div class="use-case-number">02</div>
+                    <h3 class="use-case-title">Expert Knowledge Transfer</h3>
+                    <p class="use-case-desc">
+                        Capture tribal knowledge from experienced engineers. RAG pipeline makes decades of 
+                        maintenance wisdom instantly accessible to all technicians.
+                    </p>
+                    <div class="use-case-tags">
+                        <span class="tag">Document Search</span>
+                        <span class="tag">Citation Tracking</span>
+                        <span class="tag">SOP Compliance</span>
+                    </div>
+                </div>
+
+                <div class="use-case">
+                    <div class="use-case-number">03</div>
+                    <h3 class="use-case-title">Rapid Fault Diagnosis</h3>
+                    <p class="use-case-desc">
+                        3-agent system analyzes symptoms, identifies root causes, and recommends actions in minutes 
+                        instead of hours. Reduce mean time to repair (MTTR) by 45%.
+                    </p>
+                    <div class="use-case-tags">
+                        <span class="tag">Root Cause Analysis</span>
+                        <span class="tag">Multi-Agent AI</span>
+                        <span class="tag">Action Plans</span>
+                    </div>
+                </div>
+
+                <div class="use-case">
+                    <div class="use-case-number">04</div>
+                    <h3 class="use-case-title">Compliance & Traceability</h3>
+                    <p class="use-case-desc">
+                        Complete audit trail for every maintenance decision. Operations logbook ensures regulatory 
+                        compliance with detailed records and evidence-based recommendations.
+                    </p>
+                    <div class="use-case-tags">
+                        <span class="tag">Logbook Tracking</span>
+                        <span class="tag">Report Generation</span>
+                        <span class="tag">Audit Ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Section -->
+    <section class="why-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Why Industrial Agent AI?</span>
+                <h2 class="section-heading">Purpose-Built for Steel Plants</h2>
+                <p class="section-subtext">
+                    Fine-tuned on 2,100+ real steel plant maintenance scenarios, achieving 87% domain accuracy
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- System Status Bar -->
+    <div class="system-status">
+        <div class="status-left">
+            <div class="status-dot"></div>
+            <span>SYSTEM ONLINE</span>
+        </div>
+        <div class="status-center">
+            <span id="systemClock">--:--:-- UTC</span>
+        </div>
+        <div class="status-right">
+            <div class="status-metric">
+                <span>PHI-3.5</span>
+            </div>
+            <div class="status-metric">
+                <span class="status-metric-value">45</span>
+                <span>tok/s</span>
+            </div>
+            <div class="status-metric">
+                <span class="status-metric-value">87%</span>
+                <span>accuracy</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== TYPEWRITER EFFECT FOR HERO TITLE =====
+        const heroTitle = document.getElementById('hero-title');
+        const line1 = 'Intelligent Maintenance.';
+        const line2 = 'Zero Downtime.';
+        let charIndex = 0;
+        let lineIndex = 0;
+        
+        function typeWriter() {
+            const currentLine = lineIndex === 0 ? line1 : line2;
+            
+            if (charIndex < currentLine.length) {
+                heroTitle.innerHTML += currentLine.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeWriter, 80);
+            } else if (lineIndex === 0) {
+                heroTitle.innerHTML += '<br>';
+                lineIndex = 1;
+                charIndex = 0;
+                setTimeout(typeWriter, 200);
+            } else {
+                // Add blinking cursor after typing is complete
+                heroTitle.innerHTML += '<span class="typing-cursor"></span>';
+            }
+        }
+        
+        // Start typewriter after page loads
+        setTimeout(typeWriter, 1000);
+
+        // ===== SYSTEM CLOCK UPDATE =====
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getUTCHours()).padStart(2, '0');
+            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('systemClock').textContent = `${hours}:${minutes}:${seconds} UTC`;
+        }
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // ===== LIVE TICKER VALUES =====
+        const tickerData = {
+            'TEMP': { base: 847, range: 12, unit: '°C' },
+            'VIB':  { base: 2.3, range: 0.4, unit: ' mm/s' },
+            'CURR': { base: 412, range: 18, unit: ' A' },
+            'PRESSURE': { base: 6.2, range: 0.3, unit: ' bar' },
+            'RPM':  { base: 1450, range: 30, unit: '' },
+            'LOAD': { base: 78, range: 5, unit: '%' },
+            'POWER':{ base: 2.4, range: 0.2, unit: ' MW' }
+        };
+        
+        setInterval(() => {
+            document.querySelectorAll('.ticker-value').forEach((el, i) => {
+                const keys = Object.keys(tickerData);
+                if (i < keys.length * 2) { // handle duplicates
+                    const key = keys[i % keys.length];
+                    const d = tickerData[key];
+                    const val = (d.base + (Math.random() - 0.5) * d.range).toFixed(
+                        d.range < 1 ? 1 : 0
+                    );
+                    el.textContent = val + d.unit;
+                }
+            });
+        }, 3000);
+
+        // ===== FLOATING NAVBAR ON SCROLL =====
+        const floatingNav = document.getElementById('floatingNav');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            // Show navbar when scrolled down past hero (500px)
+            if (currentScroll > 500) {
+                floatingNav.classList.add('visible');
+            } else {
+                floatingNav.classList.remove('visible');
+            }
+            
+            lastScroll = currentScroll;
+        });
+
+        // ===== SCRAMBLE TEXT REVEAL FOR TRUST STATS =====
+        function scrambleText(element, finalText, duration = 1000) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*<>';
+            const startTime = Date.now();
+            
+            const interval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                let result = '';
+                for (let i = 0; i < finalText.length; i++) {
+                    if (progress * finalText.length > i) {
+                        result += finalText[i];
+                    } else {
+                        result += chars[Math.floor(Math.random() * chars.length)];
+                    }
+                }
+                
+                element.textContent = result;
+                
+                if (progress === 1) {
+                    clearInterval(interval);
+                    element.textContent = finalText;
+                }
+            }, 50);
+        }
+
+        // Trigger scramble when stats come into view
+        const scrambleObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target.classList.contains('scrambled')) {
+                    entry.target.classList.add('scrambled');
+                    const finalValue = entry.target.getAttribute('data-value');
+                    scrambleText(entry.target, finalValue, 1500);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.scramble').forEach(el => {
+            scrambleObserver.observe(el);
+        });
+
+        // ===== PER-CARD CURSOR GLOW WITH MATCHING COLORS =====
+        document.querySelectorAll('.role-card').forEach(card => {
+            const cursorGlow = card.querySelector('.cursor-glow');
+            
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left - 150; // Center the 300px glow
+                const y = e.clientY - rect.top - 150;
+                
+                cursorGlow.style.transform = `translate(${x}px, ${y}px)`;
+            });
+        });
+
+        // ===== CLICK RIPPLE EFFECT ON CARDS =====
+        document.querySelectorAll('.role-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.style.position = 'absolute';
+                ripple.style.borderRadius = '50%';
+                ripple.style.background = 'rgba(245, 166, 35, 0.5)';
+                ripple.style.pointerEvents = 'none';
+                ripple.style.animation = 'ripple 0.6s ease-out';
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Add ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                0% { transform: scale(0); opacity: 1; }
+                100% { transform: scale(2); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        function selectRole(event, role = null) {
+            event.preventDefault();
+            
+            if (role) {
+                // Store role in localStorage
+                localStorage.setItem('userRole', role);
+                
+                // Small delay to ensure storage is complete, then navigate
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 100);
+            }
+        }
+
+        // ===== 3D TILT EFFECT ON CARDS =====
+        document.querySelectorAll('.role-card, .feature-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 10;
+                const rotateY = (centerX - x) / 10;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+            });
+        });
+
+        // ===== MAGNETIC CURSOR EFFECT ON BUTTONS =====
+        document.querySelectorAll('.btn, .role-cta').forEach(button => {
+            button.addEventListener('mousemove', (e) => {
+                const rect = button.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                
+                const distance = Math.sqrt(x * x + y * y);
+                const maxDistance = 100;
+                
+                if (distance < maxDistance) {
+                    const strength = (maxDistance - distance) / maxDistance;
+                    button.style.transform = `translate(${x * strength * 0.3}px, ${y * strength * 0.3}px)`;
+                }
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'translate(0, 0)';
+            });
+        });
+
+        // ===== SCROLL-TRIGGERED ANIMATIONS =====
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                }
+            });
+        }, observerOptions);
+
+        // Apply scroll reveal to sections
+        document.querySelectorAll('.feature-card, .use-case, .stat-card').forEach(el => {
+            el.classList.add('scroll-reveal');
+            observer.observe(el);
+        });
+
+        // ===== STATS COUNTER ANIMATION =====
+        function animateCounter(element, target, duration = 2000) {
+            let start = 0;
+            const increment = target / (duration / 16);
+            
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(start);
+                }
+            }, 16);
+        }
+
+        // ===== RADIAL PROGRESS RINGS =====
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
+                    entry.target.classList.add('counted');
+                    
+                    // Animate progress rings
+                    const ringContainers = entry.target.querySelectorAll('.stat-ring-container');
+                    ringContainers.forEach((container, index) => {
+                        setTimeout(() => {
+                            container.classList.add('revealed');
+                            
+                            // Animate SVG circle
+                            const progressCircle = container.querySelector('.stat-ring-progress');
+                            const progress = parseFloat(progressCircle.getAttribute('data-progress'));
+                            const circumference = 2 * Math.PI * 45; // radius = 45
+                            const offset = circumference * (1 - progress);
+                            
+                            progressCircle.style.strokeDashoffset = offset;
+                        }, index * 200);
+                    });
+                    
+                    // Animate comparison bars
+                    const modelBars = entry.target.querySelectorAll('.stat-bar-model');
+                    modelBars.forEach((bar, index) => {
+                        setTimeout(() => {
+                            bar.style.width = bar.getAttribute('data-width');
+                        }, index * 200 + 400);
+                    });
+                }
+            });
+        }, { threshold: 0.5 });
+
+        const statsSection = document.querySelector('.stats-section');
+        if (statsSection) {
+            statsObserver.observe(statsSection);
+        }
+    </script>
+</body>
+</html>

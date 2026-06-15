@@ -6,14 +6,14 @@ const WELCOME_MESSAGE = {
   id: 'welcome',
   role: 'assistant',
   content:
-    '**Industrial Agent AI** - Intelligent Maintenance Assistant\n\n' +
-    '> Powered by fine-tuned Phi-3.5 Mini specialized for industrial equipment\n\n' +
-    '**Key Features:**\n' +
+    'Industrial Agent AI - Intelligent Maintenance Assistant\n\n' +
+    'Powered by fine-tuned Phi-3.5 Mini specialized for industrial equipment\n\n' +
+    'Key Features:\n' +
     '• Expert answers with exact manual citations\n' +
     '• RAG pipeline with 4 pre-loaded equipment manuals\n' +
     '• Document-grounded responses for accuracy\n\n' +
-    '**Model Card:** https://huggingface.co/Santhoshkumarp/phi35-maintenance-wizard-lora\n\n' +
-    '_Upload a document or ask about existing equipment to get started._',
+    'Model Card: https://huggingface.co/Santhoshkumarp/phi35-maintenance-wizard-lora\n\n' +
+    'Upload a document or ask about existing equipment to get started.',
   citations: [],
   timestamp: new Date(),
 }
@@ -21,14 +21,14 @@ const WELCOME_MESSAGE = {
 const MONITOR_WELCOME_MESSAGE = {
   id: 'monitor-welcome',
   role: 'assistant',
-  content: '**Live Monitor Intelligence** - Real-Time Equipment Monitoring\n\n' +
-    '> 3-Agent Diagnostic System for intelligent fault detection\n\n' +
-    '**Agent Pipeline:**\n' +
+  content: 'Live Monitor Intelligence - Real-Time Equipment Monitoring\n\n' +
+    '3-Agent Diagnostic System for intelligent fault detection\n\n' +
+    'Agent Pipeline:\n' +
     '1. Root Cause Analysis - Identifies failure patterns\n' +
     '2. Risk Assessment - Predicts remaining useful life (RUL)\n' +
     '3. Maintenance Planning - Generates action plans with spare parts\n\n' +
-    '**Quick Start:** Click "DEMO ANOMALY" to see AI analysis in action\n\n' +
-    '_Real-time sensor data with automated fault detection and diagnostics._',
+    'Quick Start: Click "DEMO ANOMALY" to see AI analysis in action\n\n' +
+    'Real-time sensor data with automated fault detection and diagnostics.',
   citations: [],
   timestamp: new Date(),
 }

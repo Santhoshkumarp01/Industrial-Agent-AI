@@ -252,13 +252,13 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
               DEMO ANOMALY
             </button>
 
-            {/* Tour restart button - Tour 1: Live Monitor */}
+            {/* Tour button - Live Monitor guide */}
             <button
               onClick={() => {
                 localStorage.removeItem('industrial_agent_monitor_onboarding_complete')
                 window.location.reload()
               }}
-              title="Start Monitor Intelligence tour (Tour 1)"
+              title="Start Monitor Intelligence guide"
               style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: 10,
@@ -282,7 +282,7 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
                 e.currentTarget.style.color = 'var(--text-secondary)'
               }}
             >
-              TOUR 1
+              TOUR
             </button>
 
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>
