@@ -32,9 +32,7 @@ export default function Sidebar({ documents = [] }) {
   const totalChunks   = documents.reduce((acc, d) => acc + (d.chunk_count || 0), 0)
 
   const handleBackToHome = () => {
-    if (confirm('Return to role selection? This will reset your session.')) {
-      setUserRole(null)
-    }
+    setUserRole(null)
   }
 
   return (

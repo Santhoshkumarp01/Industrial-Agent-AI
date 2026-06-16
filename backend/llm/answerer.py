@@ -34,9 +34,10 @@ STRICT GROUNDING RULES (HIGHEST PRIORITY — NEVER VIOLATE):
 5. Never answer with assumptions or general engineering knowledge.
 
 HANDLING VAGUE OR INCOMPLETE QUESTIONS:
-6. If the question is vague or incomplete (e.g., "What does the manual say about"), provide a helpful summary of the key topics found in the retrieved context.
-7. Structure the response as: "The manual sections retrieved cover the following topics: [summarize main topics from context]"
-8. If the context is completely unrelated to the question, ONLY THEN say: "This information could not be confirmed from the retrieved manual sections."
+6. If the question is clearly OUT OF SCOPE (asking about locations, people, colleges, dates, non-technical topics), immediately respond: "This question is outside the scope of the equipment maintenance manual. Please ask about equipment specifications, maintenance procedures, safety instructions, or troubleshooting."
+7. If the question is vague or incomplete but RELATED to equipment/maintenance (e.g., "What does the manual say about"), provide a helpful summary of the key topics found in the retrieved context.
+8. Structure the response as: "The manual sections retrieved cover the following topics: [summarize main topics from context]"
+9. If the context is completely unrelated to the question, ONLY THEN say: "This information could not be confirmed from the retrieved manual sections."
 
 CRITICAL LIST RULES (NEVER VIOLATE):
 9. If the user asks for a numbered list (e.g., "what are the safety rules/steps/requirements"), return the COMPLETE list exactly as stated in the manual.
@@ -115,6 +116,44 @@ The manual also lists items to observe to prevent accidents, including awareness
 
 User: What is the maximum operating speed for IM B5 flange-mounted motors?
 CORRECT: This information could not be confirmed from the retrieved manual sections."""
+
+
+def _detect_out_of_scope_query(query: str) -> bool:
+    """
+    Detect if a query is completely out of scope for industrial equipment manuals.
+    
+    Out-of-scope patterns:
+    - Geographic/location questions (distance, location, address)
+    - Personal/people questions (who, names of people)
+    - Current events, news, politics
+    - Non-technical topics (recipes, entertainment, sports)
+    
+    Returns:
+        True if query is out of scope, False if potentially relevant
+    """
+    import re
+    query_lower = query.lower()
+    
+    # Out-of-scope keywords
+    out_of_scope_patterns = [
+        # Geographic
+        r'\b(distance|location|address|where is|how far|city|town|college|university|school)\b',
+        # People
+        r'\b(who is|person|people|name of.*person|celebrity)\b',
+        # Current events
+        r'\b(news|latest|today|yesterday|current|election|politics)\b',
+        # Non-technical
+        r'\b(recipe|cook|food|movie|film|sport|game|music|song)\b',
+        # Non-equipment
+        r'\b(weather|climate|animal|plant|tree|flower)\b',
+    ]
+    
+    for pattern in out_of_scope_patterns:
+        if re.search(pattern, query_lower):
+            logger.warning(f"⚠️ OUT-OF-SCOPE QUERY DETECTED: {query[:80]}")
+            return True
+    
+    return False
 
 
 def _select_best_section_for_list(query: str, chunks: List[RetrievedChunk]) -> RetrievedChunk:
@@ -338,6 +377,16 @@ def generate_answer(
         "confidence_level": confidence_level or "UNKNOWN",
         "confidence_message": "",
     }
+    
+    # Check if query is completely out of scope BEFORE processing
+    if _detect_out_of_scope_query(query):
+        logger.warning(f"🚫 OUT-OF-SCOPE QUERY REJECTED: {query[:80]}")
+        metadata["confidence_message"] = "Question is outside the scope of equipment manuals"
+        return AnswerResponse(
+            answer="This question is outside the scope of the equipment maintenance manual. Please ask about equipment specifications, maintenance procedures, safety instructions, or troubleshooting.",
+            citations=[],
+            retrieved_chunks=[],
+        ), metadata
     
     if not chunks:
         metadata["confidence_message"] = "No relevant information found"

@@ -20,7 +20,7 @@ const QUICK_ACTIONS = [
 ]
 
 export default function ChatPanel({ chatHook, documentsHook }) {
-  const { messages, isLoading, sendMessage } = chatHook
+  const { messages, isLoading, sendMessage, cancelRequest } = chatHook
   const { uploadDocument, fetchDocuments } = documentsHook
 
   const selectedTag = useAppStore((s) => s.selectedEquipmentTag)
@@ -382,12 +382,12 @@ export default function ChatPanel({ chatHook, documentsHook }) {
           />
 
           <button
-            onClick={handleSend}
-            disabled={!inputValue.trim() || isLoading}
+            onClick={isLoading ? cancelRequest : handleSend}
+            disabled={!isLoading && !inputValue.trim()}
             style={{
               width: 32,
               height: 32,
-              background: inputValue.trim() && !isLoading ? 'var(--accent-amber)' : 'var(--bg-surface-3)',
+              background: isLoading ? 'var(--status-critical)' : (inputValue.trim() ? 'var(--accent-amber)' : 'var(--bg-surface-3)'),
               borderRadius: 'var(--radius-sm)',
               display: 'flex',
               alignItems: 'center',
@@ -395,12 +395,13 @@ export default function ChatPanel({ chatHook, documentsHook }) {
               flexShrink: 0,
               transition: 'var(--transition)',
               color: 'var(--bg-base)',
-              fontSize: 14,
-              cursor: inputValue.trim() && !isLoading ? 'pointer' : 'not-allowed',
+              fontSize: isLoading ? 12 : 14,
+              cursor: (isLoading || inputValue.trim()) ? 'pointer' : 'not-allowed',
+              border: 'none',
             }}
-            title="Send (Enter)"
+            title={isLoading ? "Stop (Cancel request)" : "Send (Enter)"}
           >
-            ▶
+            {isLoading ? '■' : '▶'}
           </button>
         </div>
       </div>

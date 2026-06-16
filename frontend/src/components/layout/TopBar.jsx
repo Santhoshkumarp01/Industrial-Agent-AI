@@ -12,9 +12,7 @@ export default function TopBar() {
   const roleInfo = getRoleInfo(userRole)
 
   const handleChangeRole = () => {
-    if (confirm('Are you sure you want to change your role? This will reset your session.')) {
-      setUserRole(null)
-    }
+    setUserRole(null)
   }
 
   useEffect(() => {

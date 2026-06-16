@@ -38,6 +38,7 @@ export const useChat = ({ isMonitor = false } = {}) => {
   const [sessionId] = useState(() => uuidv4())
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [abortController, setAbortController] = useState(null)
 
   const sendMessage = useCallback(
     async (query, equipmentTag = null) => {
@@ -54,9 +55,13 @@ export const useChat = ({ isMonitor = false } = {}) => {
       setMessages((prev) => [...prev, userMsg])
       setIsLoading(true)
       setError(null)
+      
+      // Create AbortController for cancellation
+      const controller = new AbortController()
+      setAbortController(controller)
 
       try {
-        const data = await sendChatMessage(query, equipmentTag, sessionId)
+        const data = await sendChatMessage(query, equipmentTag, sessionId, controller.signal)
 
         const assistantMsg = {
           id: uuidv4(),
@@ -70,22 +75,43 @@ export const useChat = ({ isMonitor = false } = {}) => {
         }
         setMessages((prev) => [...prev, assistantMsg])
       } catch (err) {
-        setError(err.message)
-        const errMsg = {
-          id: uuidv4(),
-          role: 'assistant',
-          content: `Error: ${err.message}`,
-          citations: [],
-          timestamp: new Date(),
-          isError: true,
+        if (err.name === 'AbortError' || err.message.includes('abort')) {
+          const cancelMsg = {
+            id: uuidv4(),
+            role: 'assistant',
+            content: 'Request cancelled by user.',
+            citations: [],
+            timestamp: new Date(),
+            isError: false,
+          }
+          setMessages((prev) => [...prev, cancelMsg])
+        } else {
+          setError(err.message)
+          const errMsg = {
+            id: uuidv4(),
+            role: 'assistant',
+            content: `Error: ${err.message}`,
+            citations: [],
+            timestamp: new Date(),
+            isError: true,
+          }
+          setMessages((prev) => [...prev, errMsg])
         }
-        setMessages((prev) => [...prev, errMsg])
       } finally {
         setIsLoading(false)
+        setAbortController(null)
       }
     },
     [sessionId]
   )
+
+  const cancelRequest = useCallback(() => {
+    if (abortController) {
+      abortController.abort()
+      setAbortController(null)
+      setIsLoading(false)
+    }
+  }, [abortController])
 
   const clearChat = useCallback(() => {
     setMessages([isMonitor ? MONITOR_WELCOME_MESSAGE : WELCOME_MESSAGE])
@@ -186,5 +212,5 @@ export const useChat = ({ isMonitor = false } = {}) => {
     })
   }, [])
 
-  return { messages, sessionId, isLoading, error, sendMessage, clearChat, addAnalysisMessage, addAnalyzingMessage, replaceAnalyzingMessage, replaceAnalyzingWithError, addEquipmentPrompt }
+  return { messages, sessionId, isLoading, error, sendMessage, cancelRequest, clearChat, addAnalysisMessage, addAnalyzingMessage, replaceAnalyzingMessage, replaceAnalyzingWithError, addEquipmentPrompt }
 }

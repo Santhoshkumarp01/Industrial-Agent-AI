@@ -24,17 +24,22 @@ export const uploadDocument = async (file, equipmentTag) => {
 /**
  * Send a chat query and receive an answer with citations.
  */
-export const sendChatMessage = async (query, equipmentTag = null, sessionId = null) => {
+export const sendChatMessage = async (query, equipmentTag = null, sessionId = null, signal = null) => {
   try {
     console.log('[API] sendChatMessage called with:', { query: query.substring(0, 50), equipmentTag, sessionId })
     const res = await client.post('/chat', {
       query,
       equipment_tag: equipmentTag || undefined,
       session_id: sessionId || undefined,
+    }, {
+      signal, // Pass AbortSignal for cancellation
     })
     console.log('[API] Response received:', res.data.answer.substring(0, 100))
     return res.data
   } catch (err) {
+    if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
+      throw new Error('Request cancelled')
+    }
     console.error('[API] Chat request failed:', err)
     throw new Error(err.response?.data?.detail || 'Failed to get response from AI.')
   }
