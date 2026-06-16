@@ -22,13 +22,12 @@ An enterprise-grade AI system that reduces unplanned downtime through predictive
 
 ## 🌐 Live Demo
 
-**🚀 Landing Page**: https://industrial-agent-ai.vercel.app/landing.html  
-**💻 Application**: https://industrial-agent-ai.vercel.app/  
-**⚙️ Backend (HF Spaces)**: https://santhoshkumarp-industrial-agent-ai.hf.space  
+**🚀 Live Application**: https://industrial-agent-ai.vercel.app/  
+**⚙️ Backend API**: https://santhoshkumarp-industrial-agent-ai.hf.space  
 **🤖 Fine-tuned Model**: [Santhoshkumarp/phi35-maintenance-wizard-lora](https://huggingface.co/Santhoshkumarp/phi35-maintenance-wizard-lora)
 
 ### Quick Test (30 seconds):
-1. Visit the [landing page](https://industrial-agent-ai.vercel.app/landing.html) or go directly to the [application](https://industrial-agent-ai.vercel.app/)
+1. Visit the [application](https://industrial-agent-ai.vercel.app/)
 2. Navigate to **"Live Monitor Intelligence"** panel (left sidebar)
 3. Click **"DEMO ANOMALY"** button (top right corner)
 4. Watch real-time 3-agent analysis streaming:
@@ -528,9 +527,7 @@ USE_LOCAL_MODEL=true
 
 ### Vercel (Frontend)
 
-**URLs**: 
-- Landing Page: https://industrial-agent-ai.vercel.app/landing.html
-- Application: https://industrial-agent-ai.vercel.app/
+**URL**: https://industrial-agent-ai.vercel.app/
 
 **Configuration**:
 - `frontend/vercel.json` - SPA routing configuration
