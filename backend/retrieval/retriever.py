@@ -150,6 +150,11 @@ def retrieve(
             equipment_tag=equipment_tag,
         )
         
+        if equipment_tag:
+            logger.info(f"🔍 Equipment filter active: '{equipment_tag}' - retrieved {len(candidates)} candidates")
+        else:
+            logger.info(f"🔍 No equipment filter - searching all documents - retrieved {len(candidates)} candidates")
+        
         # Deduplicate by chunk_id
         for c in candidates:
             if c.chunk_id not in seen_chunk_ids:

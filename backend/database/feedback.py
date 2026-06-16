@@ -100,3 +100,60 @@ def get_feedback_stats() -> dict:
         "incorrect": incorrect,
         "accuracy_percent": round((confirmed / total * 100) if total > 0 else 0, 1)
     }
+
+
+def store_chat_feedback(
+    session_id: str,
+    message_id: str,
+    query: str,
+    answer: str,
+    verdict: str,  # "positive" or "negative"
+) -> str:
+    """
+    Store engineer feedback on chat assistant answers.
+    
+    Args:
+        session_id: Chat session identifier
+        message_id: Unique message identifier (timestamp-based)
+        query: Engineer's question
+        answer: AI's answer that was rated
+        verdict: "positive" or "negative"
+    
+    Returns:
+        feedback_id: UUID of stored feedback
+    """
+    feedback_id = str(uuid.uuid4())
+    now = datetime.now().isoformat()
+
+    with get_connection() as conn:
+        # Create chat_feedback table if not exists
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS chat_feedback (
+                id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                message_id TEXT NOT NULL,
+                query TEXT NOT NULL,
+                answer TEXT NOT NULL,
+                verdict TEXT NOT NULL,
+                feedback_timestamp TEXT NOT NULL
+            )
+        """)
+        
+        conn.execute("""
+            INSERT INTO chat_feedback (
+                id, session_id, message_id, query, answer, verdict, feedback_timestamp
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            feedback_id,
+            session_id,
+            message_id,
+            query,
+            answer,
+            verdict,
+            now
+        ))
+
+    # TODO: For negative feedback, could reinject corrected answers into Qdrant
+    # Similar to _store_correction_as_knowledge() but for chat Q&A
+    
+    return feedback_id

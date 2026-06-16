@@ -3,6 +3,7 @@ import CitationTag from './CitationTag'
 import FeedbackForm from './FeedbackForm'
 import { formatTimestamp } from '../../utils/formatters'
 import useAppStore from '../../store/appStore'
+import { submitChatFeedback } from '../../services/api'
 
 function ThinkingDots() {
   return (
@@ -584,6 +585,38 @@ function MachineAnalysisContent({ data }) {
 }
 
 export default function MessageBubble({ message, isLoading = false }) {
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackGiven, setFeedbackGiven] = useState(false)
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
+  
+  const handleChatFeedback = async (verdict) => {
+    setFeedbackSubmitting(true)
+    try {
+      // Generate a message ID from timestamp
+      const messageId = message.timestamp ? new Date(message.timestamp).getTime().toString() : Date.now().toString()
+      
+      // Get session ID from message or use a default
+      const sessionId = message.sessionId || 'default-session'
+      
+      await submitChatFeedback(
+        sessionId,
+        messageId,
+        message.originalQuery || message.content || '',
+        message.content,
+        verdict
+      )
+      
+      setFeedbackGiven(true)
+      console.log(`✓ Chat feedback submitted: ${verdict}`)
+    } catch (err) {
+      console.error('Failed to submit chat feedback:', err)
+      // Still mark as given to prevent re-submission
+      setFeedbackGiven(true)
+    } finally {
+      setFeedbackSubmitting(false)
+    }
+  }
+  
   if (isLoading) {
     return (
       <div style={{ padding: '4px 0 4px 16px', borderLeft: '2px solid var(--accent-amber)' }}>
@@ -670,6 +703,59 @@ export default function MessageBubble({ message, isLoading = false }) {
               {message.citations.map((cit) => (
                 <CitationTag key={cit.ref} citation={cit} />
               ))}
+            </div>
+          )}
+          
+          {/* Engineer Feedback for Chat Answers */}
+          {!message.isError && message.citations && message.citations.length > 0 && (
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
+              {!feedbackGiven ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.06em' }}>
+                    Was this answer helpful?
+                  </span>
+                  <button
+                    onClick={() => handleChatFeedback('positive')}
+                    disabled={feedbackSubmitting}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 10,
+                      padding: '4px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--status-ok)',
+                      background: 'rgba(93, 232, 145, 0.1)',
+                      color: 'var(--status-ok)',
+                      cursor: feedbackSubmitting ? 'wait' : 'pointer',
+                      letterSpacing: '0.06em',
+                      opacity: feedbackSubmitting ? 0.6 : 1
+                    }}
+                  >
+                    ✓ YES
+                  </button>
+                  <button
+                    onClick={() => handleChatFeedback('negative')}
+                    disabled={feedbackSubmitting}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 10,
+                      padding: '4px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--status-warning)',
+                      background: 'rgba(232, 188, 93, 0.1)',
+                      color: 'var(--status-warning)',
+                      cursor: feedbackSubmitting ? 'wait' : 'pointer',
+                      letterSpacing: '0.06em',
+                      opacity: feedbackSubmitting ? 0.6 : 1
+                    }}
+                  >
+                    ✗ NO
+                  </button>
+                </div>
+              ) : (
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.06em' }}>
+                  ✓ Thank you for your feedback!
+                </div>
+              )}
             </div>
           )}
         </>

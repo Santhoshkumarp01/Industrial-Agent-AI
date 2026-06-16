@@ -65,6 +65,8 @@ export const useChat = ({ isMonitor = false } = {}) => {
           citations: data.citations || [],
           retrievedChunks: data.retrieved_chunks || [],
           timestamp: new Date(),
+          sessionId: sessionId,  // Attach session ID for feedback
+          originalQuery: query,   // Attach original query for feedback
         }
         setMessages((prev) => [...prev, assistantMsg])
       } catch (err) {

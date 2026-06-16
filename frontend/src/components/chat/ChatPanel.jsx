@@ -39,6 +39,7 @@ export default function ChatPanel({ chatHook, documentsHook }) {
   const handleSend = () => {
     const text = inputValue.trim()
     if (!text || isLoading) return
+    console.log('[ChatPanel] Sending message with equipment tag:', selectedTag)
     sendMessage(text, selectedTag)
     setInputValue('')
     if (textareaRef.current) textareaRef.current.style.height = 'auto'

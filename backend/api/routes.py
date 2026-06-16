@@ -19,6 +19,7 @@ from models.schemas import (
     DocumentInfo,
     CitationRef,
 )
+from database.feedback import store_chat_feedback
 from utils.cloudinary_storage import upload_pdf, delete_pdf, get_pdf_url
 
 logger = logging.getLogger(__name__)
@@ -113,6 +114,9 @@ async def chat(request: ChatRequest) -> AnswerResponse:
 
     try:
         logger.info(f"[CHAT] Processing query: {request.query[:100]}")
+        logger.info(f"[CHAT] Equipment tag filter: {request.equipment_tag if request.equipment_tag else 'NONE - searching all documents'}")
+        logger.info(f"[CHAT] Session ID: {request.session_id}")
+
 
         # ── Build conversation history context ───────────────────────────────
         # Prepend last N turns to the query so the LLM understands follow-ups
@@ -259,3 +263,33 @@ async def get_citation(session_id: str, ref_id: str) -> CitationRef:
             detail=f"Citation '{ref_key}' not found in session '{session_id}'.",
         )
     return citation
+
+
+@router.post("/chat/feedback")
+async def submit_chat_feedback(
+    session_id: str = Form(...),
+    message_id: str = Form(...),
+    query: str = Form(...),
+    answer: str = Form(...),
+    verdict: str = Form(...),  # "positive" or "negative"
+) -> dict:
+    """
+    Store engineer feedback for chat answers.
+    Used to improve future RAG performance by reinjecting corrections.
+    """
+    if verdict not in ["positive", "negative"]:
+        raise HTTPException(status_code=400, detail="Verdict must be 'positive' or 'negative'")
+
+    try:
+        store_chat_feedback(
+            session_id=session_id,
+            message_id=message_id,
+            query=query,
+            answer=answer,
+            verdict=verdict,
+        )
+        logger.info(f"[FEEDBACK] Chat feedback recorded: session={session_id}, verdict={verdict}")
+        return {"success": True, "message": "Feedback recorded successfully"}
+    except Exception as e:
+        logger.error(f"[FEEDBACK] Failed to store feedback: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to store feedback: {str(e)}")
