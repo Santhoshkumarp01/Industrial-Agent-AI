@@ -147,7 +147,17 @@ def ensure_collection(force_recreate: bool = False) -> None:
             field_name="doc_id",
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
-        
+        client.create_payload_index(
+            collection_name=config.QDRANT_COLLECTION,
+            field_name="equipment_tag",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+        client.create_payload_index(
+            collection_name=config.QDRANT_COLLECTION,
+            field_name="section_heading",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+        logger.info(f"Created collection with indexes: {config.QDRANT_COLLECTION}")
         client.create_payload_index(
             collection_name=config.QDRANT_COLLECTION,
             field_name="equipment_tag",
@@ -171,6 +181,18 @@ def ensure_collection(force_recreate: bool = False) -> None:
     else:
         print(f"✓ Qdrant collection exists: {config.QDRANT_COLLECTION}")
         logger.info(f"Qdrant collection already exists: {config.QDRANT_COLLECTION}")
+        
+        # Ensure indexes exist for existing collection (idempotent)
+        try:
+            client.create_payload_index(
+                collection_name=config.QDRANT_COLLECTION,
+                field_name="section_heading",
+                field_schema=models.PayloadSchemaType.KEYWORD,
+            )
+            logger.info(f"✓ Ensured section_heading index exists on {config.QDRANT_COLLECTION}")
+        except Exception as e:
+            # Index might already exist - that's fine
+            logger.info(f"Section_heading index check: {e}")
     
     # Parent sections collection (not embedded, just stored for retrieval)
     parent_collection = f"{config.QDRANT_COLLECTION}_parents"
