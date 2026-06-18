@@ -1,4 +1,5 @@
 import React from 'react'
+import { trackUserRole } from '../../utils/analytics'
 
 const ROLES = [
   {
@@ -100,7 +101,11 @@ export default function RoleLanding({ onSelectRole }) {
             <RoleCard
               key={role.id}
               role={role}
-              onSelect={() => onSelectRole(role.id)}
+              onSelect={() => {
+                // Track role selection
+                trackUserRole(role.id)
+                onSelectRole(role.id)
+              }}
             />
           ))}
         </div>

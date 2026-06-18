@@ -9,6 +9,7 @@ import { formatRelativeTime } from '../../utils/formatters'
 import { EQUIPMENT_LIST } from '../../services/sensorSimulator'
 import { runMachineAnalysis, injectMachineAnomaly, getMachineLogs, runAnalysisStreaming } from '../../services/api'
 import useAppStore from '../../store/appStore'
+import { trackEvent, trackAnalysisRun } from '../../utils/analytics'
 
 const SENSOR_LABELS = {
   vibration:   'Vibration (mm/s)',
@@ -215,6 +216,12 @@ export default function MonitoringPanel({ sensorHook, chatHook, documentsHook })
               onClick={async () => {
                 const machineTag = 'general-industrial-motor'
                 const machineName = 'General Industrial Motor'
+                
+                // Track demo anomaly click
+                trackEvent('demo_anomaly_clicked', {
+                  equipment: machineTag,
+                  panel: 'monitor',
+                })
                 
                 // Inject anomaly
                 try {

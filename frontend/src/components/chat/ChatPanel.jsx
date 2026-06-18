@@ -4,6 +4,7 @@ import DocumentUploader from './DocumentUploader'
 import PDFViewer from './PDFViewer'
 import OnboardingTour from '../onboarding/OnboardingTour'
 import useAppStore from '../../store/appStore'
+import { trackEvent, trackChatMessage } from '../../utils/analytics'
 
 const DOT_GRID_BG = {
   backgroundImage: 'radial-gradient(circle, #1A1F2E 1px, transparent 1px)',
@@ -40,6 +41,10 @@ export default function ChatPanel({ chatHook, documentsHook }) {
     const text = inputValue.trim()
     if (!text || isLoading) return
     console.log('[ChatPanel] Sending message with equipment tag:', selectedTag)
+    
+    // Track chat message sent
+    trackChatMessage(!!selectedTag, false)
+    
     sendMessage(text, selectedTag)
     setInputValue('')
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
@@ -62,6 +67,13 @@ export default function ChatPanel({ chatHook, documentsHook }) {
   const handleUpload = async (file, tag) => {
     const result = await uploadDocument(file, tag)
     await fetchDocuments()
+    
+    // Track document upload
+    trackEvent('document_upload', {
+      equipment_tag: tag,
+      file_name: file.name,
+    })
+    
     return result
   }
 
