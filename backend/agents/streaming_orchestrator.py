@@ -273,6 +273,25 @@ def run_analysis_streaming(
     # ============================================================
     
     # Format response to match expected frontend structure  
+    # Build comprehensive answer text with all agent results
+    answer_text = f"""**Diagnosis:** {root_cause_result['root_cause']}
+**Confidence:** {root_cause_result['confidence']:.0%}
+
+**Risk Assessment:**
+• **Risk Level:** {risk_result['risk_level']}
+• **Urgency:** {risk_result['urgency_hours']} hours
+• **Parts Required:** {', '.join(risk_result['parts_required']) if risk_result['parts_required'] else 'None'}
+• **Parts Available:** {'Yes' if risk_result['parts_available'] else 'No'}
+
+**Immediate Actions:**
+{chr(10).join([f'• {action}' for action in maintenance_result['immediate_actions']])}
+
+**Repair Steps:**
+{chr(10).join([f'{i+1}. {step}' for i, step in enumerate(maintenance_result['repair_steps'])])}
+
+**Long-Term Recommendations:**
+{chr(10).join([f'• {rec}' for rec in maintenance_result['long_term_recommendations']])}"""
+    
     final_response = {
         "machine_tag": equipment_id,
         "equipment_id": equipment_id,
@@ -285,7 +304,7 @@ def run_analysis_streaming(
         "latest_readings": sensor_data,
         "logbook_entry_id": logbook_entry_id,
         "analysis": {
-            "answer": analysis_result['fault_description'],
+            "answer": answer_text,
             "citations": root_cause_result.get("evidence_full", [])[:3],  # Use full citation objects for frontend
             "grounded_in_doc": len(root_cause_result.get("evidence_full", [])) > 0
         },
