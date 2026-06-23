@@ -272,7 +272,7 @@ def run_analysis_streaming(
     # COMPLETE
     # ============================================================
     
-    # Format response to match expected frontend structure
+    # Format response to match expected frontend structure  
     final_response = {
         "machine_tag": equipment_id,
         "equipment_id": equipment_id,
@@ -285,7 +285,7 @@ def run_analysis_streaming(
         "latest_readings": sensor_data,
         "logbook_entry_id": logbook_entry_id,
         "analysis": {
-            "answer": _format_analysis_answer(root_cause_result, risk_result, maintenance_result),
+            "answer": analysis_result['fault_description'],
             "citations": root_cause_result.get("evidence_full", [])[:3],  # Use full citation objects for frontend
             "grounded_in_doc": len(root_cause_result.get("evidence_full", [])) > 0
         },
@@ -331,39 +331,3 @@ def _store_incident(
             json.dumps(sensor_data),
             timestamp
         ))
-
-
-def _format_analysis_answer(root_cause_result: dict, risk_result: dict, maintenance_result: dict) -> str:
-    """Format the analysis results into a readable answer string."""
-    
-    # Format immediate actions as bullet list
-    immediate_actions_text = "\n".join([f"• {action}" for action in maintenance_result['immediate_actions']])
-    
-    # Format repair steps as numbered list
-    repair_steps_text = "\n".join([f"{i+1}. {step}" for i, step in enumerate(maintenance_result['repair_steps'])])
-    
-    # Format long-term recommendations as bullet list
-    long_term_text = "\n".join([f"• {rec}" for rec in maintenance_result['long_term_recommendations']])
-    
-    answer = f"""**Root Cause Analysis:**
-{root_cause_result['fault_description']}
-
-**Diagnosis:** {root_cause_result['root_cause']}
-**Confidence:** {root_cause_result['confidence']:.0%}
-
-**Risk Assessment:**
-• **Risk Level:** {risk_result['risk_level']}
-• **Urgency:** {risk_result['urgency_hours']} hours
-• **Parts Required:** {', '.join(risk_result['parts_required']) if risk_result['parts_required'] else 'None specified'}
-• **Parts Available:** {'Yes' if risk_result['parts_available'] else 'No'}
-
-**Immediate Actions:**
-{immediate_actions_text}
-
-**Repair Steps:**
-{repair_steps_text}
-
-**Long-Term Recommendations:**
-{long_term_text}"""
-    
-    return answer

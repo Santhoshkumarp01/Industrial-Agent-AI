@@ -5,6 +5,7 @@ export default function CitationTag({ citation }) {
   const setActiveCitation = useAppStore((s) => s.setActiveCitation)
 
   const handleClick = () => {
+    console.log('Citation clicked:', citation)
     setActiveCitation({
       ref: citation.ref,
       doc_id: citation.doc_id,
