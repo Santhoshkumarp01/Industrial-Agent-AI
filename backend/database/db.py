@@ -16,6 +16,7 @@ DB_PATH = Path("industrial_agent.db")
 def init_db():
     """Create all tables if they don't exist. Call once at startup."""
     with get_connection() as conn:
+        # Create tables first
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS incidents (
                 id TEXT PRIMARY KEY,
@@ -78,14 +79,15 @@ def init_db():
                 FOREIGN KEY (incident_id) REFERENCES incidents(id)
             );
         """)
-        
-        # Auto-migration: Add fault_code column to existing databases
+    
+    # Auto-migration: Add fault_code column to existing databases (separate connection)
+    with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(logbook_entries)")
         columns = [row[1] for row in cursor.fetchall()]
         if "fault_code" not in columns:
             print("  → Migrating: Adding fault_code column to logbook_entries")
-            conn.execute("ALTER TABLE logbook_entries ADD COLUMN fault_code TEXT")
+            cursor.execute("ALTER TABLE logbook_entries ADD COLUMN fault_code TEXT")
             print("  ✓ Migration complete")
         
     print("✓ SQLite database initialized: industrial_agent.db")

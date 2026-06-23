@@ -70,17 +70,23 @@ def analyze_root_cause(
         if not rag_results or len(rag_results) == 0:
             logger.warning(f"RAG retrieval returned empty results for equipment {equipment_id}")
             evidence_citations = []
+            evidence_citations_full = []
             evidence_text = "No knowledge base results available."
         else:
-            # Return full citation objects, not just refs
-            evidence_citations = [
+            # Return BOTH formats:
+            # 1. String refs for schema compatibility (evidence_citations)
+            evidence_citations = [chunk.citation_ref for chunk in rag_results[:8]]
+            
+            # 2. Full citation objects for frontend (evidence_citations_full)
+            evidence_citations_full = [
                 {
                     "ref": chunk.citation_ref,
                     "doc_id": chunk.doc_id,
                     "doc_name": chunk.doc_name,
-                    "page": chunk.page_number,
-                    "section": chunk.section_heading,
-                    "snippet": chunk.text[:150] if chunk.text else ""
+                    "page_number": chunk.page_number,
+                    "section_heading": chunk.section_heading,
+                    "snippet": chunk.text[:150] if chunk.text else "",
+                    "bbox": chunk.bbox
                 }
                 for chunk in rag_results[:8]  # Top 8 citations
             ]
@@ -88,6 +94,7 @@ def analyze_root_cause(
     except Exception as e:
         logger.error(f"RAG retrieval failed: {e}")
         evidence_citations = []
+        evidence_citations_full = []
         evidence_text = "No knowledge base results available."
 
     # Search historical incidents
@@ -190,7 +197,8 @@ Respond in plain text, not JSON. Be specific and cite the evidence if available.
         "root_cause": root_cause,
         "fault_description": fault_description,
         "confidence": confidence,
-        "evidence": evidence_citations,
+        "evidence": evidence_citations,  # String refs for schema: ["[C1]", "[C2]"]
+        "evidence_full": evidence_citations_full,  # Full objects for frontend
         "similar_incidents": similar_incidents
     }
 

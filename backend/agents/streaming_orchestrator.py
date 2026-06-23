@@ -107,7 +107,7 @@ def run_analysis_streaming(
             "root_cause": root_cause_result["root_cause"],
             "fault_description": root_cause_result["fault_description"],
             "confidence": root_cause_result["confidence"],
-            "evidence": root_cause_result["evidence"][:3],  # Top 3 evidence sources
+            "evidence": root_cause_result.get("evidence_full", [])[:3],  # Use full citation objects for frontend
             "similar_incidents_count": len(root_cause_result.get("similar_incidents", []))
         }
     }
@@ -252,7 +252,7 @@ def run_analysis_streaming(
         parts_available=risk_result["parts_available"],
         rul_hours=rul_hours,
         confidence_score=root_cause_result["confidence"],
-        evidence_sources=root_cause_result["evidence"],
+        evidence_sources=root_cause_result["evidence"],  # Use string refs for database
         report_id=incident_id
     )
     
@@ -285,12 +285,9 @@ def run_analysis_streaming(
         "latest_readings": sensor_data,
         "logbook_entry_id": logbook_entry_id,
         "analysis": {
-            "answer": f"**Root Cause:** {root_cause_result['root_cause']}\n\n" +
-                     f"**Risk Level:** {risk_result['risk_level']} - {risk_result['urgency_hours']}h urgency\n\n" +
-                     f"**Immediate Actions:**\n{maintenance_result['immediate_actions']}\n\n" +
-                     f"**Repair Steps:**\n{maintenance_result['repair_steps']}",
-            "citations": root_cause_result.get("evidence", [])[:3],  # Top 3 evidence sources as citations
-            "grounded_in_doc": len(root_cause_result.get("evidence", [])) > 0
+            "answer": _format_analysis_answer(root_cause_result, risk_result, maintenance_result),
+            "citations": root_cause_result.get("evidence_full", [])[:3],  # Use full citation objects for frontend
+            "grounded_in_doc": len(root_cause_result.get("evidence_full", [])) > 0
         },
         # Include all original data
         **analysis_result
@@ -334,3 +331,39 @@ def _store_incident(
             json.dumps(sensor_data),
             timestamp
         ))
+
+
+def _format_analysis_answer(root_cause_result: dict, risk_result: dict, maintenance_result: dict) -> str:
+    """Format the analysis results into a readable answer string."""
+    
+    # Format immediate actions as bullet list
+    immediate_actions_text = "\n".join([f"• {action}" for action in maintenance_result['immediate_actions']])
+    
+    # Format repair steps as numbered list
+    repair_steps_text = "\n".join([f"{i+1}. {step}" for i, step in enumerate(maintenance_result['repair_steps'])])
+    
+    # Format long-term recommendations as bullet list
+    long_term_text = "\n".join([f"• {rec}" for rec in maintenance_result['long_term_recommendations']])
+    
+    answer = f"""**Root Cause Analysis:**
+{root_cause_result['fault_description']}
+
+**Diagnosis:** {root_cause_result['root_cause']}
+**Confidence:** {root_cause_result['confidence']:.0%}
+
+**Risk Assessment:**
+• **Risk Level:** {risk_result['risk_level']}
+• **Urgency:** {risk_result['urgency_hours']} hours
+• **Parts Required:** {', '.join(risk_result['parts_required']) if risk_result['parts_required'] else 'None specified'}
+• **Parts Available:** {'Yes' if risk_result['parts_available'] else 'No'}
+
+**Immediate Actions:**
+{immediate_actions_text}
+
+**Repair Steps:**
+{repair_steps_text}
+
+**Long-Term Recommendations:**
+{long_term_text}"""
+    
+    return answer
