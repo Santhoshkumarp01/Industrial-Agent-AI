@@ -72,7 +72,18 @@ def analyze_root_cause(
             evidence_citations = []
             evidence_text = "No knowledge base results available."
         else:
-            evidence_citations = [chunk.citation_ref for chunk in rag_results]
+            # Return full citation objects, not just refs
+            evidence_citations = [
+                {
+                    "ref": chunk.citation_ref,
+                    "doc_id": chunk.doc_id,
+                    "doc_name": chunk.doc_name,
+                    "page": chunk.page_number,
+                    "section": chunk.section_heading,
+                    "snippet": chunk.text[:150] if chunk.text else ""
+                }
+                for chunk in rag_results[:8]  # Top 8 citations
+            ]
             evidence_text = "\n\n".join([chunk.text for chunk in rag_results])
     except Exception as e:
         logger.error(f"RAG retrieval failed: {e}")
