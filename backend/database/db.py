@@ -1,8 +1,9 @@
 """
-SQLite database setup.
+SQLite database setup for Industrial Agent AI.
 
 Single file: industrial_agent.db
 Tables: incidents, logbook_entries, feedback, reports
+Auto-migration: Adds missing columns on startup for production compatibility
 """
 
 import sqlite3
