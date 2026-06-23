@@ -8,7 +8,7 @@ import {
   ReferenceDot,
   CartesianGrid,
 } from 'recharts'
-import { formatTimestamp } from '../../utils/formatters'
+import { formatTimeOnly } from '../../utils/formatters'
 
 export default function SensorChart({ sensorKey, sensor, title }) {
   if (!sensor) return null
@@ -22,7 +22,7 @@ export default function SensorChart({ sensorKey, sensor, title }) {
       readings.map((r, i) => ({
         index: i,
         value: r.value,
-        time: formatTimestamp(r.timestamp),
+        time: formatTimeOnly(r.timestamp),
         isAnomaly: r.isAnomaly,
       })),
     [readings]

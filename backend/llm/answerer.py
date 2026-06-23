@@ -128,11 +128,17 @@ def _detect_out_of_scope_query(query: str) -> bool:
     - Current events, news, politics
     - Non-technical topics (recipes, entertainment, sports)
     
+    IMPORTANT: Machine diagnostic reports and maintenance queries are IN SCOPE!
+    
     Returns:
         True if query is out of scope, False if potentially relevant
     """
     import re
     query_lower = query.lower()
+    
+    # Skip if this is a machine diagnostic report (in-scope)
+    if "machine diagnostic report" in query_lower or "equipment" in query_lower:
+        return False
     
     # Out-of-scope keywords
     out_of_scope_patterns = [

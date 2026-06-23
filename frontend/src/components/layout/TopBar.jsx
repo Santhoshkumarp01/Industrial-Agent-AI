@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { formatTimestamp } from '../../utils/formatters'
+import { formatTimeOnly } from '../../utils/formatters'
 import { getRoleInfo } from '../../utils/permissions'
 import StatusDot from '../shared/StatusDot'
 import useAppStore from '../../store/appStore'
@@ -203,7 +203,7 @@ export default function TopBar() {
             letterSpacing: '0.05em',
           }}
         >
-          {formatTimestamp(time)}
+          {formatTimeOnly(time)}
         </span>
       </div>
     </header>

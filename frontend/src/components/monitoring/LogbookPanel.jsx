@@ -73,7 +73,9 @@ export default function LogbookPanel() {
   }
 
   const isNewEntry = (timestamp) => {
+    if (!timestamp) return false
     const entryTime = new Date(timestamp)
+    if (isNaN(entryTime.getTime())) return false
     const now = new Date()
     const hoursDiff = (now - entryTime) / (1000 * 60 * 60)
     return hoursDiff < 1
@@ -240,7 +242,7 @@ export default function LogbookPanel() {
                         <strong style={{ color: 'var(--text-primary)' }}>
                           {entry.equipment_name}
                         </strong>
-                        {isNewEntry(entry.timestamp) && (
+                        {isNewEntry(entry.created_at) && (
                           <span style={{
                             fontFamily: 'var(--font-mono)',
                             fontSize: 9,
@@ -256,7 +258,7 @@ export default function LogbookPanel() {
                       </div>
                     </td>
                     <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>
-                      {formatTimestamp(entry.timestamp)}
+                      {entry.created_at ? formatTimestamp(entry.created_at) : 'N/A'}
                     </td>
                     <td style={{ padding: '12px', color: 'var(--text-primary)' }}>
                       {entry.root_cause || 'N/A'}

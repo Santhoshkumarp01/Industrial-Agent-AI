@@ -333,10 +333,32 @@ function AgentAnalysisContent({ analysis, logbookEntryId, onFeedbackSubmit }) {
   )
 }
 
-// ── Machine Analysis Content (No Feedback Form) ──────────────────────────────
-function MachineAnalysisContent({ data }) {
+// ── Machine Analysis Content (With Feedback Form) ────────────────────────────
+function MachineAnalysisContent({ data, logbookEntryId, onFeedbackSubmit }) {
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false)
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const setActivePanel = useAppStore((s) => s.setActivePanel)
   const setActiveCitation = useAppStore((s) => s.setActiveCitation)
+  const openLogbookEntry = useAppStore((s) => s.openLogbookEntry)
+  const openReport = useAppStore((s) => s.openReport)
+
+  const handleFeedbackSuccess = (verdict) => {
+    setFeedbackSubmitted(true)
+    setShowFeedbackForm(false)
+    if (onFeedbackSubmit) onFeedbackSubmit(verdict)
+  }
+
+  const handleViewReport = () => {
+    if (data.incident_id) {
+      openReport(data.incident_id)
+    }
+  }
+
+  const handleViewLogbook = () => {
+    if (logbookEntryId) {
+      openLogbookEntry(logbookEntryId)
+    }
+  }
 
   if (!data) return null
 
@@ -565,20 +587,85 @@ function MachineAnalysisContent({ data }) {
         </div>
       )}
 
-      {/* Footer actions - No feedback form in Monitor chat */}
-      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button
-          onClick={() => setActivePanel('logbook')}
-          style={{ fontFamily: 'var(--font-mono)', fontSize: 11, padding: '5px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-active)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', letterSpacing: '0.05em' }}
-        >
-          📋 VIEW IN LOGBOOK
-        </button>
-        <button
-          onClick={() => setActivePanel('reports')}
-          style={{ fontFamily: 'var(--font-mono)', fontSize: 11, padding: '5px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-active)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', letterSpacing: '0.05em' }}
-        >
-          📊 VIEW REPORTS
-        </button>
+      {/* Footer actions - With feedback form for continuous learning */}
+      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
+        {!feedbackSubmitted && !showFeedbackForm && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowFeedbackForm(true)}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--accent-amber)',
+                background: 'var(--accent-amber-glow)',
+                color: 'var(--accent-amber)',
+                cursor: 'pointer',
+                letterSpacing: '0.06em'
+              }}
+            >
+              📝 PROVIDE FEEDBACK
+            </button>
+            <button
+              onClick={handleViewLogbook}
+              style={{ fontFamily: 'var(--font-mono)', fontSize: 11, padding: '5px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-active)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', letterSpacing: '0.05em' }}
+            >
+              📋 VIEW IN LOGBOOK
+            </button>
+            <button
+              onClick={handleViewReport}
+              style={{ fontFamily: 'var(--font-mono)', fontSize: 11, padding: '5px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-active)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', letterSpacing: '0.05em', marginLeft: 'auto' }}
+            >
+              📊 VIEW REPORTS →
+            </button>
+          </div>
+        )}
+
+        {showFeedbackForm && !feedbackSubmitted && (
+          <FeedbackForm 
+            logbookEntryId={logbookEntryId}
+            onSuccess={handleFeedbackSuccess}
+          />
+        )}
+
+        {feedbackSubmitted && (
+          <div style={{
+            background: 'rgba(93, 232, 145, 0.1)',
+            border: '1px solid var(--status-ok)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              color: 'var(--status-ok)',
+              letterSpacing: '0.08em'
+            }}>
+              ✓ FEEDBACK RECORDED - Thank you!
+            </span>
+            <button
+              onClick={handleViewLogbook}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--status-ok)',
+                background: 'transparent',
+                color: 'var(--status-ok)',
+                cursor: 'pointer',
+                letterSpacing: '0.06em',
+                marginLeft: 'auto'
+              }}
+            >
+              VIEW IN LOGBOOK
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -677,7 +764,11 @@ export default function MessageBubble({ message, isLoading = false }) {
       }}
     >
       {isMachineAnalysis ? (
-        <MachineAnalysisContent data={message.analysisData} />
+        <MachineAnalysisContent 
+          data={message.analysisData} 
+          logbookEntryId={message.logbookEntryId}
+          onFeedbackSubmit={message.onFeedbackSubmit}
+        />
       ) : isAgentAnalysis ? (
         <AgentAnalysisContent
           analysis={message.analysisData}

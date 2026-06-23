@@ -53,7 +53,18 @@ def init_db():
                 fault_code TEXT,                -- PDF-grounded fault code
                 FOREIGN KEY (incident_id) REFERENCES incidents(id)
             );
-
+        """)
+        
+        # Auto-migration: Add fault_code column if it doesn't exist
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(logbook_entries)")
+        columns = [row[1] for row in cursor.fetchall()]
+        if "fault_code" not in columns:
+            print("  → Migrating: Adding fault_code column to logbook_entries")
+            conn.execute("ALTER TABLE logbook_entries ADD COLUMN fault_code TEXT")
+            print("  ✓ Migration complete")
+        
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS feedback (
                 id TEXT PRIMARY KEY,
                 logbook_entry_id TEXT NOT NULL,
