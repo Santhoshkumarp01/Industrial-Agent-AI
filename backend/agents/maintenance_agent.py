@@ -53,7 +53,11 @@ def generate_maintenance_plan(
 
     # Search RAG for relevant SOPs
     try:
-        sop_results, _ = retrieve(query, equipment_tag=equipment_id, top_k=6)
+        # Map machine_tag to Qdrant equipment_tag
+        from sensors.machine_logs import MACHINE_TAG_TO_EQUIPMENT_TAG
+        qdrant_equipment_tag = MACHINE_TAG_TO_EQUIPMENT_TAG.get(equipment_id, equipment_id)
+        
+        sop_results, _ = retrieve(query, equipment_tag=qdrant_equipment_tag, top_k=6)
         
         # Handle empty results gracefully
         if not sop_results or len(sop_results) == 0:

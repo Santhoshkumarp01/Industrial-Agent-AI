@@ -60,7 +60,11 @@ def analyze_root_cause(
 
     # Search RAG system
     try:
-        rag_results, _ = retrieve(query, equipment_tag=equipment_id, top_k=8)
+        # Map machine_tag to Qdrant equipment_tag
+        from sensors.machine_logs import MACHINE_TAG_TO_EQUIPMENT_TAG
+        qdrant_equipment_tag = MACHINE_TAG_TO_EQUIPMENT_TAG.get(equipment_id, equipment_id)
+        
+        rag_results, _ = retrieve(query, equipment_tag=qdrant_equipment_tag, top_k=8)
         
         # Handle empty results gracefully
         if not rag_results or len(rag_results) == 0:
