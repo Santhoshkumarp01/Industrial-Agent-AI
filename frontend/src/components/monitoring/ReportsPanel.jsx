@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { getReports, getReport } from '../../services/api'
 import Spinner from '../shared/Spinner'
 import useAppStore from '../../store/appStore'
+import CitationTag from '../chat/CitationTag'
 
 export default function ReportsPanel() {
   const [reports, setReports] = useState([])
@@ -16,9 +17,7 @@ export default function ReportsPanel() {
 
   useEffect(() => {
     loadReports()
-    // Auto-refresh every 10 seconds when panel is active
-    const interval = setInterval(loadReports, 10000)
-    return () => clearInterval(interval)
+    // Removed auto-refresh - reports only load on mount or manual refresh
   }, [])
   
   // Auto-open selected report from store
@@ -640,22 +639,34 @@ function ReportDetail({ report, onClose }) {
               flexWrap: 'wrap', 
               gap: 6 
             }}>
-              {diagnosis.evidence_sources.map((ref, i) => (
-                <span
-                  key={i}
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 11,
-                    padding: '4px 8px',
-                    background: 'var(--accent-amber-glow)',
-                    border: '1px solid var(--accent-amber-dim)',
-                    borderRadius: 'var(--radius-sm)',
-                    color: 'var(--accent-amber)',
-                  }}
-                >
-                  [{ref}]
-                </span>
-              ))}
+              {diagnosis.evidence_sources.map((ref, i) => {
+                // evidence_sources can be either string refs ["[C1]", "[C2]"] 
+                // or full citation objects [{ref: "[C1]", doc_id: "...", ...}]
+                const isFullCitation = typeof ref === 'object' && ref !== null
+                
+                if (isFullCitation) {
+                  // Use CitationTag for full citation objects
+                  return <CitationTag key={i} citation={ref} />
+                } else {
+                  // Fallback for string refs (legacy format)
+                  return (
+                    <span
+                      key={i}
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 11,
+                        padding: '4px 8px',
+                        background: 'var(--accent-amber-glow)',
+                        border: '1px solid var(--accent-amber-dim)',
+                        borderRadius: 'var(--radius-sm)',
+                        color: 'var(--accent-amber)',
+                      }}
+                    >
+                      {ref}
+                    </span>
+                  )
+                }
+              })}
             </div>
           </Section>
         )}

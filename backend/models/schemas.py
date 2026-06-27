@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from pydantic import BaseModel
 
 
@@ -239,7 +239,7 @@ class LogbookEntryCreate(BaseModel):
     parts_available: bool
     rul_hours: Optional[float]
     confidence_score: float
-    evidence_sources: list[str]
+    evidence_sources: list[Union[str, dict]]  # Can be string refs ["[C1]"] or full citation objects
     report_id: Optional[str] = None  # Made optional since report is generated after logbook entry
     fault_code: Optional[str] = None  # PDF-grounded fault code
 

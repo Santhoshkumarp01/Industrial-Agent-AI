@@ -252,7 +252,7 @@ def run_analysis_streaming(
         parts_available=risk_result["parts_available"],
         rul_hours=rul_hours,
         confidence_score=root_cause_result["confidence"],
-        evidence_sources=root_cause_result["evidence"],  # Use string refs for database
+        evidence_sources=root_cause_result.get("evidence_full", root_cause_result["evidence"]),  # Store full citations for PDF viewer
         report_id=incident_id
     )
     
